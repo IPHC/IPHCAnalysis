@@ -295,7 +295,7 @@ class Event
   // Static empty collection if a collection 
   // is not stored in the NTuple
   static const std::vector<IPHCTree::NTJet>      empty_jets_;
-  static const IPHCTree::NTJetMet                empty_met_;
+  static const IPHCTree::NTMET                   empty_met_;
   static const std::vector<IPHCTree::NTPhoton>   empty_photons_;
   static const std::vector<IPHCTree::NTElectron> empty_electrons_;
   static const std::vector<IPHCTree::NTMuon>     empty_muons_;

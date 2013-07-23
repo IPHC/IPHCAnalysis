@@ -45,9 +45,9 @@ void MuonHistoManager::FillSelStep(const vector<NTMuon>& muons, const int& iSelS
 		Histos[3][iChannel][iSelStep][iDataset].Fill(muons[i].p4.Phi(),weight);
 		Histos[4][iChannel][iSelStep][iDataset].Fill(muons[i].D0,weight);
 		Histos[5][iChannel][iSelStep][iDataset].Fill(muons[i].charge,weight);
-		Histos[6][iChannel][iSelStep][iDataset].Fill(muons[i].TrkIso03,weight);
-		Histos[7][iChannel][iSelStep][iDataset].Fill(muons[i].ECaloIso03,weight);
-		Histos[8][iChannel][iSelStep][iDataset].Fill(muons[i].HCaloIso03,weight);
+		Histos[6][iChannel][iSelStep][iDataset].Fill(muons[i].isolation["Trk03"],weight);
+		Histos[7][iChannel][iSelStep][iDataset].Fill(muons[i].isolation["ECalo03"],weight);
+		Histos[8][iChannel][iSelStep][iDataset].Fill(muons[i].isolation["HCalo03"],weight);
 		//Histos[[9]iChannel][iSelStep][iDataset].Fill(muons[i].RelIso03(),weight);
 		NTMuon mu = muons[i];
 		float relIso = mu.RelIso03();

@@ -41,9 +41,9 @@ void ElectronHistoManager::FillSelStep(const vector<NTElectron>& electrons, cons
 		Histos[3][iChannel][iSelStep][iDataset].Fill(electrons[i].p4.Phi(),weight);
 		Histos[4][iChannel][iSelStep][iDataset].Fill(electrons[i].D0,weight);
 		Histos[5][iChannel][iSelStep][iDataset].Fill(electrons[i].charge,weight);
-		Histos[6][iChannel][iSelStep][iDataset].Fill(electrons[i].TrkIso03,weight);
-		Histos[7][iChannel][iSelStep][iDataset].Fill(electrons[i].ECaloIso03,weight);
-		Histos[8][iChannel][iSelStep][iDataset].Fill(electrons[i].HCaloIso03,weight);
+		Histos[6][iChannel][iSelStep][iDataset].Fill(electrons[i].isolation["Trk03"],weight);
+		Histos[7][iChannel][iSelStep][iDataset].Fill(electrons[i].isolation["ECalo03"],weight);
+		Histos[8][iChannel][iSelStep][iDataset].Fill(electrons[i].isolation["HCalo03"],weight);
 		//Histos[9][iChannel][iSelStep][iDataset].Fill(electrons[i].CombinedRelIso03(),weight);
 		NTElectron el = electrons[i];
 		float relIso = el.CombinedRelIso03();
