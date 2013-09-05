@@ -73,6 +73,9 @@ int main(int argc, char* argv[]){
     }
     //register dataset in proof
     proof->RegisterDataSet(datasets[i].Name().c_str(),fileCollec[i]);
+    
+    proof->SetDataSetTreeName(datasets[i].Name().c_str(), "MyModule/Event");
+    
     proof->VerifyDataSet(datasets[i].Name().c_str());
   }
   

@@ -120,13 +120,20 @@ void ProofSelectorMyCutFlow::Init(TTree *tree)
   
   //fChain point to the loading tree 
   fChain = tree;
+  tree->ls();
   cout << "start init tree " << endl;
   // Set branch addresses
   branch = (TBranch *) tree->GetBranch("NTEvent");
+  cout << "branch adress retrieved " << endl;
   event = new IPHCTree::NTEvent();
-   branch->SetAddress(&event);
-   //event is now retrieved and could be used in Process
-   cout << "end init tree " << endl;
+  cout << "create event pointer " << endl;
+  if(tree==0)   cout << "link to the tree is null" << endl;
+  if(branch==0) cout << "branch pointer is a null pointer 1" << endl;
+  if((TBranch *) tree->GetBranch("NTEvent") == 0) cout << "branch pointer is a null pointer 2" << endl;
+  if((TBranch *) tree->GetBranch("NTEvent") == 0) cout << "branch pointer is a null pointer 2" << endl;
+  branch->SetAddress(&event);
+  //event is now retrieved and could be used in Process
+  cout << "end init tree " << endl;
 }
 
 //_____________________________________________________________________________
@@ -553,15 +560,15 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       std::vector<TH1F>* pErrCutFlow;
       
       if(IChannel == 0 && decayChannel == "mumu") pCutFlow = &CutFlow_mumu;
-      if(IChannel == 1 && decayChannel == "emu" ) pCutFlow = &CutFlow_mumu;
-      if(IChannel == 2 && decayChannel == "ee"  ) pCutFlow = &CutFlow_mumu;
+      if(IChannel == 1 && decayChannel == "emu" ) pCutFlow = &CutFlow_emu;
+      if(IChannel == 2 && decayChannel == "ee"  ) pCutFlow = &CutFlow_ee;
       
       
       if(IChannel == 0 && decayChannel == "mumu") pErrCutFlow = &ErrCutFlow_mumu;
-      if(IChannel == 1 && decayChannel == "emu" ) pErrCutFlow = &ErrCutFlow_mumu;
-      if(IChannel == 2 && decayChannel == "ee"  ) pErrCutFlow = &ErrCutFlow_mumu;
+      if(IChannel == 1 && decayChannel == "emu" ) pErrCutFlow = &ErrCutFlow_emu;
+      if(IChannel == 2 && decayChannel == "ee"  ) pErrCutFlow = &ErrCutFlow_ee;
       
-      
+       
       
       //*****************************************************************
       // apply dilepton selection
