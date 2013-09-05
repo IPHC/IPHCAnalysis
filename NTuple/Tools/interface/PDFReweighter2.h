@@ -1,5 +1,5 @@
-#ifndef PDF_REWEIGHTER_h
-#define PDF_REWEIGHTER_h
+#ifndef PDF_REWEIGHTER2_h
+#define PDF_REWEIGHTER2_h
 
 //#ifdef PDFREWEIGHT_ENABLE
 
@@ -16,6 +16,7 @@
 #include "Tools/interface/JetCorrector.h"
 #include "Tools/interface/Dataset.h"
 #include "Tools/interface/AnalysisEnvironmentLoader.h"
+#include "Tools/interface/PDFReweighter.h"
 
 // ROOT headers
 #include <Rtypes.h>
@@ -28,18 +29,8 @@ using namespace IPHCTree;
 using namespace std;
 
 
-struct UncertaintyType
-{
-  Double_t Mean;
-  Double_t Min;
-  Double_t Max;
 
-  UncertaintyType()
-  { Mean=0.; Min=0.; Max=0.; }
-};
-
-
-class PDFReweighter
+class PDFReweighter2
 {
   // -------------------------------------------------------------
   //                        data members
@@ -48,23 +39,10 @@ class PDFReweighter
 private:
 
   std::pair<std::string,unsigned int> REF_pdf_;
-  std::pair<std::string,unsigned int> CTEQ_uncertainties_pdf_;
-  std::pair<std::string,unsigned int> CTEQ_alphas_pdf_;
-  std::pair<std::string,unsigned int> MSTW_uncertainties_pdf_;
-  std::pair<std::string,unsigned int> MSTW_alphasP_pdf_;
-  std::pair<std::string,unsigned int> MSTW_alphasM_pdf_;
-  std::pair<std::string,unsigned int> NNPDF_uncertainties_pdf_;
-  std::pair<std::string,unsigned int> NNPDF_alphasP_pdf_;
-  std::pair<std::string,unsigned int> NNPDF_alphasM_pdf_;
-  TH1F* cteq;
-  TH1F* mstw;
-  TH1F* nnpdf;
-  TH1F* cteq2;
-  TH1F* mstw2;
-  TH1F* nnpdf2;
-  TH1F* cteq0;
-  TH1F* mstw0;
-  TH1F* nnpdf0;
+  std::pair<std::string,unsigned int> NNPDF_pdf_;
+  std::pair<std::string,unsigned int> NNPDF15_pdf_;
+  std::pair<std::string,unsigned int> NNPDF16_pdf_;
+  std::pair<std::string,unsigned int> NNPDF17_pdf_;
 
   // -------------------------------------------------------------
   //                    public method members
@@ -72,11 +50,11 @@ private:
 public:
 
   /// Constructor without argument
-  PDFReweighter()
+  PDFReweighter2()
   {}
 
   /// Destructor
-  ~PDFReweighter()
+  ~PDFReweighter2()
   {}
 
   /// Initialize function
@@ -86,7 +64,11 @@ public:
   bool Finalize();
 
   /// Calculate envelop related to weights
-  UncertaintyType Calculate(const IPHCTree::NTMonteCarlo& mc) const;
+  UncertaintyType Calculate(const IPHCTree::NTMonteCarlo& mc, unsigned int mode) const;
+
+
+void CalculateAlone(Int_t parton, double x, double Q2, 
+                    double& ipdf, double& mean, double& up, double& down)const;
 
 
   // -------------------------------------------------------------
@@ -94,18 +76,13 @@ public:
   // -------------------------------------------------------------
 private:
 
-  /// Calculate CTEQ weights
-  UncertaintyType CalculateCTEQ(const IPHCTree::NTMonteCarlo& mc, 
-                                Double_t& pdf1, Double_t& pdf2) const;
-
-
-  /// Calculate MSTW weights
-  UncertaintyType CalculateMSTW(const IPHCTree::NTMonteCarlo& mc, 
-                                Double_t& pdf1, Double_t& pdf2) const;
+  /// Calculate NNPDF weights
+  UncertaintyType CalculateNNPDF(unsigned int number, const IPHCTree::NTMonteCarlo& mc, 
+                                 Double_t& pdf1, Double_t& pdf2) const;
 
   /// Calculate NNPDF weights
-  UncertaintyType CalculateNNPDF(const IPHCTree::NTMonteCarlo& mc, 
-                                 Double_t& pdf1, Double_t& pdf2) const;
+  UncertaintyType CalculateNNPDFalone(unsigned int number, Int_t parton, Double_t x, Double_t Q2, 
+                                Double_t& pdf) const;
 
   /// Generic function to calculate PDF weights
   Double_t CalculateWeight(unsigned int pdf, unsigned int subset,
@@ -116,6 +93,18 @@ private:
   /// Calculate initial weights
   void CalculateRefWeight(const IPHCTree::NTMonteCarlo& mc, 
                           Double_t& pdf1, Double_t& pdf2) const;
+
+  /// Generic function to calculate PDF weights
+  Double_t CalculateWeightalone(unsigned int oldpdf, 
+                                unsigned int subset,
+                           Int_t parton, Double_t x, Double_t Q2, 
+                           const Double_t& pdf) const;
+
+  /// Calculate initial weights
+  Double_t CalculateRefWeightalone(
+                          Int_t parton, Double_t x, Double_t Q2, 
+                          Double_t& pdf) const;
+
 
 };
 

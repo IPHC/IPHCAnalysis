@@ -282,7 +282,7 @@ void SFBweight::SFBinit(int btag_algo, float btag_discri, int n_bjets){
 void SFBweight::LoadInfo(string fileName){
 
 
-  string fullFileName(getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/")+fileName);
+  string fullFileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/")+fileName);
   std::cout<<"Reading the b-tag info from file "<<fullFileName<<endl;
   fexists(fullFileName, true);
   TFile* f = new TFile(fullFileName.c_str());
@@ -354,7 +354,7 @@ void SFBweight::LoadInfo2(string fileName){
   map_errmcc_.clear();
   map_errmcl_.clear();
 
-	string fullFileName(getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/")+fileName);
+	string fullFileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/")+fileName);
 	if(debug) cout<<"SFBweight::LoadInfo2:: Loading the file "<<fullFileName<<endl;
 	fexists(fullFileName, true);
         TFile* f2 = TFile::Open(fullFileName.c_str());
@@ -392,7 +392,7 @@ void SFBweight::LoadInfo2(string fileName){
 }
 
 void SFBweight::LoadTTsf(string fileName){
-  string fullFileName(getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/")+fileName);
+  string fullFileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/")+fileName);
   cout<<"SFBweight::LoadTTsf:: Loading the file "<<fullFileName<<endl;
   fexists(fullFileName, true);
   std::ifstream file(fullFileName.c_str());

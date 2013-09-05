@@ -1,0 +1,1719 @@
+#define ProofSelectorMyCutFlow_cxx
+
+//////////////////////////////////////////////////////////
+//
+// Example of TSelector implementation to do a Monte Carlo
+// generation using Pythia8.
+// See tutorials/proof/runProof.C, option "pythia8", for an
+// example of how to run this selector.
+//
+//////////////////////////////////////////////////////////
+ 
+#include <TCanvas.h>
+#include <TFrame.h>
+#include <TPaveText.h>
+#include <TFormula.h>
+#include <TF1.h>
+#include <TH1F.h>
+#include <TMath.h>
+#include <TString.h>
+#include <TStyle.h>
+#include <TSystem.h>
+#include <TParameter.h>
+#include "TClonesArray.h"
+#include "TParticle.h"
+#include "TDatabasePDG.h"
+
+#include "ProofSelectorMyCutFlow.h"
+
+//_____________________________________________________________________________
+ProofSelectorMyCutFlow::ProofSelectorMyCutFlow()
+{
+  // Constructor
+  
+  
+  
+  /*
+    string ofilenametex = "HighHTEvents.txt";
+    ofile = ofstream(ofilenametex.c_str());
+    
+    ofile.precision(3);
+    ofile.setf(ios::fixed);
+    
+  */
+  
+  fChain     = 0;
+  branch     = 0;
+  event      = 0;
+  dataset    = 0;
+  anaEL      = 0;
+  verbosity  = 0;
+  DataType   = 0;
+  Luminosity = 0;
+  //histos
+  fHist      = 0;
+  
+  
+  
+  applyLeptonSF  = true;
+  applyTrigger   = true;
+  
+  
+  
+  IReweight		= true;
+  
+  doBTagCVScorr = true;
+  //pdf.Initialize();
+  doBTagCSV_syst = 0;
+  
+  
+  
+  
+  applyJES  = false;
+  scale     = -1; // +1 or -1
+  applyJER  = false;
+  ResFactor = 0.1;
+  
+  applyLeptonSFUp    = false;
+  applyLeptonSFDown  = false;
+  
+  applyTriggerUp   = false;
+  applyTriggerDown = false;
+  
+  //to do rename
+  IReweight_puUp	= false;
+  IReweight_puDown	= false;
+  
+  
+  
+  
+  doPDF = true;
+  //pdftype =0 ;
+  pdftype =1  ;
+  
+  PDFmode=-1; // PDF4LHC recipe
+  //PDFmode=0 ;// enveloppe avec les 4 NNPDF2.1
+  //PDFmode=1 ;// NNPDF21
+  //PDFmode=2 ;// NNPDF21_mc15
+  //PDFmode=3 ;// NNPDF21_mc16
+  //PDFmode=4 ;// NNPDF21_mc17
+  
+  
+}
+
+//_____________________________________________________________________________
+ProofSelectorMyCutFlow::~ProofSelectorMyCutFlow()
+{
+  // Destructor
+  
+  //SafeDelete(fHist);
+}
+
+//_____________________________________________________________________________
+void ProofSelectorMyCutFlow::Init(TTree *tree)
+{
+  // The Init() function is called when the selector needs to initialize
+  // a new tree or chain. Typically here the branch addresses of the tree
+  // will be set. It is normaly not necessary to make changes to the
+  // generated code, but the routine can be extended by the user if needed.
+  // Init() will be called many times when running with PROOF.
+  
+  //fChain point to the loading tree 
+  fChain = tree;
+  cout << "start init tree " << endl;
+  // Set branch addresses
+  branch = (TBranch *) tree->GetBranch("NTEvent");
+  event = new IPHCTree::NTEvent();
+   branch->SetAddress(&event);
+   //event is now retrieved and could be used in Process
+   cout << "end init tree " << endl;
+}
+
+//_____________________________________________________________________________
+void ProofSelectorMyCutFlow::Begin(TTree * /*tree*/)
+{
+  // The Begin() function is called at the start of the query.
+  // When running with PROOF Begin() is only called on the client.
+  // The tree argument is deprecated (on PROOF 0 is passed).
+  
+  cout << "start Begin " << endl;
+  TString option = GetOption();
+  cout << "end  Begin" << endl;
+  
+  
+}
+
+//_____________________________________________________________________________
+void ProofSelectorMyCutFlow::SlaveBegin(TTree * tree)
+{
+  // The SlaveBegin() function is called after the Begin() function.
+  // When running with PROOF SlaveBegin() is called on each slave server.
+  // The tree argument is deprecated (on PROOF 0 is passed).
+  
+  
+  cout << "start SlaveBegin " << endl;
+  TString option = GetOption();
+  //--------------------------------------//
+  //       Loading the xml file
+  //--------------------------------------//
+  TNamed *dsname = (TNamed *) fInput->FindObject("PROOF_DATASETNAME"); 
+  datasetName = dsname->GetTitle();
+  cout << "dataset name " << datasetName << endl;
+  cout << "dataset name " << datasetName << endl;
+  cout << "dataset name " << datasetName << endl;
+  cout << "dataset name " << datasetName << endl;
+  cout << "dataset name " << datasetName << endl;
+  cout << "dataset name " << datasetName << endl;
+  
+  
+  
+  TNamed *xfname = (TNamed *) fInput->FindObject("PROOF_XMLFILENAME");
+  string xmlFileName = xfname->GetTitle();
+  anaEL = new AnalysisEnvironmentLoader(xmlFileName.c_str());
+  
+  
+  
+  anaEL->LoadSamples (datasets, datasetName); // now the list of datasets written in the xml file is known
+  
+  
+  
+  //retrieve the current dataset according to its name
+  for(unsigned int d=0;d<datasets.size();d++){
+    cout << "datasets.size() " << datasets.size()<< "  datasets[d].Name()" << datasets[d].Name()  << " datasetName "
+	 <<datasetName  << endl;
+    if(datasets[d].Name()==datasetName)dataset = &datasets[d];
+  }
+  cout << "load datasets "  << endl;
+  anaEL->LoadDiLeptonSelection (sel); // now the parameters for the selection are given to the selection
+  cout << "datasets loaded "  << endl;
+  //anaEL->LoadGeneralInfo(DataType, Luminosity, verbosity );
+  anaEL->LoadGeneralInfo(DataType, Luminosity, LumiError, PUWeightFileName, verbosity );
+  
+  //Load for PU:
+  sel.GeneratePUWeight(PUWeightFileName);
+  
+  //******************************************
+  //Load Scale Factors for lepton efficiencies
+  //******************************************
+  sel.LoadElScaleFactors();
+  sel.LoadMuScaleFactors();
+  sel.InitJESUnc("Total"); 
+  
+  
+  anaEL->LoadWeight (sel); // now the parameters for SFBweight are initialized (for b-tag!)
+  
+  //--------------------------------------//
+  //   Fill cuts and channels  	
+  //--------------------------------------//
+  CutName.push_back("Cut1");
+  
+  //--------------------------------------//
+  //   Initializing variables 	
+  //--------------------------------------//
+  
+  
+ 
+  
+  //**************************************
+  //**************************************
+  //******* fakes DD estimate ************
+  //**************************************
+  //**************************************
+  
+  
+  
+  ITypeMC     = -1;
+  ICut        = -1;  
+  
+  
+  //************************************
+  //For trigger systematics 
+  
+  if(applyTriggerUp){
+    
+    
+    
+  } 
+  if(applyTriggerDown){
+    
+    
+    
+  } 
+  
+  
+  
+  for(unsigned int d=0;d<datasets.size();d++){
+    cout << "datasets.size() " << datasets.size()<< "  datasets[d].Name()" << datasets[d].Name()  << " datasetName "
+	 <<datasetName  << endl;
+    if(datasets[d].Name()==datasetName)dataset = &datasets[d];
+  }
+  
+  
+  
+  
+  
+  
+  //--------------------------------------//
+  //   Managing histos  	
+  //--------------------------------------//
+  MyhistoManager.LoadDatasets(datasets);   
+  MyhistoManager.LoadSelectionSteps(CutName);
+  MyhistoManager.LoadChannels(TheChannelName);
+  //example
+  
+  nbins = 200;
+  minx = 0.;
+  maxx = 350;
+  
+  
+  //***********************
+  // initiate histograms
+  
+  MyhistoManager.CreateHisto(CutFlow_mumu,  "CutFlow_mumu" ,datasetName,"CutFlow","Entries",15,-0.5,14.5);
+  MyhistoManager.CreateHisto(CutFlow_emu,   "CutFlow_emu"  ,datasetName,"CutFlow","Entries",15,-0.5,14.5);
+  MyhistoManager.CreateHisto(CutFlow_ee,    "CutFlow_ee"   ,datasetName,"CutFlow","Entries",15,-0.5,14.5);
+  
+  
+  
+  
+  
+  
+  if (IReweight ) {
+    
+    //to do : update PU reweighting input file
+    string mcfile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PU3DMC_Fall11_JLA.root");
+    fexists(mcfile, true);
+    
+    string datafile;
+    if( !IReweight_puDown && !IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_68mb.root");
+    if( IReweight_puDown ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_64.6mb.root");
+    if( IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_71.4mb.root");
+    
+    fexists(datafile, true);
+    
+    
+    //to do : update PU for the last recipe
+    LumiWeights = new reweight::LumiReWeighting(mcfile, datafile, "histoMCPU", "pileup" );
+    LumiWeights->weight3D_init( 1. );
+    
+  }
+  
+  
+  //if(doPDF) pdf.Initialize();
+  
+  if (doPDF)
+    { 
+      if (PDFmode==-1) pdf.Initialize();
+      else pdf2.Initialize();
+    }
+  
+  
+  
+  //************************************
+  
+  //cout << "618 " <<  endl;
+  
+  //--------------------------------------//
+  //   Output file 	
+  //--------------------------------------//
+  //retrieve info from the input:
+  TNamed *out = (TNamed *) fInput->FindObject("PROOF_OUTPUTFILE");
+  //this file will be THE file which will contains all the histograms
+  fProofFile = new TProofOutputFile(out->GetTitle());
+  // Open the file
+  TDirectory *savedir = gDirectory;
+  fFile = fProofFile->OpenFile("UPDATE");
+  if (fFile && fFile->IsZombie()) SafeDelete(fFile);
+  savedir->cd();
+  
+  
+  //this file is very important !!!
+  fFile->Write();
+  //It is required to add in fOutput the histos you want to feedback
+  //fOutput->Add(fHist);
+  fOutput->Add(fFile);
+  cout << "end SlaveBegin " << endl;
+}
+
+//_____________________________________________________________________________
+Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
+{
+  
+  //---------------------------------------------------//
+  // Main event loop: get entry
+  //---------------------------------------------------//
+  fChain->GetTree()->GetEntry(entry); 
+  branch->GetEntry(entry);
+  
+  IPHCTree::NTTransient::InitializeAfterReading(event);
+  
+  
+  //to do : add "isData" from the xml config file
+  bool isData = false;    
+  if(datasetName=="DataDiEG"   || datasetName=="DataDiMu" || 
+     datasetName=="DataDiMuEG" || datasetName=="DataDiEGMu" ) isData = true;
+  
+  
+  //---------------------------------------------------//
+  //         Doing the analysis event by event
+  //---------------------------------------------------//
+  int debugcc=1000;
+  int maxdebugcc=10;
+  sel.LoadEvent(event);
+  
+  //Collection of selected objects
+  vector<NTVertex>   selVertices  = sel.GetSelectedVertex();
+  vector<NTElectron> selElectrons = sel.GetSelectedElectrons(); 
+  vector<NTMuon>     selMuons     = sel.GetSelectedMuons();
+  //NTMET met			   = sel.GetMET(); 
+  
+  NTMET met			   = sel.GetSelectedMET(applyJES, scale, applyJER, ResFactor);  
+  // cout << "MET loaded " << endl;
+  
+  
+  
+  
+  double Dweight[101];
+  for(int k1=0; k1<101; k1++) {
+    Dweight[k1] = 0.;
+  }   
+  
+  
+  double weightITypeMC_save = Luminosity*dataset->Xsection()/dataset->getNSkimmedEvent();
+  double weightITypeMC=0;
+  
+  //*****************************************************************
+  // Loop over the channels (lepton pairs which triggered the events)
+  //*****************************************************************
+  
+  double EventYieldWeightError = 0;
+  
+  
+  for (int IChannel=0; IChannel<3; IChannel++) {
+    
+    string ChannelName = "";
+    if      (IChannel==0) ChannelName= "mumu"; 
+    else if (IChannel==1) ChannelName= "emu" ; 
+    else if (IChannel==2) ChannelName= "ee"  ;  
+    
+    if (IChannel==0 && datasetName!="DataDiMu"   ) continue;
+    if (IChannel==1 && datasetName!="DataDiMuEG" ) continue;
+    if (IChannel==2 && datasetName!="DataDiEG"   ) continue;
+    
+    
+    
+    //*****************************************************************
+    // calcul the MC weights
+    //*****************************************************************   
+    //to do : use isData parameter 
+    if ( datasetName!="DataDiEG"   && datasetName!="DataDiMu" && 
+	 datasetName!="DataDiMuEG" && datasetName!="DataDiEGMu" ) {
+      
+      
+      if(IReweight ){
+	weightITypeMC = weightITypeMC_save*LumiWeights->weight3D(event->pileup.before_npu, event->pileup.intime_npu, event->pileup.after_npu);
+      }
+      else weightITypeMC = weightITypeMC_save;
+    }
+    else weightITypeMC = 1;
+    
+    
+    //*****************************************************************
+    // determine top decay channel
+    //*****************************************************************    
+    
+    bool IsTTbarDilept = false;
+    bool IsSignal = false;
+    double WeightForBranchingRatio = 1.;
+    //bool IsLJ = false;
+    
+    
+    
+    
+    //to do : fix "is signal" in filling histograms
+    //*****************************************************************
+    // determine top decay channel
+    //*****************************************************************    
+    if ( datasetName=="TTbar" ) {
+      if ( IChannel==0) { // "mumu" 
+	if ( event->mc.TMEME==20 || event->mc.TMEME==11010 || event->mc.TMEME==22000 )    IsTTbarDilept = true;
+	if ( !(event->mc.TMEME==20 || event->mc.TMEME==11010 || event->mc.TMEME==22000) ) IsTTbarDilept = false;
+      }      
+      else if ( IChannel==1) {  // "ee" 
+	if ( event->mc.TMEME==2 || event->mc.TMEME==10101 || event->mc.TMEME==20200 )     IsTTbarDilept = true;
+	if ( !(event->mc.TMEME==2 || event->mc.TMEME==10101 || event->mc.TMEME==20200) )  IsTTbarDilept = false;
+      }      
+      else if ( IChannel==2) { // "emu" 
+	if ( event->mc.TMEME==11 || event->mc.TMEME==21100 || event->mc.TMEME==11001 || event->mc.TMEME==10110 )     IsTTbarDilept = true;
+	if ( !(event->mc.TMEME==11 || event->mc.TMEME==21100 || event->mc.TMEME==11001 || event->mc.TMEME==10110) )  IsTTbarDilept = false;
+      }      
+      
+    }
+    
+    
+    
+    
+    //to do : fix IsSignal
+    
+    //*****************************************************************
+    // determine MC evetn weight
+    //*****************************************************************    
+    
+    std::vector< double > thereweight = determineWeights(datasetName, weightITypeMC, WeightForBranchingRatio);
+    ITypeMC = thereweight[0];
+    Dweight[ITypeMC] =   thereweight[1];
+    EventYieldWeightError = thereweight[2];
+    if(thereweight[3] > 0) IsSignal = true; else IsSignal = false;
+    
+    
+    
+    //*****************************************************************
+    // fill cutflow before any selection
+    //*****************************************************************   
+    
+    if(IChannel == 0){
+      MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    0, datasetName, IsSignal, Dweight[ITypeMC]);    
+      MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 0, datasetName, IsSignal, EventYieldWeightError);
+    }
+    else if(IChannel == 1){
+      MyhistoManager.FillHisto(CutFlow_emu,       "CutFlow_emu",    0, datasetName, IsSignal, Dweight[ITypeMC]);
+      MyhistoManager.FillHisto(ErrCutFlow_emu,    "ErrCutFlow_emu", 0, datasetName, IsSignal, EventYieldWeightError);
+    }
+    else if(IChannel == 2) {
+      MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    0, datasetName, IsSignal, Dweight[ITypeMC]);
+      MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 0, datasetName, IsSignal, EventYieldWeightError);
+    }
+    
+    
+    //*****************************************************************
+    // pass trigger selection
+    //*****************************************************************   
+    
+    bool passtrigger = false;
+    
+    
+    //to do : update trigger selection
+    if(ChannelName == "mumu" ) passtrigger = sel.passTriggerSelection ( dataset, "mumu");
+    if(ChannelName == "emu"  ) passtrigger = sel.passTriggerSelection ( dataset, "emu" );
+    if(ChannelName == "ee"   ) passtrigger = sel.passTriggerSelection ( dataset, "ee" );
+    
+    
+    if (   passtrigger   ) {
+      
+       //*****************************************************************
+      // fill cutflow after trigger selection
+      //*****************************************************************   
+      
+      if(     IChannel == 0){
+        MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    1, datasetName, IsSignal, Dweight[ITypeMC]);    
+        MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 1, datasetName, IsSignal, EventYieldWeightError);
+      }
+      else if(IChannel == 1){
+        MyhistoManager.FillHisto(CutFlow_emu,       "CutFlow_emu",    1, datasetName, IsSignal, Dweight[ITypeMC]);
+        MyhistoManager.FillHisto(ErrCutFlow_emu,    "ErrCutFlow_emu", 1, datasetName, IsSignal, EventYieldWeightError);
+      }
+      else if(IChannel == 2 ) {
+        MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    1, datasetName, IsSignal, Dweight[ITypeMC]);
+        MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 1, datasetName, IsSignal, EventYieldWeightError);
+      }
+      
+ 
+      
+      //*****************************************************************
+      // determine decay channel
+      //***************************************************************** 
+      string decayChannel == "";
+      sel.GetLeptonPair(selMuon, selElectron, decayChannel ); 
+      
+      
+      if(decayChannel != ""){
+      //*****************************************************************
+      // fill cutflow after trigger selection
+      //*****************************************************************   
+      
+      if(     IChannel == 0 && decayChannel == "mumu"){
+        MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    1, datasetName, IsSignal, Dweight[ITypeMC]);    
+        MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 1, datasetName, IsSignal, EventYieldWeightError);
+      }
+      else if(IChannel == 1 && decayChannel == "emu" ){
+        MyhistoManager.FillHisto(CutFlow_emu,       "CutFlow_emu",    1, datasetName, IsSignal, Dweight[ITypeMC]);
+        MyhistoManager.FillHisto(ErrCutFlow_emu,    "ErrCutFlow_emu", 1, datasetName, IsSignal, EventYieldWeightError);
+      }
+      else if(IChannel == 2 && decayChannel == "ee"  ) {
+        MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    1, datasetName, IsSignal, Dweight[ITypeMC]);
+        MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 1, datasetName, IsSignal, EventYieldWeightError);
+      }
+      
+      
+      
+      
+      
+      
+      
+      //*****************************************************************
+      // apply lepton scale factors
+      //*****************************************************************    
+      
+      
+      double LeptonSF      = 0.;
+      double LeptonSFError = 0.;
+      
+      if(applyLeptonSF && !isData){
+        //to do : update to last SF values 
+	if(IChannel == 0 &&  decayChannel== "mumu"){
+	  LeptonSF = sel.getLeptonScaleFactor( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu") 
+	    * sel.getLeptonScaleFactor( selMuon[1].p4.Pt(), selMuon[1].p4.Eta(), "mu");
+	  if(applyLeptonSFUp)
+            LeptonSF = (sel.getLeptonScaleFactor( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu")+sel.getLeptonScaleFactorError( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu"))
+	      * (sel.getLeptonScaleFactor( selMuon[1].p4.Pt(), selMuon[1].p4.Eta(), "mu")+sel.getLeptonScaleFactorError( selMuon[1].p4.Pt(), selMuon[1].p4.Eta(), "mu"));		  
+	  if(applyLeptonSFDown)
+            LeptonSF = (sel.getLeptonScaleFactor( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu")-sel.getLeptonScaleFactorError( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu"))
+	      * (sel.getLeptonScaleFactor( selMuon[1].p4.Pt(), selMuon[1].p4.Eta(), "mu")-sel.getLeptonScaleFactorError( selMuon[1].p4.Pt(), selMuon[1].p4.Eta(), "mu"));		  
+	}
+	if(IChannel == 1 &&  decayChannel== "emu"){
+	  LeptonSF = sel.getLeptonScaleFactor( selMuon[0].p4.Pt()    , selMuon[0].p4.Eta()    , "mu") 
+	    * sel.getLeptonScaleFactor( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e");
+	  if(applyLeptonSFUp)
+            LeptonSF = (sel.getLeptonScaleFactor( selMuon[0].p4.Pt()    , selMuon[0].p4.Eta(),     "mu")+sel.getLeptonScaleFactorError( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu"))
+	      * (sel.getLeptonScaleFactor( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "mu")+sel.getLeptonScaleFactorError( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e"));		  
+	  if(applyLeptonSFDown)
+            LeptonSF = (sel.getLeptonScaleFactor( selMuon[0].p4.Pt()    , selMuon[0].p4.Eta(),     "mu")-sel.getLeptonScaleFactorError( selMuon[0].p4.Pt(), selMuon[0].p4.Eta(), "mu"))
+	      * (sel.getLeptonScaleFactor( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "mu")-sel.getLeptonScaleFactorError( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e"));		  
+	}
+	if(IChannel == 2 &&  decayChannel== "ee"){
+	  LeptonSF = sel.getLeptonScaleFactor( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e") 
+	    * sel.getLeptonScaleFactor( selElectron[1].p4.Pt(), selElectron[1].p4.Eta(), "e");
+	  if(applyLeptonSFUp)
+            LeptonSF = (sel.getLeptonScaleFactor( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e")+sel.getLeptonScaleFactorError( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e"))
+	      * (sel.getLeptonScaleFactor( selElectron[1].p4.Pt(), selElectron[1].p4.Eta(), "e")+sel.getLeptonScaleFactorError( selElectron[1].p4.Pt(), selElectron[1].p4.Eta(), "e"));		  
+	  if(applyLeptonSFDown)
+            LeptonSF = (sel.getLeptonScaleFactor( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e")-sel.getLeptonScaleFactorError( selElectron[0].p4.Pt(), selElectron[0].p4.Eta(), "e"))
+	      * (sel.getLeptonScaleFactor( selElectron[1].p4.Pt(), selElectron[1].p4.Eta(), "e")-sel.getLeptonScaleFactorError( selElectron[1].p4.Pt(), selElectron[1].p4.Eta(), "e"));		  
+	}
+	Dweight[ITypeMC]*=LeptonSF;
+      }
+      
+      
+      
+      
+      
+      //*****************************************************************
+      // apply trigger scale factors
+      //*****************************************************************  
+      //to do update to pT eta dependent SF ?
+      if(applyTrigger  &&  !isData ){	
+	
+	if(IChannel == 0 && cand3leptonChannel == "mumu")Dweight[ITypeMC]*=SF_trig_mumu;
+	if(IChannel == 1 && cand3leptonChannel == "emu" )Dweight[ITypeMC]*=SF_trig_emu;
+	if(IChannel == 2 && cand3leptonChannel == "ee"  )Dweight[ITypeMC]*=SF_trig_ee;
+	
+      }
+      
+      vector<NTJet>        selJets = sel.GetSelectedJets(selMuons, selElectrons, applyJES, scale, applyJER, ResFactor);
+      double theMET = met.p2.Mod();
+      
+      
+      
+      //calculate btagging
+      //update btag SF
+      int NBtaggedJets    = 0;
+      int idxBtag         = 0;
+      int AlgoBtag        = sel.GetbtagAlgo();
+      float btagDiscriCut = sel.GetbtagDiscriCut ();
+      
+      bool foundASelBjet = 0;
+      for(unsigned int ijet = 0; ijet < selJets.size(); ijet++){
+	if(abs(selJets[ijet].partonFlavour)==5 ){
+	  foundASelBjet = true;
+	}
+	if ( AlgoBtag==0 &&  selJets[ijet].bTag["trackCountingHighEffBJetTags"]	 >= btagDiscriCut) NBtaggedJets++;
+	if ( AlgoBtag==1 &&  selJets[ijet].bTag["simpleSecondaryVertexHighEffBJetTags"] >= btagDiscriCut) NBtaggedJets++;
+	if ( AlgoBtag==2 &&  selJets[ijet].bTag["trackCountingHighPurBJetTags"]	 >= btagDiscriCut) NBtaggedJets++;
+	if ( AlgoBtag==3 &&  selJets[ijet].bTag["simpleSecondaryVertexHighPurBJetTags"] >= btagDiscriCut) NBtaggedJets++;
+	if ( AlgoBtag==4 &&  selJets[ijet].bTag["jetProbabilityBJetTags"]  	         >= btagDiscriCut) NBtaggedJets++;
+	if ( AlgoBtag==5 &&  selJets[ijet].bTag["jetBProbabilityBJetTags"] 	         >= btagDiscriCut) NBtaggedJets++;
+	if ( AlgoBtag==6 &&  selJets[ijet].bTag["combinedSecondaryVertexBJetTags"]      >= btagDiscriCut){
+	  NBtaggedJets++;
+	  idxBtag = ijet;
+	}
+      }  
+      
+      
+      // initialisation of weightb
+      vector < float >weightb;
+      weightb.push_back (1.);
+      weightb.push_back (1.);
+      weightb.push_back (1.);
+      weightb.push_back (1.);
+      weightb.push_back (1.);
+      
+      if (sel.GetFlagb() == 1) {	// check if the weightb computation is needed or not (depending on "flag" in xml)
+	if (!isData) {	 // to be applied only for MC 
+	  vector < float >weight_temp = sel.GetSFBweight().GetWeigth4BSel (sel.GetMethodb(), sel.GetSystb(),selJets);
+	  weightb[0] = weight_temp[0];  //weight of the event (depending on "NofBtagJets" in xml)
+	  weightb[1] = weight_temp[1];  //proba 0 jet
+	  weightb[2] = weight_temp[2];  //proba 1 jet
+	  weightb[3] = weight_temp[3];  //proba 2 jets
+	  weightb[4] = weight_temp[4];  //proba at least 3 jets		
+	}
+      }
+      
+      
+      double btagweight_1selBtag = 1;
+      double btagweight_2selBtag = 1;
+      if(!isData) {
+        btagweight_1selBtag = 1-weightb[1];
+        btagweight_2selBtag = weightb[0];
+      }
+      
+      
+      
+      
+      
+      
+      } // end selection lepton pair
+    } // end selection trigger
+  } //end loops on datasets
+  
+  
+  return kTRUE;
+}
+
+//_____________________________________________________________________________
+void ProofSelectorMyCutFlow::SlaveTerminate()
+{
+  // The SlaveTerminate() function is called after all entries or objects
+  // have been processed. When running with PROOF SlaveTerminate() is called
+  // on each slave server.
+  
+  if(fProofFile) fProofFile->Print();
+  if (fFile) {
+    Bool_t cleanup = kFALSE;
+    TDirectory *savedir = gDirectory;
+    fFile->cd();
+    
+  MyhistoManager.WriteMyHisto(SelABjet, "all");
+  MyhistoManager.WriteMyHisto(SelABjet_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(Ntrilept_mumumu, "all");
+  MyhistoManager.WriteMyHisto(Ntrileptnoniso_mumumu, "all");
+  
+   
+  MyhistoManager.WriteMyHisto(Nvertex, "all");  
+  
+  MyhistoManager.WriteMyHisto(CutFlow_mumumu, "all" );
+  MyhistoManager.WriteMyHisto(CutFlow_mumue,  "all" );
+  MyhistoManager.WriteMyHisto(CutFlow_eemu,   "all" );
+  MyhistoManager.WriteMyHisto(CutFlow_eee,    "all" );
+  
+  
+  
+  MyhistoManager.WriteMyHisto(PU_before_mumumu, "all");  
+  MyhistoManager.WriteMyHisto(PU_before_mumue, "all");  
+  MyhistoManager.WriteMyHisto(PU_before_eemu, "all");  
+  MyhistoManager.WriteMyHisto(PU_before_eee, "all");  
+
+  MyhistoManager.WriteMyHisto(PU_intime_mumumu, "all");  
+  MyhistoManager.WriteMyHisto(PU_intime_mumue, "all");  
+  MyhistoManager.WriteMyHisto(PU_intime_eemu, "all");  
+  MyhistoManager.WriteMyHisto(PU_intime_eee, "all");  
+
+  MyhistoManager.WriteMyHisto(PU_after_mumumu, "all");  
+  MyhistoManager.WriteMyHisto(PU_after_mumue, "all");  
+  MyhistoManager.WriteMyHisto(PU_after_eemu, "all");  
+  MyhistoManager.WriteMyHisto(PU_after_eee, "all");  
+  
+  
+  MyhistoManager.WriteMyHisto(NVtx_mumumu, "all");  
+  MyhistoManager.WriteMyHisto(NVtx_mumue, "all");  
+  MyhistoManager.WriteMyHisto(NVtx_eemu, "all");  
+  MyhistoManager.WriteMyHisto(NVtx_eee, "all");  
+  
+  MyhistoManager.WriteMyHisto(Nvtx_mumumu_afterleptsel, "all" );
+  MyhistoManager.WriteMyHisto(Nvtx_mumue_afterleptsel , "all" );
+  MyhistoManager.WriteMyHisto(Nvtx_eemu_afterleptsel  , "all" );
+  MyhistoManager.WriteMyHisto(Nvtx_eee_afterleptsel   , "all" );
+  
+  
+  MyhistoManager.WriteMyHisto(ErrCutFlow_mumumu,  "all");
+  MyhistoManager.WriteMyHisto(ErrCutFlow_mumue,   "all");
+  MyhistoManager.WriteMyHisto(ErrCutFlow_eemu,    "all");
+  MyhistoManager.WriteMyHisto(ErrCutFlow_eee,     "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto(Mt_mumumu_afterbjetsel, "all"); 
+  MyhistoManager.WriteMyHisto(Mt_mumue_afterbjetsel , "all");
+  MyhistoManager.WriteMyHisto(Mt_eemu_afterbjetsel  , "all");
+  MyhistoManager.WriteMyHisto(Mt_eee_afterbjetsel   , "all");
+    
+  MyhistoManager.WriteMyHisto(Mt_mumumu_afterbjetveto, "all"); 
+  MyhistoManager.WriteMyHisto(Mt_mumue_afterbjetveto , "all");
+  MyhistoManager.WriteMyHisto(Mt_eemu_afterbjetveto  , "all");
+  MyhistoManager.WriteMyHisto(Mt_eee_afterbjetveto   , "all");
+    
+    
+  
+  MyhistoManager.WriteMyHisto(NJet_mumumu_afterZsel,"all");
+  MyhistoManager.WriteMyHisto(NJet_mumue_afterZsel, "all");
+  MyhistoManager.WriteMyHisto(NJet_eemu_afterZsel,  "all");
+  MyhistoManager.WriteMyHisto(NJet_eee_afterZsel,   "all");
+  
+  
+  MyhistoManager.WriteMyHisto(NJet_mumumu_afterbsel,"all");
+  MyhistoManager.WriteMyHisto(NJet_mumue_afterbsel, "all");
+  MyhistoManager.WriteMyHisto(NJet_eemu_afterbsel,  "all");
+  MyhistoManager.WriteMyHisto(NJet_eee_afterbsel,   "all");
+  
+  
+  MyhistoManager.WriteMyHisto(NLept_mumumu_afterbsel,"all");
+  MyhistoManager.WriteMyHisto(NLept_mumue_afterbsel, "all");
+  MyhistoManager.WriteMyHisto(NLept_eemu_afterbsel,  "all");
+  MyhistoManager.WriteMyHisto(NLept_eee_afterbsel,   "all");
+  
+  MyhistoManager.WriteMyHisto(NBJet_mumumu_afterZsel, "all");
+  MyhistoManager.WriteMyHisto(NBJet_mumue_afterZsel,  "all");
+  MyhistoManager.WriteMyHisto(NBJet_eemu_afterZsel,   "all");
+  MyhistoManager.WriteMyHisto(NBJet_eee_afterZsel,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(NBJet_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(NBJet_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(NBJet_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(NBJet_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(InvM_ll_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(InvM_ll_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eee_afterleptsel_mWT110,    "all");
+  
+  MyhistoManager.WriteMyHisto(InvM_ll_mumumu_afterleptsel_lowbin, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_mumue_afterleptsel_lowbin,  "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eemu_afterleptsel_lowbin,   "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eee_afterleptsel_lowbin,    "all");
+    
+  
+  MyhistoManager.WriteMyHisto(InvM_ll_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(InvM_ll_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eee_afterbjetsel,    "all");
+    
+    
+  MyhistoManager.WriteMyHisto(LeptPt_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(LeptPt_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptPt_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptPt_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptPt_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(LeptPt_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptPt_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptPt_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptPt_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(LeptPt_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptPt_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptPt_eee_afterbjetsel,    "all");
+  
+    
+    
+  MyhistoManager.WriteMyHisto(LeptZPt_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptZPt_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptZPt_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptZPt_eee_afterbjetsel,    "all");
+  
+    
+    
+  MyhistoManager.WriteMyHisto(LeptWPt_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptWPt_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptWPt_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eee_afterbjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(LeptWPt_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eee_afterbjetveto,    "all");
+  
+    
+    
+  MyhistoManager.WriteMyHisto(LeptWPt_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(LeptWPt_eee_afterleptsel_mWT110,    "all");
+  
+    
+  MyhistoManager.WriteMyHisto(JetPt_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(JetPt_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(JetPt_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(JetPt_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(JetPt_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(JetPt_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(JetPt_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(JetPt_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(JetPt_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(JetPt_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(JetPt_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(JetPt_eee_afterbjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(JetPt_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(JetPt_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(JetPt_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(JetPt_eee_afterbjetveto,    "all");
+  
+    
+    
+  MyhistoManager.WriteMyHisto(JetEta_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(JetEta_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(JetEta_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(JetEta_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(JetEta_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(JetEta_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(JetEta_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(JetEta_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(JetEta_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(JetEta_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(JetEta_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(JetEta_eee_afterbjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(JetEta_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(JetEta_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(JetEta_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(JetEta_eee_afterbjetveto,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(HT_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(HT_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(HT_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(HT_eee_afterleptsel,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(HT_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(HT_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(HT_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(HT_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(HT_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(HT_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(HT_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(HT_eee_afterbjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(HT_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(HT_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(HT_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(HT_eee_afterbjetveto,    "all");
+  
+  
+  
+  
+  
+  MyhistoManager.WriteMyHisto(MET_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(MET_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(MET_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(MET_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(MET_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(MET_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(MET_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(MET_eee_afterleptsel_mWT110,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(MET_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(MET_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(MET_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(MET_eee_afterjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(MET_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(MET_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(MET_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(MET_eee_afterbjetsel,    "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto(InvM_ll_mumumu_afterleptsel_highSumPt, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_mumue_afterleptsel_highSumPt, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eemu_afterleptsel_highSumPt, "all");
+  MyhistoManager.WriteMyHisto(InvM_ll_eee_afterleptsel_highSumPt, "all");
+  
+  
+  
+  
+  MyhistoManager.WriteMyHisto(Asym_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(Asym_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(Asym_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(Asym_eee_afterbjetsel,    "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eee_afterbjetsel,    "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eee_afterbjetveto,    "all");
+  
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eee_afterleptsel,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumumu_afterleptsel_nojet, "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_mumue_afterleptsel_nojet,  "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eemu_afterleptsel_nojet,   "all");
+  MyhistoManager.WriteMyHisto(RecoPtZ_eee_afterleptsel_nojet,    "all");
+  
+  MyhistoManager.WriteMyHisto(RecoTopMass_mumumu_afterbjetsel  , "all");
+  MyhistoManager.WriteMyHisto(RecoTopMass_mumue_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(RecoTopMass_eemu_afterbjetsel,    "all");
+  MyhistoManager.WriteMyHisto(RecoTopMass_eee_afterbjetsel,     "all");
+  
+  MyhistoManager.WriteMyHisto(RecoTopMass_mumumu_afterbjetveto  , "all");
+  MyhistoManager.WriteMyHisto(RecoTopMass_mumue_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(RecoTopMass_eemu_afterbjetveto,    "all");
+  MyhistoManager.WriteMyHisto(RecoTopMass_eee_afterbjetveto,     "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto(deltaPhilb_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(deltaPhilb_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(deltaPhilb_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(deltaPhilb_eee_afterbjetsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(deltaPhilj_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(deltaPhilj_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(deltaPhilj_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(deltaPhilj_eee_afterbjetveto,    "all");
+  
+  MyhistoManager.WriteMyHisto(deltaR_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(deltaR_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(deltaR_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(deltaR_eee_afterleptsel,    "all");
+  
+    
+  MyhistoManager.WriteMyHisto(WmissAssing_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(WmissAssing_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(WmissAssing_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(WmissAssing_eee_afterleptsel,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(DijetInvM_mumumu_afterleptsel_inZpeak,    "all");
+  MyhistoManager.WriteMyHisto(DijetInvM_mumue_afterleptsel_inZpeak,     "all");
+  MyhistoManager.WriteMyHisto(DijetInvM_eemu_afterleptsel_inZpeak,      "all");
+  MyhistoManager.WriteMyHisto(DijetInvM_eee_afterleptsel_inZpeak,       "all");
+  
+  
+  
+  
+  
+  
+  MyhistoManager.WriteMyHisto(mWT_mumumu_afterbjetveto, "all");
+  MyhistoManager.WriteMyHisto(mWT_mumue_afterbjetveto,  "all");
+  MyhistoManager.WriteMyHisto(mWT_eemu_afterbjetveto,   "all");
+  MyhistoManager.WriteMyHisto(mWT_eee_afterbjetveto,    "all");
+
+  MyhistoManager.WriteMyHisto(mWT_mumumu_afterbjetsel, "all");
+  MyhistoManager.WriteMyHisto(mWT_mumue_afterbjetsel,  "all");
+  MyhistoManager.WriteMyHisto(mWT_eemu_afterbjetsel,   "all");
+  MyhistoManager.WriteMyHisto(mWT_eee_afterbjetsel,    "all");
+
+  MyhistoManager.WriteMyHisto(mWT_mumumu_afterjetsel, "all");
+  MyhistoManager.WriteMyHisto(mWT_mumue_afterjetsel,  "all");
+  MyhistoManager.WriteMyHisto(mWT_eemu_afterjetsel,   "all");
+  MyhistoManager.WriteMyHisto(mWT_eee_afterjetsel,    "all");
+
+  MyhistoManager.WriteMyHisto(mWT_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(mWT_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(mWT_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(mWT_eee_afterleptsel,    "all");
+
+  MyhistoManager.WriteMyHisto(Charge_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto(Charge_mumue_afterleptsel,  "all");
+  MyhistoManager.WriteMyHisto(Charge_eemu_afterleptsel,   "all");
+  MyhistoManager.WriteMyHisto(Charge_eee_afterleptsel,    "all");
+  
+  MyhistoManager.WriteMyHisto(Charge_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(Charge_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(Charge_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(Charge_eee_afterleptsel_mWT110,    "all");
+  
+  
+  
+  
+  
+  MyhistoManager.WriteMyHisto(deltaRLeptJet_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(deltaRLeptJet_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(deltaRLeptJet_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(deltaRLeptJet_eee_afterleptsel_mWT110,    "all");
+  
+  MyhistoManager.WriteMyHisto(deltaRLeptMet_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(deltaRLeptMet_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(deltaRLeptMet_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(deltaRLeptMet_eee_afterleptsel_mWT110,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(NJet_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(NJet_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(NJet_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(NJet_eee_afterleptsel_mWT110,    "all");
+  
+  
+  
+  
+  MyhistoManager.WriteMyHisto(NBJet_mumumu_afterleptsel_mWT110, "all");
+  MyhistoManager.WriteMyHisto(NBJet_mumue_afterleptsel_mWT110,  "all");
+  MyhistoManager.WriteMyHisto(NBJet_eemu_afterleptsel_mWT110,   "all");
+  MyhistoManager.WriteMyHisto(NBJet_eee_afterleptsel_mWT110,    "all");
+  
+  
+  MyhistoManager.WriteMyHisto(NBJet_mumumu_afterjetsel_bjets, "all");
+  MyhistoManager.WriteMyHisto(NBJet_mumue_afterjetsel_bjets,  "all"); 
+  MyhistoManager.WriteMyHisto(NBJet_eemu_afterjetsel_bjets,   "all");  
+  MyhistoManager.WriteMyHisto(NBJet_eee_afterjetsel_bjets,    "all");   
+
+
+  MyhistoManager.WriteMyHisto(NBJet_mumumu_afterjetsel_cjets, "all");
+  MyhistoManager.WriteMyHisto(NBJet_mumue_afterjetsel_cjets,  "all"); 
+  MyhistoManager.WriteMyHisto(NBJet_eemu_afterjetsel_cjets,   "all");  
+  MyhistoManager.WriteMyHisto(NBJet_eee_afterjetsel_cjets,    "all");   
+
+
+  MyhistoManager.WriteMyHisto(NBJet_mumumu_afterjetsel_ljets, "all");
+  MyhistoManager.WriteMyHisto(NBJet_mumue_afterjetsel_ljets,  "all"); 
+  MyhistoManager.WriteMyHisto(NBJet_eemu_afterjetsel_ljets,   "all");  
+  MyhistoManager.WriteMyHisto(NBJet_eee_afterjetsel_ljets ,   "all");  
+
+  
+  
+  MyhistoManager.WriteMyHisto(BJetDiscri_mumumu_afterjetsel_bjets,    "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_mumue_afterjetsel_bjets,     "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_eemu_afterjetsel_bjets,      "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_eee_afterjetsel_bjets,       "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto(BJetDiscri_mumumu_afterjetsel_cjets,    "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_mumue_afterjetsel_cjets,     "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_eemu_afterjetsel_cjets,      "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_eee_afterjetsel_cjets,       "all");
+  
+  
+  MyhistoManager.WriteMyHisto(BJetDiscri_mumumu_afterjetsel_ljets,    "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_mumue_afterjetsel_ljets,     "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_eemu_afterjetsel_ljets,      "all");
+  MyhistoManager.WriteMyHisto(BJetDiscri_eee_afterjetsel_ljets,       "all");
+  
+  
+  
+  
+  MyhistoManager.WriteMyHisto2D(HT_vs_MET_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_MET_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_MET_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_MET_eee_afterleptsel, "all");
+ 
+  MyhistoManager.WriteMyHisto2D(HT_vs_NJet_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_NJet_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_NJet_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_NJet_eee_afterleptsel, "all");
+ 
+  MyhistoManager.WriteMyHisto2D(HT_vs_NBJet_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_NBJet_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_NBJet_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_NBJet_eee_afterleptsel, "all");
+ 
+  MyhistoManager.WriteMyHisto2D(HT_vs_LeptPt_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_LeptPt_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_LeptPt_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_LeptPt_eee_afterleptsel, "all");
+ 
+  MyhistoManager.WriteMyHisto2D(HT_vs_JetPt_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_JetPt_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_JetPt_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_JetPt_eee_afterleptsel, "all");
+  
+  
+  
+  MyhistoManager.WriteMyHisto2D(HT_vs_Mll_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_Mll_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_Mll_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(HT_vs_Mll_eee_afterleptsel, "all");
+  
+  MyhistoManager.WriteMyHisto2D(InvM_ll_vs_mWT_mumumu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(InvM_ll_vs_mWT_mumue_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(InvM_ll_vs_mWT_eemu_afterleptsel, "all");
+  MyhistoManager.WriteMyHisto2D(InvM_ll_vs_mWT_eee_afterleptsel, "all");
+  
+  
+  
+  TheTree->Write();
+  
+  
+  
+   //The following line is mandatory to copy everythin in a common RootFile
+    fOutput->Add(fProofFile);
+    
+  CutFlow_mumumu.clear();
+  CutFlow_mumue.clear();
+  CutFlow_eemu.clear();
+  CutFlow_eee.clear();
+  ErrCutFlow_mumumu.clear();
+  ErrCutFlow_mumue.clear();
+  ErrCutFlow_eemu.clear();
+  ErrCutFlow_eee.clear();
+  
+  
+  
+  Ntrilept_mumumu.clear();
+  Ntrileptnoniso_mumumu.clear();
+ 
+  
+  
+  DijetInvM_mumumu_afterleptsel_inZpeak.clear();
+  DijetInvM_mumue_afterleptsel_inZpeak.clear();
+  DijetInvM_eemu_afterleptsel_inZpeak.clear();
+  DijetInvM_eee_afterleptsel_inZpeak.clear();
+  
+  
+  
+  Mt_mumumu_afterbjetsel.clear();
+  Mt_mumue_afterbjetsel.clear();
+  Mt_eemu_afterbjetsel.clear();
+  Mt_eee_afterbjetsel.clear();
+   
+  Mt_mumumu_afterbjetveto.clear();
+  Mt_mumue_afterbjetveto.clear();
+  Mt_eemu_afterbjetveto.clear();
+  Mt_eee_afterbjetveto.clear();
+   
+  
+  NJet_mumumu_afterZsel.clear();
+  NJet_mumue_afterZsel.clear();
+  NJet_eemu_afterZsel.clear();
+  NJet_eee_afterZsel.clear();
+  
+  
+  NJet_mumumu_afterbsel.clear();
+  NJet_mumue_afterbsel.clear();
+  NJet_eemu_afterbsel.clear();
+  NJet_eee_afterbsel.clear();
+  
+  NJet_mumumu_afterleptsel_mWT110.clear();
+  NJet_mumue_afterleptsel_mWT110.clear();
+  NJet_eemu_afterleptsel_mWT110.clear();
+  NJet_eee_afterleptsel_mWT110.clear();
+  
+  
+  NLept_mumumu_afterbsel.clear();
+  NLept_mumue_afterbsel.clear();
+  NLept_eemu_afterbsel.clear();
+  NLept_eee_afterbsel.clear();
+  
+  
+  NBJet_mumumu_afterZsel.clear();
+  NBJet_mumue_afterZsel.clear();
+  NBJet_eemu_afterZsel.clear();
+  NBJet_eee_afterZsel.clear();
+  
+  
+  NBJet_mumumu_afterjetsel.clear();
+  NBJet_mumue_afterjetsel.clear();
+  NBJet_eemu_afterjetsel.clear();
+  NBJet_eee_afterjetsel.clear();
+  
+  
+  
+  NBJet_mumumu_afterleptsel_mWT110.clear();
+  NBJet_mumue_afterleptsel_mWT110.clear();
+  NBJet_eemu_afterleptsel_mWT110.clear();
+  NBJet_eee_afterleptsel_mWT110.clear();
+  
+  //to be filled
+  
+  Nvtx_mumumu_afterleptsel.clear();
+  Nvtx_mumue_afterleptsel.clear();
+  Nvtx_eemu_afterleptsel.clear();
+  Nvtx_eee_afterleptsel.clear();
+  
+  InvM_ll_mumumu_afterleptsel.clear();
+  InvM_ll_mumue_afterleptsel.clear();
+  InvM_ll_eemu_afterleptsel.clear();
+  InvM_ll_eee_afterleptsel.clear();
+  
+  InvM_ll_mumumu_afterleptsel_mWT110.clear();
+  InvM_ll_mumue_afterleptsel_mWT110.clear();
+  InvM_ll_eemu_afterleptsel_mWT110.clear();
+  InvM_ll_eee_afterleptsel_mWT110.clear();
+  
+  InvM_ll_mumumu_afterleptsel_lowbin.clear();
+  InvM_ll_mumue_afterleptsel_lowbin.clear();
+  InvM_ll_eemu_afterleptsel_lowbin.clear();
+  InvM_ll_eee_afterleptsel_lowbin.clear();
+  
+  InvM_ll_mumumu_afterleptsel_highSumPt.clear();
+  InvM_ll_mumue_afterleptsel_highSumPt.clear();
+  InvM_ll_eemu_afterleptsel_highSumPt.clear();
+  InvM_ll_eee_afterleptsel_highSumPt.clear();
+  
+  InvM_ll_mumumu_afterjetsel.clear();
+  InvM_ll_mumue_afterjetsel.clear();
+  InvM_ll_eemu_afterjetsel.clear();
+  InvM_ll_eee_afterjetsel.clear();
+  
+  InvM_ll_mumumu_afterbjetsel.clear();
+  InvM_ll_mumue_afterbjetsel.clear();
+  InvM_ll_eemu_afterbjetsel.clear();
+  InvM_ll_eee_afterbjetsel.clear();
+  
+  LeptPt_mumumu_afterleptsel.clear();
+  LeptPt_mumue_afterleptsel.clear();
+  LeptPt_eemu_afterleptsel.clear();
+  LeptPt_eee_afterleptsel.clear();
+  
+  LeptPt_mumumu_afterjetsel.clear();
+  LeptPt_mumue_afterjetsel.clear();
+  LeptPt_eemu_afterjetsel.clear();
+  LeptPt_eee_afterjetsel.clear();
+  
+  LeptPt_mumumu_afterbjetsel.clear();
+  LeptPt_mumue_afterbjetsel.clear();
+  LeptPt_eemu_afterbjetsel.clear();
+  LeptPt_eee_afterbjetsel.clear();
+  
+  
+  
+  LeptZPt_mumumu_afterleptsel.clear();
+  LeptZPt_mumue_afterleptsel.clear();
+  LeptZPt_eemu_afterleptsel.clear();
+  LeptZPt_eee_afterleptsel.clear();
+  
+  LeptZPt_mumumu_afterjetsel.clear();
+  LeptZPt_mumue_afterjetsel.clear();
+  LeptZPt_eemu_afterjetsel.clear();
+  LeptZPt_eee_afterjetsel.clear();
+  
+  LeptZPt_mumumu_afterbjetsel.clear();
+  LeptZPt_mumue_afterbjetsel.clear();
+  LeptZPt_eemu_afterbjetsel.clear();
+  LeptZPt_eee_afterbjetsel.clear();
+  
+  
+  
+  LeptWPt_mumumu_afterleptsel.clear();
+  LeptWPt_mumue_afterleptsel.clear();
+  LeptWPt_eemu_afterleptsel.clear();
+  LeptWPt_eee_afterleptsel.clear();
+  
+  LeptWPt_mumumu_afterjetsel.clear();
+  LeptWPt_mumue_afterjetsel.clear();
+  LeptWPt_eemu_afterjetsel.clear();
+  LeptWPt_eee_afterjetsel.clear();
+  
+  LeptWPt_mumumu_afterbjetsel.clear();
+  LeptWPt_mumue_afterbjetsel.clear();
+  LeptWPt_eemu_afterbjetsel.clear();
+  LeptWPt_eee_afterbjetsel.clear();
+  
+  LeptWPt_mumumu_afterbjetveto.clear();
+  LeptWPt_mumue_afterbjetveto.clear();
+  LeptWPt_eemu_afterbjetveto.clear();
+  LeptWPt_eee_afterbjetveto.clear();
+  
+  
+  LeptWPt_mumumu_afterleptsel_mWT110.clear();
+  LeptWPt_mumue_afterleptsel_mWT110.clear();
+  LeptWPt_eemu_afterleptsel_mWT110.clear();
+  LeptWPt_eee_afterleptsel_mWT110.clear();
+  
+  
+  JetPt_mumumu_afterleptsel.clear();
+  JetPt_mumue_afterleptsel.clear();
+  JetPt_eemu_afterleptsel.clear();
+  JetPt_eee_afterleptsel.clear();
+  
+  JetPt_mumumu_afterjetsel.clear();
+  JetPt_mumue_afterjetsel.clear();
+  JetPt_eemu_afterjetsel.clear();
+  JetPt_eee_afterjetsel.clear();
+  
+  JetPt_mumumu_afterbjetsel.clear();
+  JetPt_mumue_afterbjetsel.clear();
+  JetPt_eemu_afterbjetsel.clear();
+  JetPt_eee_afterbjetsel.clear();
+  
+  JetPt_mumumu_afterbjetveto.clear();
+  JetPt_mumue_afterbjetveto.clear();
+  JetPt_eemu_afterbjetveto.clear();
+  JetPt_eee_afterbjetveto.clear();
+  
+  JetEta_mumumu_afterleptsel.clear();
+  JetEta_mumue_afterleptsel.clear();
+  JetEta_eemu_afterleptsel.clear();
+  JetEta_eee_afterleptsel.clear();
+  
+  JetEta_mumumu_afterjetsel.clear();
+  JetEta_mumue_afterjetsel.clear();
+  JetEta_eemu_afterjetsel.clear();
+  JetEta_eee_afterjetsel.clear();
+  
+  JetEta_mumumu_afterbjetsel.clear();
+  JetEta_mumue_afterbjetsel.clear();
+  JetEta_eemu_afterbjetsel.clear();
+  JetEta_eee_afterbjetsel.clear();
+  
+  JetEta_mumumu_afterbjetveto.clear();
+  JetEta_mumue_afterbjetveto.clear();
+  JetEta_eemu_afterbjetveto.clear();
+  JetEta_eee_afterbjetveto.clear();
+  
+  HT_mumumu_afterleptsel.clear();
+  HT_mumue_afterleptsel.clear();
+  HT_eemu_afterleptsel.clear();
+  HT_eee_afterleptsel.clear();
+  
+  
+  HT_mumumu_afterjetsel.clear();
+  HT_mumue_afterjetsel.clear();
+  HT_eemu_afterjetsel.clear();
+  HT_eee_afterjetsel.clear();
+  
+  HT_mumumu_afterbjetsel.clear();
+  HT_mumue_afterbjetsel.clear();
+  HT_eemu_afterbjetsel.clear();
+  HT_eee_afterbjetsel.clear();
+  
+  HT_mumumu_afterbjetveto.clear();
+  HT_mumue_afterbjetveto.clear();
+  HT_eemu_afterbjetveto.clear();
+  HT_eee_afterbjetveto.clear();
+  
+  
+  
+  
+  
+  MET_mumumu_afterleptsel.clear();
+  MET_mumue_afterleptsel.clear();
+  MET_eemu_afterleptsel.clear();
+  MET_eee_afterleptsel.clear();
+  
+  
+  
+  MET_mumumu_afterleptsel_mWT110.clear();
+  MET_mumue_afterleptsel_mWT110.clear();
+  MET_eemu_afterleptsel_mWT110.clear();
+  MET_eee_afterleptsel_mWT110.clear();
+  
+  
+  MET_mumumu_afterjetsel.clear();
+  MET_mumue_afterjetsel.clear();
+  MET_eemu_afterjetsel.clear();
+  MET_eee_afterjetsel.clear();
+  
+  MET_mumumu_afterbjetsel.clear();
+  MET_mumue_afterbjetsel.clear();
+  MET_eemu_afterbjetsel.clear();
+  MET_eee_afterbjetsel.clear();
+  
+  Asym_mumumu_afterbjetsel.clear();
+  Asym_mumue_afterbjetsel.clear();
+  Asym_eemu_afterbjetsel.clear();
+  Asym_eee_afterbjetsel.clear();
+  
+  
+  
+  mWT_mumumu_afterjetsel.clear();
+  mWT_mumue_afterjetsel.clear();
+  mWT_eemu_afterjetsel.clear();
+  mWT_eee_afterjetsel.clear();
+  
+  
+  
+  RecoPtZ_mumumu_afterbjetsel.clear();
+  RecoPtZ_mumue_afterbjetsel.clear();
+  RecoPtZ_eemu_afterbjetsel.clear();
+  RecoPtZ_eee_afterbjetsel.clear();
+  
+  RecoPtZ_mumumu_afterbjetveto.clear();
+  RecoPtZ_mumue_afterbjetveto.clear();
+  RecoPtZ_eemu_afterbjetveto.clear();
+  RecoPtZ_eee_afterbjetveto.clear();
+  
+  
+  RecoPtZ_mumumu_afterleptsel.clear();
+  RecoPtZ_mumue_afterleptsel.clear();
+  RecoPtZ_eemu_afterleptsel.clear();
+  RecoPtZ_eee_afterleptsel.clear();
+  
+  
+  RecoPtZ_mumumu_afterleptsel_nojet.clear();
+  RecoPtZ_mumue_afterleptsel_nojet.clear();
+  RecoPtZ_eemu_afterleptsel_nojet.clear();
+  RecoPtZ_eee_afterleptsel_nojet.clear();
+  
+  
+  RecoTopMass_mumumu_afterbjetsel.clear();
+  RecoTopMass_mumue_afterbjetsel.clear();
+  RecoTopMass_eemu_afterbjetsel.clear();
+  RecoTopMass_eee_afterbjetsel.clear();
+  
+  RecoTopMass_mumumu_afterbjetveto.clear();
+  RecoTopMass_mumue_afterbjetveto.clear();
+  RecoTopMass_eemu_afterbjetveto.clear();
+  RecoTopMass_eee_afterbjetveto.clear();
+  
+  
+  deltaPhilb_mumumu_afterbjetsel.clear();
+  deltaPhilb_mumue_afterbjetsel.clear();
+  deltaPhilb_eemu_afterbjetsel.clear();
+  deltaPhilb_eee_afterbjetsel.clear();
+  
+  deltaPhilj_mumumu_afterbjetveto.clear();
+  deltaPhilj_mumue_afterbjetveto.clear();
+  deltaPhilj_eemu_afterbjetveto.clear();
+  deltaPhilj_eee_afterbjetveto.clear();
+  
+  
+  
+  
+  deltaR_mumumu_afterleptsel.clear();
+  deltaR_mumue_afterleptsel.clear();
+  deltaR_eemu_afterleptsel.clear();
+  deltaR_eee_afterleptsel.clear();
+  
+  
+  
+  deltaRLeptJet_mumumu_afterleptsel_mWT110.clear();
+  deltaRLeptJet_mumue_afterleptsel_mWT110.clear();
+  deltaRLeptJet_eemu_afterleptsel_mWT110.clear();
+  deltaRLeptJet_eee_afterleptsel_mWT110.clear();
+  
+  deltaRLeptMet_mumumu_afterleptsel_mWT110.clear();
+  deltaRLeptMet_mumue_afterleptsel_mWT110.clear();
+  deltaRLeptMet_eemu_afterleptsel_mWT110.clear();
+  deltaRLeptMet_eee_afterleptsel_mWT110.clear();
+  
+  
+  
+  WmissAssing_mumumu_afterleptsel.clear();
+  WmissAssing_mumue_afterleptsel.clear();
+  WmissAssing_eemu_afterleptsel.clear();
+  WmissAssing_eee_afterleptsel.clear();
+  
+  
+  mWT_mumumu_afterleptsel.clear();
+  mWT_mumue_afterleptsel.clear();
+  mWT_eemu_afterleptsel.clear();
+  mWT_eee_afterleptsel.clear();
+  
+  
+  mWT_mumumu_afterbjetsel.clear();
+  mWT_mumue_afterbjetsel.clear();
+  mWT_eemu_afterbjetsel.clear();
+  mWT_eee_afterbjetsel.clear();
+  
+  mWT_mumumu_afterbjetveto.clear();
+  mWT_mumue_afterbjetveto.clear();
+  mWT_eemu_afterbjetveto.clear();
+  mWT_eee_afterbjetveto.clear();
+  
+  
+  Charge_mumumu_afterleptsel.clear();
+  Charge_mumue_afterleptsel.clear();
+  Charge_eemu_afterleptsel.clear();
+  Charge_eee_afterleptsel.clear();
+  
+  Charge_mumumu_afterleptsel_mWT110.clear();
+  Charge_mumue_afterleptsel_mWT110.clear();
+  Charge_eemu_afterleptsel_mWT110.clear();
+  Charge_eee_afterleptsel_mWT110.clear();
+  
+ 
+  Nvertex.clear();
+ 
+  InvM_ll_vs_mWT_mumumu_afterleptsel.clear();
+  InvM_ll_vs_mWT_mumue_afterleptsel.clear();
+  InvM_ll_vs_mWT_eemu_afterleptsel.clear();
+  InvM_ll_vs_mWT_eee_afterleptsel.clear();
+  
+  HT_vs_MET_mumumu_afterleptsel.clear();
+  HT_vs_MET_mumue_afterleptsel.clear();
+  HT_vs_MET_eemu_afterleptsel.clear();
+  HT_vs_MET_eee_afterleptsel.clear();
+  
+  HT_vs_NJet_mumumu_afterleptsel.clear();
+  HT_vs_NJet_mumue_afterleptsel.clear();
+  HT_vs_NJet_eemu_afterleptsel.clear();
+  HT_vs_NJet_eee_afterleptsel.clear();
+  
+  HT_vs_NBJet_mumumu_afterleptsel.clear();
+  HT_vs_NBJet_mumue_afterleptsel.clear();
+  HT_vs_NBJet_eemu_afterleptsel.clear();
+  HT_vs_NBJet_eee_afterleptsel.clear();
+  
+  HT_vs_LeptPt_mumumu_afterleptsel.clear();
+  HT_vs_LeptPt_mumue_afterleptsel.clear();
+  HT_vs_LeptPt_eemu_afterleptsel.clear();
+  HT_vs_LeptPt_eee_afterleptsel.clear();
+  
+  HT_vs_JetPt_mumumu_afterleptsel.clear();
+  HT_vs_JetPt_mumue_afterleptsel.clear();
+  HT_vs_JetPt_eemu_afterleptsel.clear();
+  HT_vs_JetPt_eee_afterleptsel.clear();
+  
+  
+  
+  HT_vs_Mll_mumumu_afterleptsel.clear();
+  HT_vs_Mll_mumue_afterleptsel.clear();
+  HT_vs_Mll_eemu_afterleptsel.clear();
+  HT_vs_Mll_eee_afterleptsel.clear();
+  
+  
+  
+  
+  
+  
+    cout << "global lepton SF mumumu : " << nEvents_mumumu/sumSFlept_mumumu << endl;
+    cout << "global lepton SF mumue  : " << nEvents_mumue/sumSFlept_mumue << endl;
+    cout << "global lepton SF eemu   : " << nEvents_eemu/sumSFlept_eemu << endl;
+    cout << "global lepton SF eee    : " << nEvents_eee/sumSFlept_eee << endl;
+  
+  
+  
+  
+  
+  
+    //delete file1  ;
+    //delete hPUMC ;  
+    //delete file2 ; 
+    delete TheTree;
+    delete anaEL;
+    delete LumiWeights;
+  }
+}
+
+//_____________________________________________________________________________
+void ProofSelectorMyCutFlow::Terminate()
+{
+  // The Terminate() function is the last function to be called during
+  // a query. It always runs on the client, it can be used to present
+  // the results graphically or save the results to file.
+  
+  //Possibility to retrieve information from the merged file and perform some calculation or plotting tasks
+  delete event ;
+  //
+  // Create canvas
+  //
+  //TList* list = fOutput->GetOutputList() ;
+  /*
+    TIter next_object((TList*) fOutput);
+    TObject* obj ;
+    cout << "-- Retrieved objects:" << endl ;
+    while ((obj = next_object())) { TString objname = obj->GetName() ; cout << " " << objname << endl ; }
+    
+    if ((fi = dynamic_cast<TFile *>(fOutput->FindObject("blabla.root")))) {
+    cout<<"Warning"<<endl;
+    fi->Write("toto.root");
+    cout<<"Warning"<<endl;
+    }
+    // Final update
+    c1->cd();
+    c1->Update();
+  */
+}
+
+
+
+
+
+
+std::vector<double> ProofSelectorMyCutFlow::determineWeights(TString datasetName, double weightITypeMC, double WeightForBranchingRatio){
+
+    
+    double ITypeMC = 0;
+    double Dweight = 0 ;
+    double EventYieldWeightError = 0 ;
+    double IsSignal = 1 ;
+    
+    Dweight= weightITypeMC * WeightForBranchingRatio;
+    EventYieldWeightError = Dweight*Dweight;
+    
+      
+    if ( datasetName=="TTbar" ) { 
+      ITypeMC = 1; 
+      Dweight= weightITypeMC * WeightForBranchingRatio;
+      EventYieldWeightError = Dweight*Dweight;
+    }
+    else {   
+      IsSignal = -1; 
+      Dweight= weightITypeMC; 
+      EventYieldWeightError = Dweight*Dweight;
+      if ( datasetName=="Zjets" || datasetName=="DYToLL_M10-50"
+	      ) ITypeMC = 2; 
+      else if (  datasetName=="Wjets"  ) ITypeMC = 3;
+      else if ( datasetName=="SingleToptW" || datasetName=="TtW" || datasetName=="TbartW"
+	      || datasetName=="TtWScaleUp" || datasetName=="TtWScaleDown"
+	      || datasetName=="TbartWScaleUp" || datasetName=="TbartWScaleDown") ITypeMC = 4;  
+      else if ( datasetName=="WZ" || datasetName=="WW" || datasetName=="ZZ"  )   ITypeMC = 5; 
+    } 
+    
+    
+    
+    if ( datasetName=="DataDiEG" || datasetName=="DataDiMu" || 
+	 datasetName=="DataDiMuEG" || datasetName=="DataDiEGMu") { 
+      ITypeMC = 100;  
+      Dweight= weightITypeMC; 
+      EventYieldWeightError = Dweight*Dweight;   
+    }
+
+   
+   
+   
+   std::vector< double > thereturn;
+   thereturn.push_back(ITypeMC);
+   thereturn.push_back(Dweight);
+   thereturn.push_back(EventYieldWeightError);
+   thereturn.push_back(IsSignal);
+   
+   
+   return thereturn;
+}
+
+
+
+
+

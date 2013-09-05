@@ -970,17 +970,14 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIso(
         static_cast<unsigned int>(localElectrons[i].ID["simpleEleId90relIso"]) & 0x1
                                 );*/
 				
-    bool hadId = localElectrons[i].hadId(
-        static_cast<unsigned int>(localElectrons[i].ID["simpleEleId90cIso"]) & 0x1
-                                );
-				
-    /*double elecID = localElectrons[i].ID["mvaTrigV0"];
+   				
+    double elecID = localElectrons[i].ID["mvaTrigV0"];
     //std::cout << "hadId " << hadId << endl;
     //std::cout << "localElectrons[i].ID[mvaTrigV0] " <<  localElectrons[i].ID["mvaTrigV0"]<< endl;
     
     bool hadId = false;
     if(elecID > 0 && elecID < 1) hadId = true;
-    */
+    
     //useless 
     if (!localElectrons[i].isGsfElectron) continue; 
     if (!hadId)                           continue;
@@ -1978,7 +1975,7 @@ float Selection::GetPUWeight()
 // ----------------------------------------------------------------------------
 void Selection::LoadElScaleFactors()
 {
-  string fileName(getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/electronSF.root"));
+  string fileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/electronSF.root"));
   std::cout<<"Reading the ElScaleFactors file "<<fileName<<endl;
   fexists(fileName, true);
   TFile *f_Data_El = new TFile(fileName.c_str());
@@ -1995,7 +1992,7 @@ void Selection::LoadElScaleFactors()
 // ----------------------------------------------------------------------------
 void Selection::LoadMuScaleFactors()
 {
-  string fileName(getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/muonSF.root"));
+  string fileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/muonSF.root"));
   std::cout<<"Reading the MuScaleFactors file "<<fileName<<endl;
   fexists(fileName, true);
   TFile *f_Data_Mu = new TFile(fileName.c_str());
@@ -2012,7 +2009,7 @@ void Selection::LoadMuScaleFactors()
 // ----------------------------------------------------------------------------
 void Selection::InitJESUnc()
 {
-  string fileName(getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/JESUncMC.root"));
+  string fileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/JESUncMC.root"));
   std::cout<<"Reading the JES Uncertainty file "<<fileName<<endl;
   fexists(fileName, true);
   TFile* f1 = new TFile(fileName.c_str());
@@ -2036,7 +2033,7 @@ void Selection::InitJESUnc (char* jecContrib)
    "PileUpDataMC", "PileUpOOT", "PileUpPt", "PileUpBias", "PileUpJetRate",
    "SubTotalPileUp", "SubTotalRelative", "SubTotalDataMC", "SubTotalPt", "Total"};
 
-  string fileName = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/JEC11_V12_AK5PF_UncertaintySources.txt");
+  string fileName = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/JEC11_V12_AK5PF_UncertaintySources.txt");
   std::cout<<"Reading the JES Uncertainty text file "<<fileName<<endl;
   fexists(fileName, true);
 

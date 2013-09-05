@@ -19,9 +19,9 @@ LD		= g++
 LDFLAGS		= -g -O -Wall -fPIC
 SOFLAGS		= -shared
 
-CXXFLAGS	+= $(ROOTCFLAGS) -I./ -I../../IPHCDataFormat/
-LIBS		= $(ROOTLIBS)  -lEG 
-GLIBS		= $(ROOTGLIBS)
+CXXFLAGS	+= $(ROOTCFLAGS) -I./ -I../../IPHCDataFormat/ -I./LHAPDF/include/
+LIBS		= $(ROOTLIBS)  -lEG   -L./LHAPDF/lib/ -lLHAPDF
+GLIBS		= $(ROOTGLIBS)  
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard Selection/src/*.cc BckgdEstimation/src/*.cc Plots/src/*.cc Measurements/src/*.cc Tools/src/*.cc tinyxml/*.cc EffEstimation/src/*cc)
 HEADERS		= $(wildcard Selection/interface/*.h BckgdEstimation/interface/*.h Plots/interface/*.h Measurements/interface/*.h Tools/interface/*.h tinyxml/*.h EffEstimation/interface/*h)
