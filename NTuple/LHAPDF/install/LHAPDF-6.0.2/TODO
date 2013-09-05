@@ -1,0 +1,201 @@
+/**
+@page todolist Project to-do list
+
+
+LHAPDF6 TODO list
+=================
+
+VERSION 6.0.2
+-------------
+
+- **Build system issues**
+
+   BOOST_DIR variable doesn't work / Boost not found on Mac+Fink?
+
+
+VALIDATION / MIGRATION
+----------------------
+
+- **Put validation plot PDFs on Web**
+
+- **NNPDF2.3 PDF validation (AB)**
+
+   Looks good except at HF Q thresholds, which aren't phenomenologically
+   worrying. The top PDF has a surprising deviation at Q = 200 GeV.
+   => Move remaining NNPDF 2.3 and 2.1 PDFs into validated area.
+
+- **MSTW2008 PDF validation (AB)**
+
+   Mostly done: subgrid migration and interpolation is working.
+   => Approved for now, but still some deviations. ForcePositive needed?
+
+- **HERAPDF validation (SL,AB)**
+
+   Is HERAPDF really just a nearest-point lookup in a fine-spaced grid?!
+
+- **Final CT10 / CT10nlo migrations**
+
+   Need ForcePositive option to get exact behaviours without overshoots (also
+   for CTEQ6L1?). Add a --pos flag to creategrids to make this easier
+   (e.g. should be used for all CTEQ sets and for NNPDF MC sets)
+
+
+
+WRITE PAPER
+-----------
+
+- ** Target at EPJC Tools or CPC?**
+
+   Can put on arXiv before October, but delay publication submission to aim
+   (hope) for for eligibility in *next* UK REF.
+
+- **Note fixed problems**
+
+   Support for different set sizes. alpha_s etc. in multi-set mode. Lambda
+   reporting to PYTHIA. **ADD MORE AS WE REMEMBER THEM**
+
+
+
+VERSION 6.1
+-----------
+
+- **Print out a banner (AB)**
+
+   Requested/suggested by NNPDF. Print out on LHAPDF system and PDF
+   initialisation. Must be disableable via Verbosity = 0, but set default to
+   Verbosity = 1 or 2 (need to also define the verbosity level scheme).
+
+- **Gradient extrapolator for PDF x/Q**
+
+   Keep extrapolating linearly outside the range (in log space).
+
+- **Add a ForcePositive config option (SL)**
+
+   If enabled, return 0 (or 1e-10?) in place of any negative PDF value. Cache
+   config flag value to avoid repeated slow metadata lookups. Should solve
+   problems with negative values due to ipol overshoots in PDFs which should
+   be positive-definite such as CTEQ sets and the NNPDF 2.3 MC PDFs.
+
+- **Add Info/Config/PDFSet and AlphaS mappings to Cython**
+
+  And alphasQ(q) etc. to PDF, plus 2-arg versions of xfxQ(x, q) etc.
+
+- **Add mkPDFs<SMART_PTR> templated vector-filling functions (AB)**
+
+- **Incorporate Mark Sutton's suggestions re. the PDF base class (AB)**
+
+
+VERSION 6.x
+-----------
+
+- **PDF flavor aliasing mechanism**
+
+   e.g. allow anti-flavours to be identical without duplicating their grids in
+   the data files or memory.
+
+- **Optimize the grid PDF interpolator code a bit more**
+
+   Cache log(x), log(Q) between samplings -> log() still accounts for 15% of
+   CPU: can reduce by factor of 13, typically (only one call for a whole flavour
+   interpolation set at the same point).
+
+- **Expose LHAGLUE slots system for C++ use**
+
+   Automatic memory management can be nice for everyone.
+
+- **MRST2004qed migration?**
+
+   Definitely needs special treatment. Even possible?
+
+- **Improved x -> 1 evolution (GW,...)**
+
+   Graeme, etc.: x -> 1 extrapolation should be done carefully to ensure that
+   all PDFs -> 0 at x = 1.0, (usually) without going negative. This probably
+   deserves specialisation beyond generic splines. Graeme will look at what's
+   done in the CTEQ code (other than interpolating in x**0.3)
+
+- **Improved Q -> 0 evolution (GW,...)**
+
+   Graeme also recommends a specialised extrapolation treatment at low Q.
+
+- **Read zipped/tarred PDFs**
+
+   With standard directory structure internally. Maybe
+   https://code.google.com/p/fuse-zip/ or http://sourceforge.net/projects/avf/?
+   Most VFSes seem more designed for CLI use than programmatic ZIP access.
+
+- **Add helper functions for calculating PDF errors on observables**
+
+   Certainly a good thing to provide an example for... maybe it should just be
+   provided as an example? One nice thing is that since we now store a clear
+   ErrorType metadata entry for each PDF set, working out the appropriate error
+   treatment should be easy (I think it's best to not use words like
+   "infallible"!)
+
+
+AS AND WHEN
+-----------
+
+- **Allow use of valence/sea etc. decompositions**
+
+   GridPDF may be inherited from to allow the returned values to be built from
+   separate interpolations of component PDFs such as interpolated valence, sea,
+   or difference PDFs that are combined to make the physical ones. The PDG ID
+   code range for "generator specific" applications may be used, but we'll need
+   to bear in mind that this will mean that the flavor ID list has different
+   meanings and contents for internal and external purposes: maybe the
+   "internal" PDG ID list needs to become part of the grid data header, or can
+   the metadata be used?
+
+- **More aggressive memory and CPU optimisation**
+
+   For example avoiding duplication of x,Q knot arrays between flavors... if
+   this "1D" effect is really significant.
+
+- **Support photon structure functions**
+
+   Need to make use of the P2 and IP2 params. No idea how to even start here...
+
+- **Support nuclear corrections**
+
+   Have to be applyable to all nucleon PDFs, regardless of implementation:
+   probably nuclear PDFs will inherit from PDF (since they are PDFs) and
+   _contain_ a nucleon PDF whose values will be modified before returning.
+
+- **Using std::/boost::function to generically modify the interpolation measures in x, Q (AB)**
+
+- **Use Autoconf's more robust FC_* Fortran function name macros?**
+
+   This would require testing for a Fortran compiler, which we would rather not
+   do... Test for a Fortran compiler unless told not to build LHAGLUE? **These
+   things arguably cause as many problems as they solve!**
+
+- **Separate the x and Q2 inter/extrapolation?**
+
+   Allow mix & match combinations. Would this simplify the code since the
+   1D interpolation methods are very simple and the 2D is built from them?
+
+- **Make GridPDFs not read their info or data blocks until an xf value is requested?!**
+
+   Super-laziness!
+
+- **Speed up interpolation with (opportunistic) GPU and/or threaded interpolation**
+
+   Interpolation of PDFs seems like an ideal use case for PDFs, since it's
+   normal to query for all partons in the set at once: if we can load the
+   relevant ipol anchors for all flavours onto the GPU then we can maybe get a
+   substantial speedup (with Amdahl's Law as the obvious caveat). Good student
+   project...
+
+- **Use HDF5 for the data access?**
+
+   David has more info: I've only ever looked at it in a very rudimentary way,
+   e.g. playing with PyTables. Sounds good in principle: I prefer a *real world*
+   standard to ROOT, anyway ;-) Does it have any string/typed annotation
+   mechanism that we could use?
+
+- **Updated Octave wrapper**
+
+   To come from Phil Ilten
+
+*/
