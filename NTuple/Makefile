@@ -19,8 +19,8 @@ LD		= g++
 LDFLAGS		= -g -O -Wall -fPIC
 SOFLAGS		= -shared
 
-CXXFLAGS	+= $(ROOTCFLAGS) -I./ -I../../IPHCDataFormat/ -I./LHAPDF/include/
-LIBS		= $(ROOTLIBS)  -lEG   -L./LHAPDF/lib/ -lLHAPDF
+CXXFLAGS	+= $(ROOTCFLAGS) -I./ -I../../IPHCDataFormat/ -I./LHAPDF/include/ -I/opt/exp_soft/cms/slc5_amd64_gcc462/external/boost/1.50.0-cms/include
+LIBS		= $(ROOTLIBS) -lEG -L./LHAPDF/lib/ -lLHAPDF -lyaml-cpp
 GLIBS		= $(ROOTGLIBS)  
 #------------------------------------------------------------------------------
 SOURCES		= $(wildcard Selection/src/*.cc BckgdEstimation/src/*.cc Plots/src/*.cc Measurements/src/*.cc Tools/src/*.cc tinyxml/*.cc EffEstimation/src/*cc)
