@@ -1,0 +1,11 @@
+YAM-CPP
+---------
+yam-cpp-v0.3.0
+Release without Boost requirement
+http://yaml-cpp.googlecode.com/files/yaml-cpp-0.3.0.tar.gz
+
+LHAPDF
+---------
+LHAPDF-6.0.2
+Release full C++ since 6.0
+http://www.hepforge.org/archive/lhapdf/LHAPDF-6.0.2.tar.gz
