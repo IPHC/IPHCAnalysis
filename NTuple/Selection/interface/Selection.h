@@ -450,10 +450,9 @@ class Selection : public Event
    
    double RelIso03PFDeltaBeta(IPHCTree::NTMuon themuon){
      
-     return (s
+     return (
       ( themuon.isolation["PF03Char"] + max(0., themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]-0.5*themuon.isolation["PF03PU"] ) 
-      / p4.Pt() 
-      );
+      )/ themuon.p4.Pt() );
    }
    
    
