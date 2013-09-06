@@ -291,6 +291,7 @@ bool TTbarMetSelection::passTriggerSelection (Dataset * dataset, string channelN
   bool passEl = false;
   bool passMu = false;
   int skim = -1;
+  (void) skim; // removing warning 'unused variable'
 
   string datasetName = dataset->Name ();
   if (datasetName.compare(0,6,"DataMu")==0)

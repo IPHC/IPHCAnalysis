@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
   int nwnodes = 4; //8 to 10 is the optimal
   string macroName = "ProofSelectorMatrixMethod.C+"; //"+" should be put at the end to use ACLIC complication - This macro should inherit from TSelector 
   //In order to allow the node to access the xml, the name should be given with the full path
-  string xmlFileName = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/config/MyCutFlow_2011AB_FCNCkut.xml");
+  string xmlFileName = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml");
   string outputFileName = "MMethod.root";
   
   //---------------------------------------//

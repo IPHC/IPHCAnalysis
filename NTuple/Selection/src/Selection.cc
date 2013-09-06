@@ -280,7 +280,7 @@ IPHCTree::NTMET Selection::GetSmearedMET(
 bool Selection::looseJetId(const NTJet & theJet) const
 {
   bool passingLoose=false;
-  bool ThisIsClean=true;
+  //  bool ThisIsClean=true;
   //apply following only if |eta|<2.4: CHF>0, CEMF<0.99, chargedMultiplicity>0   
   //if(( theJet.CHEF)<= 0.0  
   //   && fabs(theJet.p4.Eta())<2.4) ThisIsClean=false; 

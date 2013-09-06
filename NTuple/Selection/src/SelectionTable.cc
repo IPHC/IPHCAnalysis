@@ -104,7 +104,7 @@ void SelectionTable::MergeDatasets(vector<string> DatasetNames_ToMerge, string M
 }
 	    
 void SelectionTable::DefineFirstDataset(string DatasetName){
-	bool found = false;
+  bool found = false; (void) found;
 	int ipos = 0;
 	for(unsigned int i=0; i<listOfDatasets_.size();i++){
 		if(listOfDatasets_[i].Name() == DatasetName){

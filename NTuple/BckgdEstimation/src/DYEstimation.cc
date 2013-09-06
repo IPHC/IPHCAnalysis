@@ -223,7 +223,7 @@ void DYEstimation::MakeDYHistos(string TypeSel, std::vector<TH1F*>hlist, TH1F* a
 // merging of T (singletoptW), Tbar (singleantitopW)  -> SingleToptW 
    int ISingleToptWSR = -1;
    int ISingleToptWCR = -1;
-   int ISingleToptWemu = -1;
+   int ISingleToptWemu = -1; (void) ISingleToptWemu; // removing warning 'unused variable' 
    int ISingleToptWContCR = -1;
    for (unsigned int j=0; j < hlist.size(); j++) {
       if ( hlist[j]->GetName()==string("SingleToptWCR") ) ISingleToptWCR = j;
@@ -357,7 +357,7 @@ vector<double> DYEstimation::MakeDYFits_emu(TH1F* all){
      myf->SetParameters(1.7256, -4.19201, .0000207, .849781, 125., 0.005);
      myf->SetLineWidth(3);
      all->Fit("CF", "M","same");
-     double I = myf->Integral(76.,106.);
+     //    double I = myf->Integral(76.,106.);
 //     std::cout<<"Integrale = "<<I <<std::endl;
 //      myf->GetParameters(param);
      for (unsigned int j=0; j<6; ++j){

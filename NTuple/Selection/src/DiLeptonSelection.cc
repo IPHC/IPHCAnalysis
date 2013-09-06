@@ -1411,7 +1411,7 @@ bool DiLeptonSelection::passTriggerSelection8TeV (Dataset * dataset, string chan
     // DATA --> Taken from TopDileptonRefAnalysis2010Pass6
     // WARNING : COULD SOMEONE CHECK THE < AND <= FOR THE RUN NUMBER????
 
-    int runNumber = getRunNumber();
+    //    int runNumber = getRunNumber();
 
 //
 

@@ -6,7 +6,7 @@
 void JetCorrector::LoadCorrections(){
 
   // open file
-  std::string fileName(getenv( "CMSSW_BASE" )+std::string("/src/NTuple/NTupleAnalysis/macros/data/GR_R_42_V23_JEC_L2L3Residual.root"));
+  std::string fileName(getenv( "CMSSW_BASE" )+std::string("/src/IPHCAnalysis/NTuple/macros/data/GR_R_42_V23_JEC_L2L3Residual.root"));
   std::cout<<"Reading the JEC_L2L3Residual file "<<fileName<<endl;
   fexists(fileName, true);
   TFile *f_JEC = new TFile(fileName.c_str());
