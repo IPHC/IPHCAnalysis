@@ -140,6 +140,50 @@ class Selection : public Event
                                            bool applyLES = false,
                                            float scale = 1.) const;
 
+
+
+
+  // -------------- accessor to muon collections for dilepton -------------
+
+  //! Get scaled muons
+  std::vector<IPHCTree::NTMuon> GetScaledMuonsDileptonTTbar(float scale = 1.) const;
+
+  //! Get selected muons no iso
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonsNoIsoDileptonTTbar(
+                                           bool applyLES = false,
+                                           float scale = 1.) const;
+
+  //! Get selected muons
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonsDileptonTTbar(
+                                           bool applyLES = false,
+                                           float scale = 1.) const;
+
+  //! Get selected muons no Iso
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonsNoIsoDileptonTTbar(
+                                           float PtThr, float EtaThr,
+                                           bool applyLES = false, 
+                                           float scale = 1.) const;
+
+  //! Get selected muons
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonsDileptonTTbar(
+                                           float PtThr, float EtaThr,
+                                           float MuonRelIso, 
+                                           bool applyLES = false,
+                                           float scale = 1.) const;
+
+  //! Get selected muons
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonIsoNonIDDileptonTTbar(
+                                           bool applyLES = false,
+                                           float scale = 1.) const;
+
+
+
+
+
+
+
+
+
   // -------- accessor to lepton + jet collections ------------
       
   //! GetSelected muons for l+jets
@@ -403,6 +447,19 @@ class Selection : public Event
   // -------------------------------------------------------------
   //                        data members
   // -------------------------------------------------------------
+   
+   double RelIso03PFDeltaBeta(IPHCTree::NTMuon themuon){
+     
+     return (s
+      ( themuon.isolation["PF03Char"] + max(0., themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]-0.5*themuon.isolation["PF03PU"] ) 
+      / p4.Pt() 
+      );
+   }
+   
+   
+   
+   
+   
    
  public:
 

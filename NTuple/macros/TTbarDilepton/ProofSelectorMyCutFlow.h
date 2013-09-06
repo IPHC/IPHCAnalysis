@@ -33,7 +33,7 @@
 
 
 #include "Tools/interface/PDFReweighter.h"
-#include "Tools/interface/PDFReweighter2.h"
+//#include "Tools/interface/PDFReweighter2.h"
 
 
 
@@ -142,7 +142,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   PDFReweighter pdf; 
   
   int PDFmode;
-  PDFReweighter2 pdf2;
+  //PDFReweighter2 pdf2;
 
   
    double scaleElec; // 1 to switch off

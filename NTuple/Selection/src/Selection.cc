@@ -1391,6 +1391,156 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuons(
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+// ----------------------------------------------------------------------------
+// GetScaledMuons
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTMuon> Selection::GetScaledMuonsDileptonTTbar(float scale) const
+{
+  std::vector<IPHCTree::NTMuon> newMuons = *GetPointer2Muons();
+  for (unsigned int i=0; i<newMuons.size(); i++)
+  {
+    newMuons[i].p4.SetPxPyPzE(scale*newMuons[i].p4.Px(),
+                              scale*newMuons[i].p4.Py(),
+                              scale*newMuons[i].p4.Pz(),
+                              scale*newMuons[i].p4.E());
+  }
+  return newMuons;
+}
+  
+
+// ----------------------------------------------------------------------------
+// GetScaledMuonsNoIso
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsNoIsoDileptonTTbar(
+                                 float PtThr, float EtaThr,
+                                 bool applyLES, float scale) const
+{
+  // Containers for output
+  std::vector<IPHCTree::NTMuon> selectedMuons;
+  vector<IPHCTree::NTMuon> localMuons;
+
+  // Get muons
+  if (applyLES) localMuons = GetScaledMuonsDileptonTTbar(scale); 
+  else localMuons = *GetPointer2Muons();
+
+  for(unsigned int i=0;i<localMuons.size();i++)
+  {
+    if (!localMuons[i].isGlobalMuon && !localMuons[i].isTrackerMuon )  continue; // isGlobalMuon
+    if (!localMuons[i].isPFMuon) continue; // isTrackerMuon
+    
+    
+  }
+
+  std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
+  return selectedMuons;
+} 
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedMuons
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsDileptonTTbar(
+                                  float PtThr, float EtaThr,
+                                  float MuonRelIso, bool applyLES,
+                                  float scale) const
+{
+  // Containers for output
+  std::vector<IPHCTree::NTMuon> selectedMuons;
+  std::vector<IPHCTree::NTMuon> muons = 
+                 GetSelectedMuonsNoIsoDileptonTTbar(PtThr,EtaThr,applyLES,scale);
+
+  // Loop over muons 
+  for(unsigned int i=0;i<muons.size();i++)
+  {
+    if ( static_cast<double>(muons[i].RelIso03PF()) > MuonRelIso) continue;
+    selectedMuons.push_back(muons[i]);
+  }
+  std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
+  return selectedMuons;
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedMuonIsoNonId
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonIsoNonIDDileptonTTbar(
+                                        bool applyLES,
+                                        float scale) const
+{
+  // Containers for output 
+  std::vector<IPHCTree::NTMuon> selectedMuons;
+  vector<IPHCTree::NTMuon> localMuons;
+
+  // Get muons
+  if(applyLES) localMuons = GetScaledMuonsDileptonTTbar(scale); 
+  else localMuons = *GetPointer2Muons();
+
+  // Loop over muons
+  for(unsigned int i=0;i<localMuons.size();i++)
+  {
+    if( localMuons[i].p4.Pt()              < cfg.MuonPtThreshold_)  continue;
+    if( fabs(localMuons[i].p4.Eta())       > cfg.MuonEtaThreshold_) continue;
+    if((double) localMuons[i].RelIso03PF() > cfg.MuonRelIso_)       continue;
+    selectedMuons.push_back(localMuons[i]);
+  }
+
+  // Sort muons according to PT rank
+  std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
+  return selectedMuons;
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedMuonsNoIso
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsNoIsoDileptonTTbar(
+                                   bool applyLES, float scale) const{
+	return GetSelectedMuonsNoIsoDileptonTTbar(cfg.MuonPtThreshold_,
+                               cfg.MuonEtaThreshold_,
+                               applyLES, scale);
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedMuons
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsDileptonTTbar(
+                                   bool applyLES, float scale) const
+{
+	return GetSelectedMuonsDileptonTTbar(cfg.MuonPtThreshold_,
+                          cfg.MuonEtaThreshold_,
+                          cfg.MuonRelIso_, applyLES, scale);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ----------------------------------------------------------------------------
 // GetSelectedMuonsNoIsoForLJets
 // ----------------------------------------------------------------------------

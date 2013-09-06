@@ -312,13 +312,12 @@ void ProofSelectorMyCutFlow::SlaveBegin(TTree * tree)
   
   //if(doPDF) pdf.Initialize();
   
-  if (doPDF)
+  /*if (doPDF)
     { 
       if (PDFmode==-1) pdf.Initialize();
       else pdf2.Initialize();
     }
-  
-  
+  */
   
   //************************************
   
@@ -378,7 +377,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
   //Collection of selected objects
   vector<NTVertex>   selVertices  = sel.GetSelectedVertex();
   vector<NTElectron> selElectrons = sel.GetSelectedElectrons(); 
-  vector<NTMuon>     selMuons     = sel.GetSelectedMuons();
+  vector<NTMuon>     selMuons     = sel.GetSelectedMuonsDileptonTTbar();
   //NTMET met			   = sel.GetMET(); 
   
   NTMET met			   = sel.GetSelectedMET(applyJES, scale, applyJER, ResFactor);  
@@ -472,8 +471,9 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
     
     //*****************************************************************
     // fill cutflow before any selection
-    //*****************************************************************   
-    
+    //***************************************************************** 
+    //to remove, for synch exercise  
+    Dweight[ITypeMC] = 1;
      
     MyhistoManager.FillHisto(CutFlow_mumu,	"CutFlow_mumu",    0, datasetName, IsSignal, Dweight[ITypeMC]);    
     MyhistoManager.FillHisto(ErrCutFlow_mumu,	"ErrCutFlow_mumu", 0, datasetName, IsSignal, EventYieldWeightError);
@@ -666,13 +666,17 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	// apply lepton invM selection
 	//*****************************************************************   
 	
-	if( fabs(InvDilMass-91) < 15) {
+	if( fabs(InvDilMass-91) > 15) {
 	  
 	  
 	  //*****************************************************************
 	  // fill cutflow lepton invM selection
 	  //*****************************************************************   
-	
+	  MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    3, datasetName, IsSignal, Dweight[ITypeMC]);    
+	  MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 3, datasetName, IsSignal, EventYieldWeightError);
+	  
+	  /*
+ 
 	  if(     IChannel == 0 && decayChannel == "mumu"){
 	    MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    3, datasetName, IsSignal, Dweight[ITypeMC]);    
 	    MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 3, datasetName, IsSignal, EventYieldWeightError);
@@ -685,7 +689,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	    MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    3, datasetName, IsSignal, Dweight[ITypeMC]);
 	    MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 3, datasetName, IsSignal, EventYieldWeightError);
 	  }
-	  
+	  */
 	  
   cout << "line 660 " << endl;
 	  
@@ -701,6 +705,9 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	    // fill cutflow jets mutli. selection
 	    //*****************************************************************   
 	
+	    MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    4, datasetName, IsSignal, Dweight[ITypeMC]);    
+	    MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 4, datasetName, IsSignal, EventYieldWeightError);
+	    /*
 	    if(     IChannel == 0 && decayChannel == "mumu"){
 	      MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    3, datasetName, IsSignal, Dweight[ITypeMC]);    
 	      MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 3, datasetName, IsSignal, EventYieldWeightError);
@@ -713,7 +720,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    3, datasetName, IsSignal, Dweight[ITypeMC]);
 	      MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 3, datasetName, IsSignal, EventYieldWeightError);
 	    }
-	  
+	  */
 	    
 	    //*****************************************************************
 	    // apply met selection
@@ -727,8 +734,10 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      //*****************************************************************
 	      // fill cutflow jets mutli. selection
 	      //*****************************************************************   
-	
-	      if(     IChannel == 0 && decayChannel == "mumu"){
+	      MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    5, datasetName, IsSignal, Dweight[ITypeMC]);    
+	      MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 5, datasetName, IsSignal, EventYieldWeightError);
+
+	      /*if(     IChannel == 0 && decayChannel == "mumu"){
 	        MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    4, datasetName, IsSignal, Dweight[ITypeMC]);    
 	        MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 4, datasetName, IsSignal, EventYieldWeightError);
 	      }
@@ -739,7 +748,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      else if(IChannel == 2 && decayChannel == "ee"  ) {
 	        MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    4, datasetName, IsSignal, Dweight[ITypeMC]);
 	        MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 4, datasetName, IsSignal, EventYieldWeightError);
-	      }
+	      }*/
 	     
 	     
 	     
@@ -816,9 +825,13 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	        
   cout << "line 785 " << endl;
 		
-		Dweight[ITypeMC] *= btagweight_1selBtag;
-		
-	        if(     IChannel == 0 && decayChannel == "mumu"){
+		// to do disable for synch ex.
+		//Dweight[ITypeMC] *= btagweight_1selBtag;
+	        MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    6, datasetName, IsSignal, Dweight[ITypeMC]);    
+	        MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 6, datasetName, IsSignal, EventYieldWeightError);
+
+	        /*
+		if(     IChannel == 0 && decayChannel == "mumu"){
 	          MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    5, datasetName, IsSignal, Dweight[ITypeMC]);    
 	          MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 5, datasetName, IsSignal, EventYieldWeightError);
 	        }
@@ -829,7 +842,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	        else if(IChannel == 2 && decayChannel == "ee"  ) {
 	          MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    5, datasetName, IsSignal, Dweight[ITypeMC]);
 	          MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 5, datasetName, IsSignal, EventYieldWeightError);
-	        }
+	        }*/
 		
 	        if( (isData && NBtaggedJets >=2) || !isData){
 	        
@@ -837,11 +850,16 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	          // fill cutflow jets mutli. selection
 	          //*****************************************************************   
 	  
-		  Dweight[ITypeMC] = btagweight_2selBtag*Dweight[ITypeMC]/btagweight_1selBtag;
+	  
+		  // to do disable for synch ex.
+		  //Dweight[ITypeMC] = btagweight_2selBtag*Dweight[ITypeMC]/btagweight_1selBtag;
 		  
   cout << "line 812 " << endl;
-		  
-	          if(     IChannel == 0 && decayChannel == "mumu"){
+		  MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    7, datasetName, IsSignal, Dweight[ITypeMC]);    
+	          MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 7, datasetName, IsSignal, EventYieldWeightError);
+
+	          /*
+		  if(     IChannel == 0 && decayChannel == "mumu"){
 	            MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    6, datasetName, IsSignal, Dweight[ITypeMC]);    
 	            MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 6, datasetName, IsSignal, EventYieldWeightError);
 	          }
@@ -852,7 +870,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	          else if(IChannel == 2 && decayChannel == "ee"  ) {
 	            MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    6, datasetName, IsSignal, Dweight[ITypeMC]);
 	            MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 6, datasetName, IsSignal, EventYieldWeightError);
-	          }
+	          }*/
 		  
 		  
 	        } // end selection 2bjet sel
