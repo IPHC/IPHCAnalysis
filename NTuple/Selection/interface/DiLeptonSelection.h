@@ -139,6 +139,11 @@ event of weight "weight" of a given dataset idataset - Returns the integer of do
 
 //      bool passTriggerSelection(string datasetname, string channelName = string(""));
       bool passTriggerSelection(Dataset* dataset, string channelName = string(""));
+      bool passTriggerSelection8TeV(Dataset* dataset, string channelName = string(""));
+      
+      
+      
+      
      std::pair<bool,bool> passMETTriggerSelection(Dataset* dataset);
      
      float GetMinValueMassCut();

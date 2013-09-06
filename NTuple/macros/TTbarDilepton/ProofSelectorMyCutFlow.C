@@ -351,7 +351,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 {
   
   
-  cout << "line 347 " << endl;
   
   
   //---------------------------------------------------//
@@ -408,18 +407,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
   
   //for (int IChannel=0; IChannel<3; IChannel++) {
     
-    int IChannel = -1;
-    
-    if( datasetName=="DataDiMu"   ) IChannel = 0;
-    if( datasetName=="DataDiMuEG" ) IChannel = 1;
-    if( datasetName=="DataDiEG"   ) IChannel = 2;
-    
-    
-    TString ChannelName = "";
-    if      (IChannel==0) ChannelName= "mumu"; 
-    else if (IChannel==1) ChannelName= "emu" ; 
-    else if (IChannel==2) ChannelName= "ee"  ;  
-    
     //if (IChannel==0 && datasetName!="DataDiMu"   ) continue;
     //if (IChannel==1 && datasetName!="DataDiMuEG" ) continue;
     //if (IChannel==2 && datasetName!="DataDiEG"   ) continue;
@@ -459,20 +446,12 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
     // determine top decay channel
     //*****************************************************************    
     if ( datasetName=="TTbar" ) {
-      if ( IChannel==0) { // "mumu" 
-	if ( event->mc.TMEME==20 || event->mc.TMEME==11010 || event->mc.TMEME==22000 )    IsTTbarDilept = true;
-	if ( !(event->mc.TMEME==20 || event->mc.TMEME==11010 || event->mc.TMEME==22000) ) IsTTbarDilept = false;
-      }      
-      else if ( IChannel==1) {  // "ee" 
-	if ( event->mc.TMEME==2 || event->mc.TMEME==10101 || event->mc.TMEME==20200 )     IsTTbarDilept = true;
-	if ( !(event->mc.TMEME==2 || event->mc.TMEME==10101 || event->mc.TMEME==20200) )  IsTTbarDilept = false;
-      }      
-      else if ( IChannel==2) { // "emu" 
-	if ( event->mc.TMEME==11 || event->mc.TMEME==21100 || event->mc.TMEME==11001 || event->mc.TMEME==10110 )     IsTTbarDilept = true;
-	if ( !(event->mc.TMEME==11 || event->mc.TMEME==21100 || event->mc.TMEME==11001 || event->mc.TMEME==10110) )  IsTTbarDilept = false;
-      }      
+      if      ( event->mc.TMEME==20 || event->mc.TMEME==11010 || event->mc.TMEME==22000 ) IsTTbarDilept = true;
+      else if ( event->mc.TMEME==2  || event->mc.TMEME==10101 || event->mc.TMEME==20200 ) IsTTbarDilept = true;
+      else if ( event->mc.TMEME==11 || event->mc.TMEME==21100 || event->mc.TMEME==11001 || event->mc.TMEME==10110 )	IsTTbarDilept = true;
+    }      
       
-    }
+    
     
     
     
@@ -495,51 +474,51 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
     // fill cutflow before any selection
     //*****************************************************************   
     
-    
      
-    if(IChannel == 0){
-      MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    0, datasetName, IsSignal, Dweight[ITypeMC]);    
-      MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 0, datasetName, IsSignal, EventYieldWeightError);
-    }
-    else if(IChannel == 1){
-      MyhistoManager.FillHisto(CutFlow_emu,       "CutFlow_emu",    0, datasetName, IsSignal, Dweight[ITypeMC]);
-      MyhistoManager.FillHisto(ErrCutFlow_emu,    "ErrCutFlow_emu", 0, datasetName, IsSignal, EventYieldWeightError);
-    }
-    else if(IChannel == 2) {
-      MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    0, datasetName, IsSignal, Dweight[ITypeMC]);
-      MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 0, datasetName, IsSignal, EventYieldWeightError);
-    }
+    MyhistoManager.FillHisto(CutFlow_mumu,	"CutFlow_mumu",    0, datasetName, IsSignal, Dweight[ITypeMC]);    
+    MyhistoManager.FillHisto(ErrCutFlow_mumu,	"ErrCutFlow_mumu", 0, datasetName, IsSignal, EventYieldWeightError);
+
+
+    MyhistoManager.FillHisto(CutFlow_emu,	"CutFlow_emu",    0, datasetName, IsSignal, Dweight[ITypeMC]);
+    MyhistoManager.FillHisto(ErrCutFlow_emu,	"ErrCutFlow_emu", 0, datasetName, IsSignal, EventYieldWeightError);
+
+
+    MyhistoManager.FillHisto(CutFlow_ee,	"CutFlow_ee",	 0, datasetName, IsSignal, Dweight[ITypeMC]);
+    MyhistoManager.FillHisto(ErrCutFlow_ee,	"ErrCutFlow_ee", 0, datasetName, IsSignal, EventYieldWeightError);
+
+
     
-  cout << "line 497 " << endl;
     
     //*****************************************************************
     // pass trigger selection
     //*****************************************************************   
     
-    bool passtrigger = false;
+    bool passtrigger_mumu = false;
+    bool passtrigger_emu  = false;
+    bool passtrigger_ee   = false;
     
     
-    //to do : update trigger selection
-    if(ChannelName == "mumu" ) passtrigger = sel.passTriggerSelection ( dataset, "mumu");
-    if(ChannelName == "emu"  ) passtrigger = sel.passTriggerSelection ( dataset, "emu" );
-    if(ChannelName == "ee"   ) passtrigger = sel.passTriggerSelection ( dataset, "ee" );
+      //to do : update trigger selection
+      passtrigger_mumu =  sel.passTriggerSelection8TeV ( dataset, "mumu");
+      passtrigger_emu  =  sel.passTriggerSelection8TeV ( dataset, "emu" );
+      passtrigger_ee   =  sel.passTriggerSelection8TeV ( dataset, "ee" );
     
     
-    if (   passtrigger   ) {
-      
+      if (   passtrigger_mumu ||  passtrigger_emu ||  passtrigger_ee ) {
+    
       //*****************************************************************
       // fill cutflow after trigger selection
       //*****************************************************************   
       
-      if(     IChannel == 0){
+      if(   passtrigger_mumu  ){
         MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    1, datasetName, IsSignal, Dweight[ITypeMC]);    
         MyhistoManager.FillHisto(ErrCutFlow_mumu,   "ErrCutFlow_mumu", 1, datasetName, IsSignal, EventYieldWeightError);
       }
-      else if(IChannel == 1){
+      else if(passtrigger_emu ){
         MyhistoManager.FillHisto(CutFlow_emu,       "CutFlow_emu",    1, datasetName, IsSignal, Dweight[ITypeMC]);
         MyhistoManager.FillHisto(ErrCutFlow_emu,    "ErrCutFlow_emu", 1, datasetName, IsSignal, EventYieldWeightError);
       }
-      else if(IChannel == 2 ) {
+      else if( passtrigger_ee ) {
         MyhistoManager.FillHisto(CutFlow_ee,        "CutFlow_ee",    1, datasetName, IsSignal, Dweight[ITypeMC]);
         MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 1, datasetName, IsSignal, EventYieldWeightError);
       }
@@ -554,19 +533,31 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       TString decayChannel = decayChannel_tmp;
       //to do : makes pat iso configurable
       
-      
+        
+      int IChannel = -1;
+      if(isData == true){
+        if(      datasetName=="DataDiMu"   && decayChannel == "mumu" ) IChannel = 0;
+        else if( datasetName=="DataDiMuEG" && decayChannel == "emu"  ) IChannel = 1;
+        else if( datasetName=="DataDiEG"   && decayChannel == "ee"   ) IChannel = 2;
+      }else{
+        if(      decayChannel == "mumu" && passtrigger_mumu) IChannel = 0;
+        else if( decayChannel == "emu"  && passtrigger_emu ) IChannel = 1;
+        else if( decayChannel == "ee"   && passtrigger_ee  ) IChannel = 2;
+      }
+    
+    
       
       std::vector<TH1F>* pCutFlow;
       std::vector<TH1F>* pErrCutFlow;
+      cout << "IChannel " << IChannel << "  decayChannel " << decayChannel << endl;
+      if(IChannel == 0 ) pCutFlow = &CutFlow_mumu;
+      if(IChannel == 1 ) pCutFlow = &CutFlow_emu;
+      if(IChannel == 2 ) pCutFlow = &CutFlow_ee;
       
-      if(IChannel == 0 && decayChannel == "mumu") pCutFlow = &CutFlow_mumu;
-      if(IChannel == 1 && decayChannel == "emu" ) pCutFlow = &CutFlow_emu;
-      if(IChannel == 2 && decayChannel == "ee"  ) pCutFlow = &CutFlow_ee;
       
-      
-      if(IChannel == 0 && decayChannel == "mumu") pErrCutFlow = &ErrCutFlow_mumu;
-      if(IChannel == 1 && decayChannel == "emu" ) pErrCutFlow = &ErrCutFlow_emu;
-      if(IChannel == 2 && decayChannel == "ee"  ) pErrCutFlow = &ErrCutFlow_ee;
+      if(IChannel == 0 ) pErrCutFlow = &ErrCutFlow_mumu;
+      if(IChannel == 1 ) pErrCutFlow = &ErrCutFlow_emu;
+      if(IChannel == 2 ) pErrCutFlow = &ErrCutFlow_ee;
       
        
       
@@ -574,15 +565,16 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       // apply dilepton selection
       //*****************************************************************   
    
-      cout << "line 545 " << endl;
-      if(decayChannel != ""){
+      if( IChannel >-1){
       
 	//*****************************************************************
 	// fill cutflow after lepton selection
 	//*****************************************************************   
 	
+         cout << "line 574 " << endl;
 	 MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    2, datasetName, IsSignal, Dweight[ITypeMC]);    
 	 MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 2, datasetName, IsSignal, EventYieldWeightError);
+         cout << "line 577 " << endl;
 	
 	
 	
@@ -664,9 +656,9 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	
 	  
         float InvDilMass = 0;
-        if (ChannelName=="mumu")  InvDilMass = (selMuons[0].p4     +selMuons[1].p4    ).M();
-        if (ChannelName=="emu")   InvDilMass = (selMuons[0].p4     +selElectrons[0].p4).M();
-        if (ChannelName=="ee")    InvDilMass = (selElectrons[0].p4 +selElectrons[1].p4).M();
+        if (decayChannel=="mumu")  InvDilMass = (selMuons[0].p4     +selMuons[1].p4    ).M();
+        if (decayChannel=="emu" )  InvDilMass = (selMuons[0].p4     +selElectrons[0].p4).M();
+        if (decayChannel=="ee"  )   InvDilMass = (selElectrons[0].p4 +selElectrons[1].p4).M();
 	
 	
 	
@@ -899,11 +891,11 @@ void ProofSelectorMyCutFlow::SlaveTerminate()
   MyhistoManager.WriteMyHisto(ErrCutFlow_ee,   "all" );
   
   
-   //The following line is mandatory to copy everythin in a common RootFile
+   //The following line is mandatory to copy everything in a common RootFile
     fOutput->Add(fProofFile);
     
   
-    
+    cout << "terminated output root file" << endl;
     
    // delete TheTree;
     delete anaEL;

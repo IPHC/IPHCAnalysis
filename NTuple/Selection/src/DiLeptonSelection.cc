@@ -1364,6 +1364,92 @@ passElMu = (triggers->IsFired("HLT_Mu8_Ele17_CaloIdL_v2") || triggers->IsFired("
 }
 
 
+
+//******************************************************
+//******** Dilepton trigger selection ******************
+//******************************************************
+//bool DiLeptonSelection::passTriggerSelection(string datasetName, string channelName){
+bool DiLeptonSelection::passTriggerSelection8TeV (Dataset * dataset, string channelName)
+{
+
+
+  bool passEl = false;
+  bool passMu = false;
+  bool passElMu = false;
+  int skim = -1;
+
+  string datasetName = dataset->Name ();
+  
+// to be compatible with MyCutFlow and others
+  if (datasetName.compare(0,6,"DataMu")==0)
+    skim = 0;
+  if (datasetName.compare(0,6,"DataEG")==0)
+    skim = 1;
+//  if (datasetName == "DataMuEG" || datasetName == "DataEGMu")
+  if ( datasetName.compare(0,8,"DataMuEG")==0 || datasetName.compare(0,8,"DataEGMu")==0 )
+    skim = 2;
+  
+  
+  //cout << " datasetName " << datasetName << endl;
+  
+  const NTTrigger* triggers = GetPointer2Trigger();
+
+  if (!dataset->isData ()) {	//MC
+    //cout << " test trigger list --------------------------------" << endl;
+    
+    
+    passMu = (triggers->IsFired("HLT_Mu17_Mu8_v17") || triggers->IsFired("HLT_Mu17_TkMu8_v10") ); // Summer12 53X
+
+    passEl = (triggers->IsFired("HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v17")  );
+
+    passElMu = (triggers->IsFired("HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v7") || triggers->IsFired("HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v7") );  
+    
+    
+
+  }
+  else {
+    // DATA --> Taken from TopDileptonRefAnalysis2010Pass6
+    // WARNING : COULD SOMEONE CHECK THE < AND <= FOR THE RUN NUMBER????
+
+    int runNumber = getRunNumber();
+
+//
+
+       
+  } // end DATA
+  
+
+  if (channelName == string ("ee") && ( (skim==-1) || (skim==1) ) ) {
+    if (passEl)
+      return true;
+    else
+      return false;
+  }
+  if (channelName == string ("mumu") && ( (skim==-1) || (skim==0) ) ) {
+    if (passMu)
+      return true;
+    else
+      return false;
+  }
+  if (channelName == string ("emu")) {
+     bool thereturn = false;
+//     if (  (passEl && skim==1 ) || ( passMu && skim==0 && !passEl ) ) thereturn = true;
+//     if ( skim == -1 && (passEl  || passMu ) ) thereturn = true;
+    if ( skim == -1 &&  passElMu) return true;
+    if ( skim == 2 && (passElMu) )
+      thereturn = true;
+    return thereturn;
+  }
+  if (channelName == string ("") || channelName == string ("*") || channelName == string ("allChannels")) {
+    if (passEl || passMu || passElMu)
+      return true;
+    return false;
+  }
+
+  return false;
+
+}
+
 //******************************************************
 //************* MET trigger selection ******************
 //******************************************************
