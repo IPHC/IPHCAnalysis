@@ -876,21 +876,21 @@ void ProofSelectorMyCutFlow::SlaveBegin(TTree * tree)
    
     string mcfile;
     if( datasetName == "FCNCkut"  || datasetName == "FCNCkct"  || datasetName == "FCNCzut"  || datasetName == "FCNCzct") // FastSim, in-time PU only
-      mcfile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUMC_InTime_Fall11.root");
+      mcfile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUMC_InTime_Fall11.root");
      else
-       mcfile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PU3DMC_Fall11_JLA.root");
+       mcfile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PU3DMC_Fall11_JLA.root");
     fexists(mcfile, true);
     
     string datafile;
     if( datasetName == "FCNCkut"|| datasetName == "FCNCkct"  || datasetName == "FCNCzut"  || datasetName == "FCNCzct" ) {
-      if( !IReweight_puDown && !IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_observed_68mb.root");
-      if( IReweight_puDown ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_observed_64.6mb.root");
-      if( IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_observed_71.4mb.root");
+      if( !IReweight_puDown && !IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUData2011_observed_68mb.root");
+      if( IReweight_puDown ) datafile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUData2011_observed_64.6mb.root");
+      if( IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUData2011_observed_71.4mb.root");
     }
     else {
-      if( !IReweight_puDown && !IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_68mb.root");
-      if( IReweight_puDown ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_64.6mb.root");
-      if( IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/NTuple/NTupleAnalysis/macros/data/PUData2011_71.4mb.root");
+      if( !IReweight_puDown && !IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUData2011_68mb.root");
+      if( IReweight_puDown ) datafile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUData2011_64.6mb.root");
+      if( IReweight_puUp ) datafile = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/PUData2011_71.4mb.root");
     }
     fexists(datafile, true);
  

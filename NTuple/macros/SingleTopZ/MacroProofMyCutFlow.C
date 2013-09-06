@@ -21,7 +21,7 @@ int main(int argc, char* argv[]){
   string macroName = "ProofSelectorMyCutFlow.C+"; //"+" should be put at the end to use ACLIC complication - This macro should inherit from TSelector 
   //In order to allow the node to access the xml, the name should be given with the full path
   string xmlFileName = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml");
-  //string xmlFileName = "/opt/sbg/data/data1/cms/jandrea/JLAgram_06072012/CMSSW_4_2_8_patch7//src/NTuple/NTupleAnalysis/config/MyCutFlow_2011AB_FCNCkut.xml";
+  //string xmlFileName = "/opt/sbg/data/data1/cms/jandrea/JLAgram_06072012/CMSSW_4_2_8_patch7//src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml";
   string outputFileName = "proof.root";
   
   //---------------------------------------//

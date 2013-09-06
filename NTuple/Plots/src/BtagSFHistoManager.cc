@@ -112,11 +112,11 @@ void BtagSFHistoManager::PlotTGraph(TDirectory* dir){
 
        dir->cd();
 
-       const int maxi=20;
-       const int maxj=5; // 5 Btag selections considered 
-       int ii=-1;
+       const unsigned int maxi=20;
+       const unsigned int maxj=5; // 5 Btag selections considered 
+       int ii=-1; (void) ii; // removing warning 'unused variable'
        int jj=-1;
-       const int maxbin=20;
+       const unsigned int maxbin=20;
        float sfb[maxbin];
        int indexb=0;
        float sfl[maxbin];
@@ -125,8 +125,8 @@ void BtagSFHistoManager::PlotTGraph(TDirectory* dir){
        float efferr[maxi][maxj][maxbin][maxbin];
        float tot_check[maxi][maxbin][maxbin];
        for (unsigned int i1=0; i1<maxi; i1++) {
-         for (int k1=0; k1<maxbin; k1++) {
-            for (int k2=0; k2<maxbin; k2++) {
+         for (unsigned int k1=0; k1<maxbin; k1++) {
+            for (unsigned int k2=0; k2<maxbin; k2++) {
                tot_check[i1][k1][k2]=0;
             }
          }
@@ -151,7 +151,7 @@ void BtagSFHistoManager::PlotTGraph(TDirectory* dir){
           else c1->Divide(div.first);
           TLegend*  qw = 0;
           for (unsigned int i1=0; i1<SelectionSteps.size(); i1++) {
-             for (int j1=0; j1<maxj; j1++) {
+             for (unsigned int j1=0; j1<maxj; j1++) {
                 TH2D* h1 = (TH2D*) Histos2D[j1+6][iChannel][i1][iDataset].Clone();
                //==============================================================
                // decode SF_b and SF_l info
@@ -204,7 +204,7 @@ void BtagSFHistoManager::PlotTGraph(TDirectory* dir){
 
 
 
-             for (int j1=0; j1<maxj; j1++) {
+             for (unsigned int j1=0; j1<maxj; j1++) {
                for (int k2=0; k2<indexl; k2++) {
                // loop SF_l
                   float aa[maxbin];
