@@ -1,8 +1,6 @@
 #ifndef PDF_REWEIGHTER_h
 #define PDF_REWEIGHTER_h
 
-//#ifdef PDFREWEIGHT_ENABLE
-
 // STL headers
 #include <iomanip>
 #include <iostream>
@@ -21,12 +19,12 @@
 #include <Rtypes.h>
 
 // LHAPDF headers
-#include "LHAPDF/include/LHAPDF/LHAPDF.h"
+//#include "LHAPDF/LHAPDF.h"
 
-
-using namespace IPHCTree;
-using namespace std;
-
+namespace LHAPDF
+{
+  class PDF;
+}
 
 struct UncertaintyType
 {
@@ -47,24 +45,15 @@ class PDFReweighter
 
 private:
 
-  std::pair<std::string,unsigned int> REF_pdf_;
-  std::pair<std::string,unsigned int> CTEQ_uncertainties_pdf_;
-  std::pair<std::string,unsigned int> CTEQ_alphas_pdf_;
-  std::pair<std::string,unsigned int> MSTW_uncertainties_pdf_;
-  std::pair<std::string,unsigned int> MSTW_alphasP_pdf_;
-  std::pair<std::string,unsigned int> MSTW_alphasM_pdf_;
-  std::pair<std::string,unsigned int> NNPDF_uncertainties_pdf_;
-  std::pair<std::string,unsigned int> NNPDF_alphasP_pdf_;
-  std::pair<std::string,unsigned int> NNPDF_alphasM_pdf_;
-  TH1F* cteq;
-  TH1F* mstw;
-  TH1F* nnpdf;
-  TH1F* cteq2;
-  TH1F* mstw2;
-  TH1F* nnpdf2;
-  TH1F* cteq0;
-  TH1F* mstw0;
-  TH1F* nnpdf0;
+  const LHAPDF::PDF* REF_pdf_;
+  const LHAPDF::PDF* CTEQ_uncertainties_pdf_;
+  const LHAPDF::PDF* CTEQ_alphas_pdf_;
+  const LHAPDF::PDF* MSTW_uncertainties_pdf_;
+  const LHAPDF::PDF* MSTW_alphasP_pdf_;
+  const LHAPDF::PDF* MSTW_alphasM_pdf_;
+  const LHAPDF::PDF* NNPDF_uncertainties_pdf_;
+  const LHAPDF::PDF* NNPDF_alphasP_pdf_;
+  const LHAPDF::PDF* NNPDF_alphasM_pdf_;
 
   // -------------------------------------------------------------
   //                    public method members
