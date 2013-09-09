@@ -880,33 +880,6 @@ void AnalysisEnvironmentLoader::LoadDiLeptonSelection (DiLeptonSelection& sel)
 }
 
 
-void AnalysisEnvironmentLoader::LoadSSDiLeptonSelection (SSDiLeptonSelection& sel)
-{
-
-  LoadSelection(dynamic_cast<Selection&>(sel));
-
-  Reset();
-
-  elem = NodeLoader(string("SSDiLeptonSelection"));
-  if(!elem) return;
-      float MinMassCut = 0;
-      float METEMu = 0;
-      float METLL = 0;
-      float ZMassWindowMin = 0;
-      float ZMassWindowMax = 0;
-      int btagAlgo = -1;
-      float btagDiscriCut = -999.;
-      int NofBtagJets = 0;
-      elem->QueryFloatAttribute ("MinMassCut", &MinMassCut);
-      elem->QueryFloatAttribute ("METCutsEMU", &METEMu);
-      elem->QueryFloatAttribute ("METCutsLL",  &METLL);
-      elem->QueryFloatAttribute ("ZMassWindowMin", &ZMassWindowMin);
-      elem->QueryFloatAttribute ("ZMassWindowMax", &ZMassWindowMax);
-      elem->QueryIntAttribute ("btagAlgo", &btagAlgo);
-      elem->QueryFloatAttribute ("btagDiscriCut", &btagDiscriCut);
-      elem->QueryIntAttribute ("NofBtagJets", &NofBtagJets);
-      sel.SetParameters(MinMassCut, pair<float,float> (METEMu,METLL), pair<float,float> (ZMassWindowMin,ZMassWindowMax), btagAlgo, btagDiscriCut, NofBtagJets);
-}
 
 
 /*void AnalysisEnvironmentLoader::LoadSemiLeptonicTauSelection (SemiLeptonicTauSelection& sel)

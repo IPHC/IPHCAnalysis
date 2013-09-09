@@ -9,7 +9,6 @@
 #include "tinyxml/tinyxml.h"
 #include "Selection/interface/Selection.h"
 #include "Selection/interface/DiLeptonSelection.h"
-#include "Selection/interface/SSDiLeptonSelection.h"
 //#include "Selection/interface/SemiLeptonicTauSelection.h"
 //#include "Measurements/interface/PLRMeasurement.h"
 #include "Dataset.h"
@@ -97,7 +96,6 @@ public:
   void LoadSamples(vector<Dataset>& datasets, string name);/** Read the xml file and fill a vector of datasets */
   void LoadSelection(Selection& sel); /** Read the xml file and update the selection parameters */
   void LoadDiLeptonSelection(DiLeptonSelection& sel); /** Read the xml file and update the DiLeptonSelection parameters */
-  void LoadSSDiLeptonSelection(SSDiLeptonSelection& sel);
   //  void LoadSemiLeptonicTauSelection(SemiLeptonicTauSelection& sel); /** Read the xml file and update the SemiLeptonicTauSelection parameters */
   void LoadGeneralInfo(int& DataType, float& Luminosity, int& verbosity );/** Read general information from the xml file - DataType = 0 for MC, 1 for Data, 2 for MC&Data */
   void LoadGeneralInfo(int& DataType, float& Luminosity, float& LumiError, int& verbosity );/** Read general information from the xml file - DataType = 0 for MC, 1 for Data, 2 for MC&Data */

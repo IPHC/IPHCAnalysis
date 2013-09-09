@@ -321,7 +321,6 @@ void ProofSelectorMyCutFlow::SlaveBegin(TTree * tree)
   
   //************************************
   
-  //cout << "618 " <<  endl;
   
   //--------------------------------------//
   //   Output file 	
@@ -376,16 +375,17 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
   
   //Collection of selected objects
   vector<NTVertex>   selVertices  = sel.GetSelectedVertex();
-  vector<NTElectron> selElectrons = sel.GetSelectedElectrons(); 
+  vector<NTElectron> selElectrons = sel.GetSelectedElectronsDileptonTTbar(); 
   vector<NTMuon>     selMuons     = sel.GetSelectedMuonsDileptonTTbar();
+  //vector<NTMuon>     selMuons     = sel.GetSelectedMuons();
+  
   //NTMET met			   = sel.GetMET(); 
   
   NTMET met			   = sel.GetSelectedMET(applyJES, scale, applyJER, ResFactor);  
   // cout << "MET loaded " << endl;
   
   
-  
-  
+ 
   double Dweight[101];
   for(int k1=0; k1<101; k1++) {
     Dweight[k1] = 0.;
@@ -451,7 +451,8 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
     }      
       
     
-    
+   //if(event->mc.TMEME==20)    cout << "selMuons.size() " << selMuons.size()  << endl;
+ 
     
     
     
@@ -533,12 +534,14 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       TString decayChannel = decayChannel_tmp;
       //to do : makes pat iso configurable
       
-        
+      
+      
+      
       int IChannel = -1;
       if(isData == true){
-        if(      datasetName=="DataDiMu"   && decayChannel == "mumu" ) IChannel = 0;
-        else if( datasetName=="DataDiMuEG" && decayChannel == "emu"  ) IChannel = 1;
-        else if( datasetName=="DataDiEG"   && decayChannel == "ee"   ) IChannel = 2;
+        if(      datasetName=="DataDiMu"   && decayChannel == "mumu" && passtrigger_mumu) IChannel = 0;
+        else if( datasetName=="DataDiMuEG" && decayChannel == "emu"  && passtrigger_emu ) IChannel = 1;
+        else if( datasetName=="DataDiEG"   && decayChannel == "ee"   && passtrigger_ee  ) IChannel = 2;
       }else{
         if(      decayChannel == "mumu" && passtrigger_mumu) IChannel = 0;
         else if( decayChannel == "emu"  && passtrigger_emu ) IChannel = 1;
@@ -549,7 +552,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       
       std::vector<TH1F>* pCutFlow;
       std::vector<TH1F>* pErrCutFlow;
-      cout << "IChannel " << IChannel << "  decayChannel " << decayChannel << endl;
       if(IChannel == 0 ) pCutFlow = &CutFlow_mumu;
       if(IChannel == 1 ) pCutFlow = &CutFlow_emu;
       if(IChannel == 2 ) pCutFlow = &CutFlow_ee;
@@ -560,24 +562,28 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       if(IChannel == 2 ) pErrCutFlow = &ErrCutFlow_ee;
       
        
+	  
+      float InvDilMass = 0;
+      if (IChannel == 0 )  InvDilMass = (selMuons[0].p4     +selMuons[1].p4	 ).M();
+      if (IChannel == 1 )  InvDilMass = (selMuons[0].p4     +selElectrons[0].p4).M();
+      if (IChannel == 2 )  InvDilMass = (selElectrons[0].p4 +selElectrons[1].p4).M();
+
+	
+	
       
       //*****************************************************************
       // apply dilepton selection
       //*****************************************************************   
    
-      if( IChannel >-1){
+      if( IChannel >-1 && InvDilMass > 20){
       
 	//*****************************************************************
 	// fill cutflow after lepton selection
 	//*****************************************************************   
 	
-         cout << "line 574 " << endl;
-	 MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    2, datasetName, IsSignal, Dweight[ITypeMC]);    
+         MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    2, datasetName, IsSignal, Dweight[ITypeMC]);    
 	 MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 2, datasetName, IsSignal, EventYieldWeightError);
-         cout << "line 577 " << endl;
-	
-	
-	
+        
 	/*
 	if(     IChannel == 0 && decayChannel == "mumu"){
 	  MyhistoManager.FillHisto(CutFlow_mumu,      "CutFlow_mumu",    2, datasetName, IsSignal, Dweight[ITypeMC]);    
@@ -651,17 +657,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	
 	
 	
-  cout << "line 624 " << endl;
-	
-	
-	  
-        float InvDilMass = 0;
-        if (decayChannel=="mumu")  InvDilMass = (selMuons[0].p4     +selMuons[1].p4    ).M();
-        if (decayChannel=="emu" )  InvDilMass = (selMuons[0].p4     +selElectrons[0].p4).M();
-        if (decayChannel=="ee"  )   InvDilMass = (selElectrons[0].p4 +selElectrons[1].p4).M();
-	
-	
-	
 	//*****************************************************************
 	// apply lepton invM selection
 	//*****************************************************************   
@@ -691,7 +686,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	  }
 	  */
 	  
-  cout << "line 660 " << endl;
 	  
 	  //*****************************************************************
 	  // apply jets mutli. selection
@@ -721,13 +715,13 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      MyhistoManager.FillHisto(ErrCutFlow_ee,     "ErrCutFlow_ee", 3, datasetName, IsSignal, EventYieldWeightError);
 	    }
 	  */
-	    
+	
+
 	    //*****************************************************************
 	    // apply met selection
 	    //***************************************************************** 
 	    double theMET = met.p2.Mod();
 	    
-  cout << "line 693 " << endl;
 	    if(decayChannel == "emu" || theMET > 40){
 	      
 	       
@@ -753,8 +747,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	     
 	     
 	     
-  cout << "line 717 " << endl;
-	      //*****************************************************************
+ 	      //*****************************************************************
 	      // calculate btagging SF
 	      //***************************************************************** 
 	      
@@ -810,12 +803,25 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      
 	      
 	      
+	      if(IChannel == 0 ) {
+	
+	        cout << decayChannel << " :" << event->general.eventNb << "; ";
+	        cout << selMuons[0].p4.Pt() <<  "; ";
+	        cout << selMuons[1].p4.Pt() <<  "; ";
+	        cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; ";
+	        cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";
+	        cout << InvDilMass <<  "; ";
+	        cout << selJets.size() <<  "; ";
+	        cout << selJets[0].p4.Pt() <<  "; ";
+	        cout << selJets[1].p4.Pt() <<  "; ";
+	        cout << theMET <<  "; ";
+	        cout << NBtaggedJets<<  "; "<< endl;;
+	      }
 	      
 	      //*****************************************************************
 	      // apply btag selection
 	      //***************************************************************** 
 	      
-  cout << "line 779 " << endl;
 
 	      if( (isData && NBtaggedJets >=1) || !isData){
 	        
@@ -823,7 +829,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	        // fill cutflow jets mutli. selection
 	        //*****************************************************************   
 	        
-  cout << "line 785 " << endl;
 		
 		// to do disable for synch ex.
 		//Dweight[ITypeMC] *= btagweight_1selBtag;
@@ -854,7 +859,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 		  // to do disable for synch ex.
 		  //Dweight[ITypeMC] = btagweight_2selBtag*Dweight[ITypeMC]/btagweight_1selBtag;
 		  
-  cout << "line 812 " << endl;
 		  MyhistoManager.FillHisto(*pCutFlow,      ("CutFlow_"+decayChannel).Data(),    7, datasetName, IsSignal, Dweight[ITypeMC]);    
 	          MyhistoManager.FillHisto(*pErrCutFlow,   ("ErrCutFlow_"+decayChannel).Data(), 7, datasetName, IsSignal, EventYieldWeightError);
 

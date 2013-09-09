@@ -106,6 +106,48 @@ class Selection : public Event
   std::vector<IPHCTree::NTElectron> GetSelectedElectronsNoIsoNonID(
                           bool applyLES = false, float scale = 1.,
                           bool applyLER = false, float resol = 1.) const;
+			  
+			  
+  // -------------- accessor to electron collections for ttdilep -------------
+  
+    //! Get scaled electrons
+  std::vector<IPHCTree::NTElectron> GetScaledElectronsDileptonTTbar(float scale = 1.) const;
+
+  //! Get smeared electrons
+  std::vector<IPHCTree::NTElectron> GetSmearedElectronsDileptonTTbar(float resol = 1.)const;
+
+  //! Get selected electrons
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsDileptonTTbar(
+                          bool applyLES = false, float scale = 1.,
+                          bool applyLER = false, float resol = 1., float rho=0.) const;
+
+  //! Get selected electrons
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsDileptonTTbar(
+                          float PtThr, float EtaThr,
+                          float ElectronRelIso, bool applyLES = false,
+                          float scale = 1., bool applyLER = false,
+                          float resol = 1., float rho=0) const;   
+
+  //! Get selected electrons no iso
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsNoIsoDileptonTTbar(
+                          bool applyLES = false, float scale = 1.,
+                          bool applyLER = false, float resol = 1.) const;
+
+  //! Get selected electrons no iso
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsNoIsoDileptonTTbar(
+                          float PtThr, float EtaThr, 
+                          bool applyLES = false, float scale = 1., 
+                          bool applyLER = false, float resol = 1.) const;
+
+  //! Get selected electrons iso non id
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsIsoNonIDDileptonTTbar(
+                          bool applyLES = false, float scale = 1.,
+                          bool applyLER = false, float resol = 1.) const;
+
+  //! Get selected electrons non iso non id
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsNoIsoNonIDDileptonTTbar(
+                          bool applyLES = false, float scale = 1.,
+                          bool applyLER = false, float resol = 1.) const;
 
   // -------------- accessor to muon collections -------------
 
@@ -447,8 +489,15 @@ class Selection : public Event
   // -------------------------------------------------------------
   //                        data members
   // -------------------------------------------------------------
+
    
-   double RelIso03PFDeltaBeta(IPHCTree::NTMuon themuon){
+   
+ public:
+
+  //! requirements
+  Requirement cfg;
+   
+static   double RelIso03PFDeltaBeta(IPHCTree::NTMuon &themuon) {
      
      return (
       ( themuon.isolation["PF03Char"] + max(0., themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]-0.5*themuon.isolation["PF03PU"] ) 
@@ -456,15 +505,46 @@ class Selection : public Event
    }
    
    
+      
+static   double RelIso03PF(IPHCTree::NTElectron &theelec) {
+     
+     return (
+      ( theelec.isolation["PATCharH"] +theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"] ) 
+      / theelec.p4.Pt() );
+   }
    
    
    
+      
+static   double EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
+      return (
+      ( theelec.isolation["PATCharH"] + 
+      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.p4.Eta()), 0. )
+      
+      )/ theelec.p4.Pt() );
+   }
    
- public:
 
-  //! requirements
-  Requirement cfg;
 
+static double AeffDR03_2012(double eta){
+
+  double theAeff = 0.;
+  
+  double abseta = fabs(eta);
+  
+    if(abseta<1.0) 	                  theAeff = 0.13;
+    else if(abseta>1.0   && abseta<1.479) theAeff = 0.14;
+    else if(abseta>1.479 && abseta<2.0)   theAeff = 0.07;
+    else if(abseta>2.0   && abseta<2.2)   theAeff = 0.09;
+    else if(abseta>2.2   && abseta<2.3)   theAeff = 0.11;
+    else if(abseta>2.3   && abseta<2.4)   theAeff = 0.11;
+    else if(abseta>2.4)                   theAeff = 0.14 ;
+   
+   return theAeff;
+  
+
+}
+  
  private:
 
   //! Pile-Up weights
@@ -493,7 +573,12 @@ class Selection : public Event
       
       
   mutable map<const char*, JetCorrectionUncertainty*, ltstr> vsrc;
-  char * jecSource;
+  char * jecSource;   
+
+
+   
+
+
 
 };
 

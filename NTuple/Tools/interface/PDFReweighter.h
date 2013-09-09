@@ -8,9 +8,9 @@
 
 // NTupleAnalysis headers
 #include "NTFormat/interface/NTEvent.h"
-#include "Selection/interface/SSDiLeptonSelection.h"
+#include "Selection/interface/DiLeptonSelection.h"
 #include "Selection/interface/SelectionTable.h"
-#include "Plots/interface/SSDiLepAnaHistoManager.h"
+#include "Plots/interface/DiLepAnaHistoManager.h"
 #include "Tools/interface/JetCorrector.h"
 #include "Tools/interface/Dataset.h"
 #include "Tools/interface/AnalysisEnvironmentLoader.h"

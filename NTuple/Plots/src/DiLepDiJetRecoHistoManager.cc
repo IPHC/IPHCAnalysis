@@ -1,5 +1,5 @@
 #include "Plots/interface/DiLepDiJetRecoHistoManager.h"
-#include "Selection/interface/SSDiLeptonSelection.h"
+#include "Selection/interface/DiLeptonSelection.h"
 
 
 
@@ -25,7 +25,7 @@ void DiLepDiJetRecoHistoManager::Fill(NTEvent* event, const vector<NTMuon>& cand
 
 void DiLepDiJetRecoHistoManager::FillSelStep(NTEvent* event, const vector<NTMuon>& candMuon, const vector<NTElectron>& candElec, const vector<NTJet>& candJet, const int& iSelStep, const int& iChannel, const int& iDataset, const float& weight){
         if(!Check(iChannel, iSelStep, iDataset, 0) ) return;
-	SSDiLeptonSelection sel;
+	DiLeptonSelection sel;
 	float mass = sel.DiLeptonMass(candMuon,candElec);
 	/*float mt = sel.DiLeptonMass(candMuon,candElec);
    	float DPhi = -999;

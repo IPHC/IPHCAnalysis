@@ -1040,7 +1040,7 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectrons(
 
   for(unsigned int i=0;i<electrons.size();i++)
   {
-    if ( static_cast<double>(electrons[i].RelIso03PF()) 
+    if ( static_cast<double>(RelIso03PF(electrons[i])) 
                                         > ElectronRelIso) continue;
     selectedElectrons.push_back(electrons[i]);
   }
@@ -1069,7 +1069,7 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsIsoNonID(
   {
     if(localElectrons[i].p4.Pt()        < cfg.ElectronPtThreshold_ ) continue;
     if(fabs(localElectrons[i].p4.Eta()) > cfg.ElectronEtaThreshold_) continue;
-    if(static_cast<double>(localElectrons[i].RelIso03PF()) 
+    if(static_cast<double>(RelIso03PF(localElectrons[i])) 
                                             > cfg.ElectronRelIso_)  continue;
     selectedElectrons.push_back(localElectrons[i]);
   }
@@ -1132,6 +1132,289 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectrons(
                               applyLES, scale,
                               applyLER, resol);
 }
+
+
+
+
+
+
+//-----------------------
+
+
+
+
+
+// ----------------------------------------------------------------------------
+// GetScaledElectrons
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetScaledElectronsDileptonTTbar
+                                                        (float scale) const
+{
+  // Container for output
+  std::vector<IPHCTree::NTElectron> newElectrons;
+
+  // Get Electrons  
+  if (GetPointer2Electrons()!=0) newElectrons = *GetPointer2Electrons();
+  else return newElectrons;
+     
+  for (unsigned int i=0; i<newElectrons.size(); i++)
+  {
+    if(scale > 1)
+    {
+      if(newElectrons[i].isEB == 1) scale = 1.005;
+      else scale = 1.0275;
+    }
+    newElectrons[i].p4.SetPxPyPzE(scale*newElectrons[i].p4.Px(),
+                                  scale*newElectrons[i].p4.Py(),
+                                  scale*newElectrons[i].p4.Pz(),
+                                  scale*newElectrons[i].p4.E());
+  }
+  return newElectrons;
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSmearedElectrons
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSmearedElectronsDileptonTTbar
+                                                        (float resol) const
+{
+  // Container for output
+  std::vector<IPHCTree::NTElectron> newElectrons;
+
+  // Get Electrons  
+  if (GetPointer2Electrons()!=0) newElectrons = *GetPointer2Electrons();
+  else return newElectrons;
+
+  // Loop over Electrons
+  for (unsigned int i=0; i<newElectrons.size(); i++)
+  {
+    if(resol > 0)
+    {
+      if (newElectrons[i].isEB == 1) resol = 0.25;
+      else resol = 0.34;
+    }
+      
+    double deltaR = -1;
+    double gen_pt = -1; //to be changed
+
+    // Look through W decays
+    for(unsigned int igenEl=0; igenEl<mc()->wAndDecays.size(); igenEl++)
+    {
+      if(abs(mc()->wAndDecays[igenEl].mcLepId) != 11  ) continue;
+      deltaR = mc()->wAndDecays[igenEl].p4_Lep_gen.DeltaR(newElectrons[i].p4);
+      if(deltaR<0.1) gen_pt = mc()->wAndDecays[igenEl].p4_Lep_gen.Pt();
+    }
+
+    // Look through Z decays
+    for(unsigned int igenEl=0; igenEl<mc()->zAndDecays.size(); igenEl++)
+      {
+        if (mc()->zAndDecays[igenEl].Lep1_pdgID == 11 || 
+            mc()->zAndDecays[igenEl].Lep1_pdgID == -11)
+        {
+          deltaR = mc()->zAndDecays[igenEl].p4_Lep1_gen.DeltaR
+                                                   (newElectrons[i].p4);
+          if(deltaR<0.1) gen_pt = mc()->zAndDecays[igenEl].p4_Lep1_gen.Pt();
+        }
+        if (mc()->zAndDecays[igenEl].Lep2_pdgID == 11 || 
+            mc()->zAndDecays[igenEl].Lep2_pdgID == -11)
+        {
+          deltaR = mc()->zAndDecays[igenEl].p4_Lep2_gen.DeltaR
+                                                    (newElectrons[i].p4);
+          if(deltaR<0.1) gen_pt = mc()->zAndDecays[igenEl].p4_Lep2_gen.Pt();
+        }
+    }
+      
+    if( gen_pt > 0)
+    {
+      double ele_pt = newElectrons[i].p4.Pt();
+      double deltapt = (ele_pt - gen_pt) * resol;
+      double ptscale = ((ele_pt + deltapt) / ele_pt);
+      if(ptscale <0 ) ptscale = 0;
+      newElectrons[i].p4.SetPxPyPzE(ptscale*newElectrons[i].p4.Px(),
+                                    ptscale*newElectrons[i].p4.Py(),
+                                    ptscale*newElectrons[i].p4.Pz(),
+                                    ptscale*newElectrons[i].p4.E() );
+    }
+  }
+
+  return newElectrons;
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectronsNoIso
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTTbar(
+                                           float PtThr, float EtaThr,
+                                           bool applyLES, float scale,
+                         	                 bool applyLER, float resol) const
+{
+  // Containers for output
+  std::vector<IPHCTree::NTElectron> selectedElectrons;
+  std::vector<IPHCTree::NTElectron> localElectrons;
+  
+  // Get new electrons
+  if (applyLES ) { localElectrons = GetScaledElectronsDileptonTTbar(scale); }
+  else { if(!applyLER) localElectrons = *GetPointer2Electrons();}
+  
+  if(applyLER ) { localElectrons = GetSmearedElectronsDileptonTTbar(resol); }
+  else{ if(!applyLES) localElectrons = *GetPointer2Electrons();}
+  
+  // Loop over electrons
+  for(unsigned int i=0;i<localElectrons.size();i++)
+  {
+    /*bool hadId = localElectrons[i].hadId(
+        static_cast<unsigned int>(localElectrons[i].ID["simpleEleId90relIso"]) & 0x1
+                                );*/
+				
+   				
+    double elecID = localElectrons[i].ID["mvaTrigV0"];
+    //std::cout << "hadId " << hadId << endl;
+    //std::cout << "localElectrons[i].ID[mvaTrigV0] " <<  localElectrons[i].ID["mvaTrigV0"]<< endl;
+    
+    bool hadId = false;
+    if(elecID > 0.5) hadId = true;
+    
+    //useless 
+    if (!localElectrons[i].isGsfElectron) continue; 
+    if (!hadId)                           continue;
+    if(!localElectrons[i].passConversionVeto)                  continue;
+    if(fabs(localElectrons[i].D0)       >=cfg.ElectronD0Cut_)  continue; 
+    if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)              continue;
+    if(localElectrons[i].p4.Pt()        <=PtThr)               continue;
+    if(localElectrons[i].missingHits > 0)                      continue;
+     selectedElectrons.push_back(localElectrons[i]);
+  }
+  std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
+  return selectedElectrons;
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectrons
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsDileptonTTbar(
+                               float PtThr, float EtaThr,
+                               float ElectronRelIso, bool applyLES,
+                               float scale, bool applyLER , float resol, float rho) const
+{
+  std::vector<IPHCTree::NTElectron> selectedElectrons;
+
+  std::vector<IPHCTree::NTElectron> electrons = 
+              GetSelectedElectronsNoIsoDileptonTTbar(PtThr, EtaThr, applyLES,
+                                        scale, applyLER, resol);
+
+  for(unsigned int i=0;i<electrons.size();i++)
+  {
+    //if ( RelIso03PF(electrons[i])  > ElectronRelIso) continue;
+    if ( EffArea03PF(electrons[i], rho)  > ElectronRelIso) continue;
+    selectedElectrons.push_back(electrons[i]);
+  }
+  std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
+  return selectedElectrons;
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectronIsoNonId
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsIsoNonIDDileptonTTbar(
+                                bool applyLES, float scale,
+                                bool applyLER , float resol) const
+{
+  std::vector<IPHCTree::NTElectron> selectedElectrons;
+  std::vector<IPHCTree::NTElectron> localElectrons;
+  
+  if(applyLES) localElectrons = GetScaledElectronsDileptonTTbar(scale); 
+  else localElectrons = *GetPointer2Electrons();
+  
+  if(applyLER) localElectrons = GetSmearedElectronsDileptonTTbar(resol); 
+  else localElectrons = *GetPointer2Electrons();
+   
+  for(unsigned int i=0;i<localElectrons.size();i++)
+  {
+    if(localElectrons[i].p4.Pt()        < cfg.ElectronPtThreshold_ ) continue;
+    if(fabs(localElectrons[i].p4.Eta()) > cfg.ElectronEtaThreshold_) continue;
+    if(static_cast<double>(RelIso03PF(localElectrons[i])) 
+                                            > cfg.ElectronRelIso_)  continue;
+    selectedElectrons.push_back(localElectrons[i]);
+  }
+  std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
+  return selectedElectrons;
+}
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectronNoIsoNonId
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoNonIDDileptonTTbar(
+                      bool applyLES, float scale, 
+		      bool applyLER , float resol ) const
+{
+  
+  std::vector<IPHCTree::NTElectron> selectedElectrons;
+  std::vector<IPHCTree::NTElectron> localElectrons;
+  
+  if(applyLES) localElectrons = GetScaledElectronsDileptonTTbar(scale); 
+  else localElectrons = *GetPointer2Electrons();
+  
+  if(applyLER) localElectrons = GetSmearedElectronsDileptonTTbar(resol); 
+  else localElectrons = *GetPointer2Electrons();
+ 
+  for(unsigned int i=0;i<localElectrons.size();i++)
+  {
+    if(localElectrons[i].p4.Pt()        < cfg.ElectronPtThreshold_ ) continue;
+    if(fabs(localElectrons[i].p4.Eta()) > cfg.ElectronEtaThreshold_) continue;
+    if(!localElectrons[i].isGsfElectron) continue; 
+    
+    selectedElectrons.push_back(localElectrons[i]);
+  }
+  std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
+  return selectedElectrons;
+}
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectronNoIso
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTTbar(
+                                 bool applyLES, float scale,
+                                 bool applyLER , float resol ) const
+{
+	return GetSelectedElectronsNoIsoDileptonTTbar(cfg.ElectronPtThreshold_,
+                                   cfg.ElectronEtaThreshold_,
+                                   applyLES, scale);
+}
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectron
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsDileptonTTbar(
+                              bool applyLES, float scale,
+                              bool applyLER, float resol , float rho) const
+{
+	return GetSelectedElectronsDileptonTTbar(cfg.ElectronPtThreshold_,
+                              cfg.ElectronEtaThreshold_,
+                              cfg.ElectronRelIso_,
+                              applyLES, scale,
+                              applyLER, resol,  rho);
+}
+
+
+
+
+
+
+
+
+
+
+//-----------------------
+
+
+
+
+
 
 
 // ----------------------------------------------------------------------------
@@ -1251,7 +1534,7 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsForLJets(
 
   for(unsigned int i=0;i<electrons.size();i++)
   {
-    if ( static_cast<double>(electrons[i].RelIso03PF()) 
+    if ( static_cast<double>(RelIso03PF(electrons[i])) 
                                         > ElectronRelIso) continue;
     selectedElectrons.push_back(electrons[i]);
   }
@@ -1330,7 +1613,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuons(
   // Loop over muons 
   for(unsigned int i=0;i<muons.size();i++)
   {
-    if ( static_cast<double>(muons[i].RelIso03PF()) > MuonRelIso) continue;
+    if ( static_cast<double>(RelIso03PFDeltaBeta(muons[i])) > MuonRelIso) continue;
     selectedMuons.push_back(muons[i]);
   }
   std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
@@ -1358,7 +1641,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonIsoNonID(
   {
     if( localMuons[i].p4.Pt()              < cfg.MuonPtThreshold_)  continue;
     if( fabs(localMuons[i].p4.Eta())       > cfg.MuonEtaThreshold_) continue;
-    if((double) localMuons[i].RelIso03PF() > cfg.MuonRelIso_)       continue;
+    if((double) RelIso03PFDeltaBeta(localMuons[i]) > cfg.MuonRelIso_)       continue;
     selectedMuons.push_back(localMuons[i]);
   }
 
@@ -1436,10 +1719,14 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsNoIsoDileptonTTbar(
   else localMuons = *GetPointer2Muons();
 
   for(unsigned int i=0;i<localMuons.size();i++)
-  {
+  { 
+  
+    if (fabs(localMuons[i].p4.Eta()) >= EtaThr)                  continue;
+    if (localMuons[i].p4.Pt()        <  PtThr)                   continue;
     if (!localMuons[i].isGlobalMuon && !localMuons[i].isTrackerMuon )  continue; // isGlobalMuon
     if (!localMuons[i].isPFMuon) continue; // isTrackerMuon
     
+    selectedMuons.push_back(localMuons[i]);
     
   }
 
@@ -1460,11 +1747,10 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsDileptonTTbar(
   std::vector<IPHCTree::NTMuon> selectedMuons;
   std::vector<IPHCTree::NTMuon> muons = 
                  GetSelectedMuonsNoIsoDileptonTTbar(PtThr,EtaThr,applyLES,scale);
-
-  // Loop over muons 
+   // Loop over muons 
   for(unsigned int i=0;i<muons.size();i++)
   {
-    if ( static_cast<double>(muons[i].RelIso03PF()) > MuonRelIso) continue;
+    if ( RelIso03PFDeltaBeta(muons[i]) > MuonRelIso) continue;
     selectedMuons.push_back(muons[i]);
   }
   std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
@@ -1492,7 +1778,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonIsoNonIDDileptonTTbar(
   {
     if( localMuons[i].p4.Pt()              < cfg.MuonPtThreshold_)  continue;
     if( fabs(localMuons[i].p4.Eta())       > cfg.MuonEtaThreshold_) continue;
-    if((double) localMuons[i].RelIso03PF() > cfg.MuonRelIso_)       continue;
+    if((double) RelIso03PFDeltaBeta(localMuons[i]) > cfg.MuonRelIso_)       continue;
     selectedMuons.push_back(localMuons[i]);
   }
 
@@ -1618,7 +1904,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsForLJets(
   // Loop over muons
   for(unsigned int i=0;i<muons.size();i++)
   {
-    if( static_cast<double>(muons[i].RelIso03PF()) > MuonRelIso) continue;
+    if( static_cast<double>(RelIso03PFDeltaBeta(muons[i])) > MuonRelIso) continue;
     selectedMuons.push_back(muons[i]);
   }
   std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
@@ -1663,7 +1949,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetVetoMuonsForLJets(
     if(!localMuons[i].isGlobalMuon && !localMuons[i].isTrackerMuon)  continue;
     if(localMuons[i].p4.Pt()        <10.)                      continue;
     if(fabs(localMuons[i].p4.Eta()) >= 2.5)                   continue;
-    if((localMuons[i].RelIso03PF()) > 0.20)                   continue;
+    if((RelIso03PFDeltaBeta(localMuons[i])) > 0.20)                   continue;
 
 
 /*  // autres cuts aussi ou pas????
@@ -1718,7 +2004,7 @@ std::vector<IPHCTree::NTElectron> Selection::GetVetoElectronsForLJets(
     if(fabs(localElectrons[i].p4.Eta()) >=2.5)              continue;
     // missing cut on ETA_SC PATElectron.superCluster()->eta())
     // excluding EB-EE transition region 1.4442 < abs(eta_sc) < 1.5660
-    if ( localElectrons[i].RelIso03PF() > 0.2)              continue;
+    if ( RelIso03PF(localElectrons[i]) > 0.2)              continue;
 
 
     // if(fabs(localElectrons[i].D0)       >=cfg.ElectronD0Cut_)  continue; 
@@ -1769,7 +2055,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedLooseMuonsForMuJets(
   {
     if ( fabs(localMuons[i].p4.Eta()) < 2.5 &&
          localMuons[i].p4.Pt() > 10         &&
-         static_cast<double>(localMuons[i].RelIso03PF()) > 0.2)     
+         static_cast<double>(RelIso03PFDeltaBeta(localMuons[i])) > 0.2)     
       selectedLooseMuons.push_back(localMuons[i]);
   }
   return selectedLooseMuons;
@@ -1796,7 +2082,7 @@ Selection::GetSelectedLooseElectronsForMuJets
   {
     if ( fabs(localElectrons[i].p4.Eta()) < 2.5 &&
          localElectrons[i].p4.Pt() > 15 &&
-         static_cast<double>(localElectrons[i].RelIso03PF()) > 0.2)     
+         static_cast<double>(RelIso03PF(localElectrons[i])) > 0.2)     
       selectedLooseElectrons.push_back(localElectrons[i]);
   }
   return selectedLooseElectrons;

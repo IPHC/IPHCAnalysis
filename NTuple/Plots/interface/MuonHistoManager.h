@@ -20,6 +20,15 @@ class MuonHistoManager: public HistoManager{
 	//Fill methods
 	void Fill(const vector<NTMuon>& muons, const int& maxSelStep, const int& iChannel, const int& iDataset, const float& weight);
 	void FillSelStep(const vector<NTMuon>& muons, const int& iSelStep, const int& iChannel, const int& iDataset, const float& weight);
+   
+   double RelIso03PFDeltaBeta(IPHCTree::NTMuon &themuon) const{
+     
+     return (
+      ( themuon.isolation["PF03Char"] + max(0., themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]-0.5*themuon.isolation["PF03PU"] ) 
+      )/ themuon.p4.Pt() );
+   }
+   
+   
 
 
 };

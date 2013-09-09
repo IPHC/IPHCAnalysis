@@ -94,7 +94,7 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
 	if (pass_elec)
 	  continue;
 	if ((elec_in[i].charge != elec_in[j].charge) && 
-	(!isForMM || (isForMM && ((elec_in[i].RelIso03PF () < iso1_in && elec_in[j].RelIso03PF () < iso2_in) || (elec_in[i].RelIso03PF () < iso2_in && elec_in[j].RelIso03PF () < iso1_in))))){
+	(!isForMM || (isForMM && ((RelIso03PF(elec_in[i]) < iso1_in && RelIso03PF(elec_in[j]) < iso2_in) || (RelIso03PF(elec_in[i]) < iso2_in && RelIso03PF(elec_in[j]) < iso1_in))))){
 	  pass_elec = true;
 	  sum_pT_ee = elec_in[i].p4.Pt () + elec_in[j].p4.Pt ();
 	  ie1 = i;
@@ -114,7 +114,7 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
 	if (pass_muon)
 	  continue;
 	if ((muon_in[i].charge != muon_in[j].charge) && 
-	  (!isForMM || (isForMM && ((muon_in[i].RelIso03PF () < iso1_in && muon_in[j].RelIso03PF () < iso2_in) || (muon_in[i].RelIso03PF () < iso2_in && muon_in[j].RelIso03PF () < iso1_in))))){
+	  (!isForMM || (isForMM && ((RelIso03PFDeltaBeta(muon_in[i]) < iso1_in && RelIso03PFDeltaBeta(muon_in[j]) < iso2_in) || (RelIso03PFDeltaBeta(muon_in[i]) < iso2_in && RelIso03PFDeltaBeta(muon_in[j]) < iso1_in))))){
 	  pass_muon = true;
 	  sum_pT_mumu = muon_in[i].p4.Pt () + muon_in[j].p4.Pt ();
 	  imu1 = i;
@@ -133,7 +133,7 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
     for (unsigned int i = 0; i < muon_in.size (); i++) {
       for (unsigned int j = 0; j < elec_in.size (); j++) {
 	if ((muon_in[i].charge != elec_in[j].charge) && 
-	 (!isForMM || (isForMM && ((muon_in[i].RelIso03PF () < iso1_in && elec_in[j].RelIso03PF () < iso2_in) || (muon_in[i].RelIso03PF () < iso2_in && elec_in[j].RelIso03PF () < iso1_in))))){
+	 (!isForMM || (isForMM && ((RelIso03PFDeltaBeta(muon_in[i]) < iso1_in && RelIso03PF(elec_in[j]) < iso2_in) || (RelIso03PFDeltaBeta(muon_in[i]) < iso2_in && RelIso03PF(elec_in[j]) < iso1_in))))){
 	  sum_pT_emu = muon_in[i].p4.Pt () + elec_in[j].p4.Pt ();
 	  if (sum_pT_emu > sum_pT_emu_start) {
 	    sum_pT_emu_start = sum_pT_emu;
@@ -167,28 +167,9 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
 
 
   if (elec_out.size () + muon_out.size () == 2) {
-    if (muon_out.size () == 2) {
-// necessary ??????? to be verified !!    
-      if (fabs (muon_out[0].p4.Eta ()) < 2.1 || fabs (muon_out[1].p4.Eta ()) < 2.1) {
-	CandPairType = "mumu";
-      }
-      else {
-	CandPairType = "false";
-      }
-    }
-    if (elec_out.size () == 2) {
-      CandPairType = "ee";
-    }
-    if (muon_out.size () == 1 && elec_out.size () == 1) {
-// necessary ??????? to be verified !!    
-//      if (elec_out[0].ET_SC < 17 && fabs (muon_out[0].p4.Eta ()) > 2.1) {
-      if ( fabs (muon_out[0].p4.Eta ()) > 2.1) {
-	CandPairType = "false";
-      }
-      else {
-	CandPairType = "emu";
-      }
-    }
+    if (muon_out.size () == 2) CandPairType = "mumu";
+    if (elec_out.size () == 2) CandPairType = "ee";
+    if (muon_out.size () == 1 && elec_out.size () == 1) CandPairType = "emu";
   }
   if (CandPairType == "ee" || CandPairType == "emu" || CandPairType == "mumu")
     return true;
@@ -197,129 +178,6 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
 
 }
 
-
-
-
-bool DiLeptonSelection::GetLeptonPairLikeSign (std::vector < NTMuon > muon_in, std::vector < IPHCTree::NTElectron > elec_in, std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out,
-				       string & CandPairType, bool isForMM, float iso1_in, float iso2_in)
-{
-
-  //important: reset the out collections
-  muon_out.clear ();
-  elec_out.clear ();
-
-  float sum_pT_ee = 0.;
-  bool pass_elec = false;
-  int ie1 = -1;
-  int ie2 = -1;
-  if (elec_in.size () >= 2) {
-    for (unsigned int i = 0; i < elec_in.size (); i++) {
-      for (unsigned int j = i + 1; j < elec_in.size (); j++) {
-	if (pass_elec)
-	  continue;
-	if ((elec_in[i].charge == elec_in[j].charge) && 
-	(!isForMM || (isForMM && ((elec_in[i].RelIso03PF () < iso1_in && elec_in[j].RelIso03PF () < iso2_in) || (elec_in[i].RelIso03PF () < iso2_in && elec_in[j].RelIso03PF () < iso1_in))))){
-	  pass_elec = true;
-	  sum_pT_ee = elec_in[i].p4.Pt () + elec_in[j].p4.Pt ();
-	  ie1 = i;
-	  ie2 = j;
-	}
-      }
-    }
-  }
-
-  float sum_pT_mumu = 0.;
-  bool pass_muon = false;
-  int imu1 = -1;
-  int imu2 = -1;
-  if (muon_in.size () >= 2) {
-    for (unsigned int i = 0; i < muon_in.size (); i++) {
-      for (unsigned int j = i + 1; j < muon_in.size (); j++) {
-	if (pass_muon)
-	  continue;
-	if ((muon_in[i].charge == muon_in[j].charge) && 
-	  (!isForMM || (isForMM && ((muon_in[i].RelIso03PF () < iso1_in && muon_in[j].RelIso03PF () < iso2_in) || (muon_in[i].RelIso03PF () < iso2_in && muon_in[j].RelIso03PF () < iso1_in))))){
-	  pass_muon = true;
-	  sum_pT_mumu = muon_in[i].p4.Pt () + muon_in[j].p4.Pt ();
-	  imu1 = i;
-	  imu2 = j;
-	}
-      }
-    }
-  }
-
-
-  float sum_pT_emu_start = 0.;
-  float sum_pT_emu = 0.;
-  int je1 = -1;
-  int jmu2 = -1;
-  if (muon_in.size () >= 1 && elec_in.size () >= 1) {
-    for (unsigned int i = 0; i < muon_in.size (); i++) {
-      for (unsigned int j = 0; j < elec_in.size (); j++) {
-	if ((muon_in[i].charge == elec_in[j].charge) && 
-	 (!isForMM || (isForMM && ((muon_in[i].RelIso03PF () < iso1_in && elec_in[j].RelIso03PF () < iso2_in) || (muon_in[i].RelIso03PF () < iso2_in && elec_in[j].RelIso03PF () < iso1_in))))){
-	  sum_pT_emu = muon_in[i].p4.Pt () + elec_in[j].p4.Pt ();
-	  if (sum_pT_emu > sum_pT_emu_start) {
-	    sum_pT_emu_start = sum_pT_emu;
-	    je1 = j;
-	    jmu2 = i;
-	  }
-	}
-      }
-    }
-  }
-
-
-  float sum[3] = { sum_pT_ee, sum_pT_mumu, sum_pT_emu };
-  int sortedIndices[3];
-  TMath::Sort (3, sum, sortedIndices);
-  if (sortedIndices[0] == 0 && sum_pT_ee != 0.) {
-    elec_out.push_back (elec_in[ie1]);
-    elec_out.push_back (elec_in[ie2]);
-  }
-  else if (sortedIndices[0] == 1 && sum_pT_mumu != 0.) {
-    muon_out.push_back (muon_in[imu1]);
-    muon_out.push_back (muon_in[imu2]);
-  }
-  else if (sortedIndices[0] == 2 && sum_pT_emu != 0.) {
-    elec_out.push_back (elec_in[je1]);
-    muon_out.push_back (muon_in[jmu2]);
-  }
-
-
-
-
-
-  if (elec_out.size () + muon_out.size () == 2) {
-    if (muon_out.size () == 2) {
-// necessary ??????? to be verified !!    
-      if (fabs (muon_out[0].p4.Eta ()) < 2.1 || fabs (muon_out[1].p4.Eta ()) < 2.1) {
-	CandPairType = "mumu";
-      }
-      else {
-	CandPairType = "false";
-      }
-    }
-    if (elec_out.size () == 2) {
-      CandPairType = "ee";
-    }
-    if (muon_out.size () == 1 && elec_out.size () == 1) {
-// necessary ??????? to be verified !!    
-//      if (elec_out[0].ET_SC < 17 && fabs (muon_out[0].p4.Eta ()) > 2.1) {
-      if ( fabs (muon_out[0].p4.Eta ()) > 2.1) {
-	CandPairType = "false";
-      }
-      else {
-	CandPairType = "emu";
-      }
-    }
-  }
-  if (CandPairType == "ee" || CandPairType == "emu" || CandPairType == "mumu")
-    return true;
-  else
-    return false;
-
-}
 
 
 
@@ -339,7 +197,7 @@ bool DiLeptonSelection::GetLeptonPairForMM(float iso1_in , float iso2_in, std::v
       for(unsigned int j=i+1; j<elec_in.size(); j++){
         if ( pass_elec ) continue;
         if ( (elec_in[i].charge != elec_in[j].charge) 
-        && ( (elec_in[i].RelIso03PF()<iso1_in && elec_in[j].RelIso03PF()<iso2_in)  || (elec_in[i].RelIso03PF()<iso2_in && elec_in[j].RelIso03PF()<iso1_in) )  
+        && ( (RelIso03PF(elec_in[i])<iso1_in && RelIso03PF(elec_in[j])<iso2_in)  || (RelIso03PF(elec_in[i])<iso2_in && RelIso03PF(elec_in[j])<iso1_in) )  
         ) {
             pass_elec = true;
             sum_pT_ee = elec_in[i].p4.Pt()+elec_in[j].p4.Pt();
@@ -361,7 +219,7 @@ bool DiLeptonSelection::GetLeptonPairForMM(float iso1_in , float iso2_in, std::v
       for(unsigned int j=i+1; j<muon_in.size(); j++){
         if ( pass_muon ) continue;
         if ( (muon_in[i].charge != muon_in[j].charge) 
-        && ( (muon_in[i].RelIso03PF()<iso1_in && muon_in[j].RelIso03PF()<iso2_in)  || (muon_in[i].RelIso03PF()<iso2_in && muon_in[j].RelIso03PF()<iso1_in) )                
+        && ( (RelIso03PFDeltaBeta(muon_in[i])<iso1_in && RelIso03PFDeltaBeta(muon_in[j])<iso2_in)  || (RelIso03PFDeltaBeta(muon_in[i])<iso2_in && RelIso03PFDeltaBeta(muon_in[j])<iso1_in) )                
            ) {
             pass_muon = true;
             sum_pT_mumu = muon_in[i].p4.Pt()+muon_in[j].p4.Pt();
@@ -380,7 +238,7 @@ bool DiLeptonSelection::GetLeptonPairForMM(float iso1_in , float iso2_in, std::v
     for(unsigned int i=0; i<muon_in.size(); i++){
       for(unsigned int j=0; j<elec_in.size(); j++){
 	if ( (muon_in[i].charge != elec_in[j].charge) 
-	   && ( (muon_in[i].RelIso03PF()<iso1_in && elec_in[j].RelIso03PF()<iso2_in) )                      ){
+	   && ( (RelIso03PFDeltaBeta(muon_in[i])<iso1_in && RelIso03PF(elec_in[j])<iso2_in) )                      ){
          sum_pT_emu = muon_in[i].p4.Pt()+elec_in[j].p4.Pt();
          if (sum_pT_emu>sum_pT_emu_start)
          {
@@ -431,29 +289,23 @@ bool DiLeptonSelection::GetLeptonPairForMM(float iso1_in , float iso2_in, std::v
 
 
 
-bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType, bool isForMM, float iso1_in, float iso2_in)
+bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType, bool isForMM, float iso1_in, float iso2_in, float rho)
 {
-  return GetLeptonPair (GetSelectedMuons (), GetSelectedElectrons (), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
+  return GetLeptonPair (GetSelectedMuonsDileptonTTbar (), GetSelectedElectronsDileptonTTbar (rho), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
 }
 
 
-bool DiLeptonSelection::GetLeptonPairElectronScaled (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string &
-              CandPairType, float scale, bool isForMM, float iso1_in, float iso2_in)
+bool DiLeptonSelection::GetLeptonPairElectronScaled (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType, float scale, bool isForMM, float iso1_in, float iso2_in, float rho)
 {
   
-  return GetLeptonPair (GetSelectedMuons (), GetSelectedElectrons (true, scale, false, 1), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
+  return GetLeptonPair (GetSelectedMuonsDileptonTTbar (), GetSelectedElectronsDileptonTTbar (true, scale, false, 1, rho), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
 }
 
-bool DiLeptonSelection::GetLeptonPairElectronSmeared (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType, 
-               float resol, bool isForMM, float iso1_in, float iso2_in)
+bool DiLeptonSelection::GetLeptonPairElectronSmeared (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType,  float resol, bool isForMM, float iso1_in, float iso2_in, float rho)
 {
-  return GetLeptonPair (GetSelectedMuons (), GetSelectedElectrons (false, 1, true, resol), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
+  return GetLeptonPair (GetSelectedMuonsDileptonTTbar (), GetSelectedElectronsDileptonTTbar (false, 1, true, resol, rho), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
 }
 
-bool DiLeptonSelection::GetLeptonPairLikeSign (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType, bool isForMM, float iso1_in, float iso2_in)
-{
-  return GetLeptonPairLikeSign (GetSelectedMuons (), GetSelectedElectrons (), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
-}
 
 
 bool DiLeptonSelection::TestIsolationOfPair (float iso1_in, float iso2_in, std::vector < NTMuon > muon_in, std::vector < IPHCTree::NTElectron > elec_in)
@@ -465,7 +317,7 @@ bool DiLeptonSelection::TestIsolationOfPair (float iso1_in, float iso2_in, std::
       for (unsigned int j = i + 1; j < elec_in.size (); j++) {
 	if (pass_elec)
 	  continue;
-	if ((elec_in[i].RelIso03PF () < iso1_in && elec_in[j].RelIso03PF () < iso2_in) || (elec_in[i].RelIso03PF () < iso2_in && elec_in[j].RelIso03PF () < iso1_in)) {
+	if ((RelIso03PF(elec_in[i]) < iso1_in && RelIso03PF(elec_in[j]) < iso2_in) || (RelIso03PF(elec_in[i]) < iso2_in && RelIso03PF(elec_in[j]) < iso1_in)) {
 	  pass_elec = true;
 	}
       }
@@ -480,7 +332,7 @@ bool DiLeptonSelection::TestIsolationOfPair (float iso1_in, float iso2_in, std::
       for (unsigned int j = i + 1; j < muon_in.size (); j++) {
 	if (pass_muon)
 	  continue;
-	if ((muon_in[i].RelIso03PF () < iso1_in && muon_in[j].RelIso03PF () < iso2_in) || (muon_in[i].RelIso03PF () < iso2_in && muon_in[j].RelIso03PF () < iso1_in)) {
+	if ((RelIso03PFDeltaBeta(muon_in[i]) < iso1_in && RelIso03PFDeltaBeta(muon_in[j]) < iso2_in) || (RelIso03PFDeltaBeta(muon_in[i]) < iso2_in && RelIso03PFDeltaBeta(muon_in[j]) < iso1_in)) {
 	  pass_muon = true;
 	}
       }
@@ -494,7 +346,7 @@ bool DiLeptonSelection::TestIsolationOfPair (float iso1_in, float iso2_in, std::
       for (unsigned int j = 0; j < elec_in.size (); j++) {
 	if (pass_emu)
 	  continue;
-	if (muon_in[i].RelIso03PF () < iso1_in && elec_in[j].RelIso03PF () < iso2_in) {
+	if (RelIso03PFDeltaBeta(muon_in[i]) < iso1_in && RelIso03PF(elec_in[j]) < iso2_in) {
 	  pass_emu = true;
 	}
       }
@@ -669,28 +521,28 @@ int DiLeptonSelection::doFullSelection (Dataset * dataset, vector < float >&weig
       if (pairType_ == "mumu") {
 	lep1PtxCharge = muon_cand[0].p4.Pt () * muon_cand[0].charge;
 	lep2PtxCharge = muon_cand[1].p4.Pt () * muon_cand[1].charge;
-	lep1RelIso = muon_cand[0].RelIso03PF ();
-	lep2RelIso = muon_cand[1].RelIso03PF ();
+	lep1RelIso = RelIso03PFDeltaBeta(muon_cand[0]);
+	lep2RelIso = RelIso03PFDeltaBeta(muon_cand[1]);
       }
       if (pairType_ == "ee") {
 	lep1PtxCharge = elec_cand[0].p4.Pt () * elec_cand[0].charge;
 	lep2PtxCharge = elec_cand[1].p4.Pt () * elec_cand[1].charge;
-	lep1RelIso = elec_cand[0].RelIso03PF ();
-	lep2RelIso = elec_cand[1].RelIso03PF ();
+	lep1RelIso = RelIso03PF(elec_cand[0]);
+	lep2RelIso = RelIso03PF(elec_cand[1]);
       }
       if (pairType_ == "emu") {
 	if (elec_cand[0].p4.Pt () > muon_cand[0].p4.Pt ()) {
 
 	  lep1PtxCharge = elec_cand[0].p4.Pt () * elec_cand[0].charge;
 	  lep2PtxCharge = muon_cand[0].p4.Pt () * muon_cand[0].charge;
-	  lep1RelIso = elec_cand[0].RelIso03PF ();
-	  lep2RelIso = muon_cand[0].RelIso03PF ();
+	  lep1RelIso = RelIso03PF(elec_cand[0]);
+	  lep2RelIso = RelIso03PFDeltaBeta(muon_cand[0]);
 	}
 	else {
 	  lep2PtxCharge = elec_cand[0].p4.Pt () * elec_cand[0].charge;
 	  lep1PtxCharge = muon_cand[0].p4.Pt () * muon_cand[0].charge;
-	  lep2RelIso = elec_cand[0].RelIso03PF ();
-	  lep1RelIso = muon_cand[0].RelIso03PF ();
+	  lep2RelIso = RelIso03PF(elec_cand[0]);
+	  lep1RelIso = RelIso03PFDeltaBeta(muon_cand[0]);
 	}
       }
       dimass_ = DiLeptonMass (muon_cand, elec_cand);
@@ -951,28 +803,28 @@ int DiLeptonSelection::doFullSelectionForMM (float iso1_in, float iso2_in, Datas
       if (pairType_ == "mumu") {
 	lep1PtxCharge = muon_cand[0].p4.Pt () * muon_cand[0].charge;
 	lep2PtxCharge = muon_cand[1].p4.Pt () * muon_cand[1].charge;
-	lep1RelIso = muon_cand[0].RelIso03PF ();
-	lep2RelIso = muon_cand[1].RelIso03PF ();
+	lep1RelIso = RelIso03PFDeltaBeta(muon_cand[0]);
+	lep2RelIso = RelIso03PFDeltaBeta(muon_cand[1]);
       }
       if (pairType_ == "ee") {
 	lep1PtxCharge = elec_cand[0].p4.Pt () * elec_cand[0].charge;
 	lep2PtxCharge = elec_cand[1].p4.Pt () * elec_cand[1].charge;
-	lep1RelIso = elec_cand[0].RelIso03PF ();
-	lep2RelIso = elec_cand[1].RelIso03PF ();
+	lep1RelIso = RelIso03PF(elec_cand[0]);
+	lep2RelIso = RelIso03PF(elec_cand[1]);
       }
       if (pairType_ == "emu") {
 	if (elec_cand[0].p4.Pt () > muon_cand[0].p4.Pt ()) {
 
 	  lep1PtxCharge = elec_cand[0].p4.Pt () * elec_cand[0].charge;
 	  lep2PtxCharge = muon_cand[0].p4.Pt () * muon_cand[0].charge;
-	  lep1RelIso = elec_cand[0].RelIso03PF ();
-	  lep2RelIso = muon_cand[0].RelIso03PF ();
+	  lep1RelIso = RelIso03PF(elec_cand[0]);
+	  lep2RelIso = RelIso03PFDeltaBeta(muon_cand[0]);
 	}
 	else {
 	  lep2PtxCharge = elec_cand[0].p4.Pt () * elec_cand[0].charge;
 	  lep1PtxCharge = muon_cand[0].p4.Pt () * muon_cand[0].charge;
-	  lep2RelIso = elec_cand[0].RelIso03PF ();
-	  lep1RelIso = muon_cand[0].RelIso03PF ();
+	  lep2RelIso = RelIso03PF(elec_cand[0]);
+	  lep1RelIso = RelIso03PFDeltaBeta(muon_cand[0]);
 	}
       }
       dimass_ = DiLeptonMass (muon_cand, elec_cand);

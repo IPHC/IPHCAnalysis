@@ -56,21 +56,18 @@ class DiLeptonSelection: public Selection{
       /** muon_out & elec_out will be filled with the 2 di-leptons candidates \n Returns true if a lepton pair is found \n
       	  CandPairType = "ee" or "emu" or "mumu" or "false"
 	*/
-      bool GetLeptonPair(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, bool isForMM = false, float iso1_in = -1., float iso2_in = -1.); /** Idem with default GetSelected Electrons & Muons as input*/
-      bool GetLeptonPairElectronScaled(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, float scale, bool isForMM = false, float iso1_in = -1., float iso2_in = -1.); /** Idem with default GetSelected Electrons & Muons as input*/
-      bool GetLeptonPairElectronSmeared(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, float resol, bool isForMM = false, float iso1_in = -1., float iso2_in = -1.); /** Idem with default GetSelected Electrons & Muons as input*/
+      bool GetLeptonPair(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, bool isForMM = false, float iso1_in = -1., float iso2_in = -1., float rho=0); /** Idem with default GetSelected Electrons & Muons as input*/
+      bool GetLeptonPairElectronScaled(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, float scale, bool isForMM = false, float iso1_in = -1., float iso2_in = -1., float rho=0); /** Idem with default GetSelected Electrons & Muons as input*/
+      bool GetLeptonPairElectronSmeared(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, float resol, bool isForMM = false, float iso1_in = -1., float iso2_in = -1., float rho=0); /** Idem with default GetSelected Electrons & Muons as input*/
 
 
-      bool GetLeptonPairLikeSign(std::vector<NTMuon> muon_in,std::vector<IPHCTree::NTElectron> elec_in, std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, bool isForMM = false, float iso1_in = -1., float iso2_in = -1.);
       /** muon_out & elec_out will be filled with the 2 di-leptons candidates \n Returns true if a lepton pair is found \n
       	  CandPairType = "ee" or "emu" or "mumu" or "false"
 	*/
-      bool GetLeptonPairLikeSign(std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType, bool isForMM = false, float iso1_in = -1., float iso2_in = -1.); /** Idem with default GetSelected Electrons & Muons as input*/
-
+ 
       bool GetLeptonPairForMM(float iso1_in, float iso2_in, std::vector<NTMuon> muon_in,std::vector<IPHCTree::NTElectron> elec_in, std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType); /** More generic than GetLeptonPair. It allows to do the isolation of pairs of type tight, medium and loose before the pairing. Giving very large numbers for iso1_in and iso2_in is the same as the GetLeptonPair method. */
 
       bool GetLeptonPairForMM(float iso1_in, float iso2_in, std::vector<NTMuon>& muon_out,std::vector<NTElectron>& elec_out,  string& CandPairType); /** Idem with default GetSelected Electrons & Muons as input*/
-
 
       int doFullSelectionForMM(float iso1_in, float iso2_in, Dataset* dataset, vector<float>& weightb, string channelName=string(""), bool applyTTbarMCCut = false, bool print = false, bool isForMM = false, bool MMInverted = false, bool applyJES = false, float JESParam = 1., bool applyEES = false, float EESParam = 1., bool applyMES = false, float MESParam = 1., bool applyJER = false, float JERFactor = 0., bool applyMETS = false, float METScale = 1.);
 

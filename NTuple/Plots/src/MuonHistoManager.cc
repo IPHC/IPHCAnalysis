@@ -50,7 +50,7 @@ void MuonHistoManager::FillSelStep(const vector<NTMuon>& muons, const int& iSelS
 		Histos[8][iChannel][iSelStep][iDataset].Fill(muons[i].isolation["HCalo03"],weight);
 		//Histos[[9]iChannel][iSelStep][iDataset].Fill(muons[i].RelIso03(),weight);
 		NTMuon mu = muons[i];
-		float relIso = mu.RelIso03();
+		float relIso = RelIso03PFDeltaBeta(mu);
 		Histos[9][iChannel][iSelStep][iDataset].Fill(relIso,weight);
 	}
 	if(muons.size()>0){
