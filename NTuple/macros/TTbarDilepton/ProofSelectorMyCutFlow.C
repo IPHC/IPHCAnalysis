@@ -580,8 +580,8 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	  
       float InvDilMass = 0;
       if (IChannel == 0 )  InvDilMass = (selMuons[0].p4     +selMuons[1].p4	 ).M();
-      if (IChannel == 1 )  InvDilMass = (selMuons[0].p4     +selElectrons[0].p4).M();
-      if (IChannel == 2 )  InvDilMass = (selElectrons[0].p4 +selElectrons[1].p4).M();
+      if (IChannel == 1 )  InvDilMass = (selMuons[0].p4     +selElectrons[0].p4Gsf).M();
+      if (IChannel == 2 )  InvDilMass = (selElectrons[0].p4Gsf +selElectrons[1].p4Gsf).M();
 
 	
 	
@@ -646,23 +646,23 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	  }
 	  if(IChannel == 1 &&  decayChannel== "emu"){
 	    LeptonSF = sel.getLeptonScaleFactor( selMuons[0].p4.Pt()    , selMuons[0].p4.Eta()    , "mu") 
-	      * sel.getLeptonScaleFactor( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e");
+	      * sel.getLeptonScaleFactor( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e");
 	    if(applyLeptonSFUp)
 	      LeptonSF = (sel.getLeptonScaleFactor( selMuons[0].p4.Pt()    , selMuons[0].p4.Eta(),     "mu")+sel.getLeptonScaleFactorError( selMuons[0].p4.Pt(), selMuons[0].p4.Eta(), "mu"))
-		* (sel.getLeptonScaleFactor( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "mu")+sel.getLeptonScaleFactorError( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e"));		  
+		* (sel.getLeptonScaleFactor( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e")+sel.getLeptonScaleFactorError( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e"));		  
 	    if(applyLeptonSFDown)
 	      LeptonSF = (sel.getLeptonScaleFactor( selMuons[0].p4.Pt()    , selMuons[0].p4.Eta(),     "mu")-sel.getLeptonScaleFactorError( selMuons[0].p4.Pt(), selMuons[0].p4.Eta(), "mu"))
-		* (sel.getLeptonScaleFactor( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "mu")-sel.getLeptonScaleFactorError( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e"));		  
+		* (sel.getLeptonScaleFactor( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e")-sel.getLeptonScaleFactorError( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e"));		  
 	  }
 	  if(IChannel == 2 &&  decayChannel== "ee"){
-	    LeptonSF = sel.getLeptonScaleFactor( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e") 
-	      * sel.getLeptonScaleFactor( selElectrons[1].p4.Pt(), selElectrons[1].p4.Eta(), "e");
+	    LeptonSF = sel.getLeptonScaleFactor( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e") 
+	      * sel.getLeptonScaleFactor( selElectrons[1].p4Gsf.Pt(), selElectrons[1].p4Gsf.Eta(), "e");
 	    if(applyLeptonSFUp)
-	      LeptonSF = (sel.getLeptonScaleFactor( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e")+sel.getLeptonScaleFactorError( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e"))
-		* (sel.getLeptonScaleFactor( selElectrons[1].p4.Pt(), selElectrons[1].p4.Eta(), "e")+sel.getLeptonScaleFactorError( selElectrons[1].p4.Pt(), selElectrons[1].p4.Eta(), "e"));		  
+	      LeptonSF = (sel.getLeptonScaleFactor( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e")+sel.getLeptonScaleFactorError( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e"))
+		* (sel.getLeptonScaleFactor( selElectrons[1].p4Gsf.Pt(), selElectrons[1].p4Gsf.Eta(), "e")+sel.getLeptonScaleFactorError( selElectrons[1].p4Gsf.Pt(), selElectrons[1].p4Gsf.Eta(), "e"));		  
 	    if(applyLeptonSFDown)
-	      LeptonSF = (sel.getLeptonScaleFactor( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e")-sel.getLeptonScaleFactorError( selElectrons[0].p4.Pt(), selElectrons[0].p4.Eta(), "e"))
-		* (sel.getLeptonScaleFactor( selElectrons[1].p4.Pt(), selElectrons[1].p4.Eta(), "e")-sel.getLeptonScaleFactorError( selElectrons[1].p4.Pt(), selElectrons[1].p4.Eta(), "e"));		  
+	      LeptonSF = (sel.getLeptonScaleFactor( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e")-sel.getLeptonScaleFactorError( selElectrons[0].p4Gsf.Pt(), selElectrons[0].p4Gsf.Eta(), "e"))
+		* (sel.getLeptonScaleFactor( selElectrons[1].p4Gsf.Pt(), selElectrons[1].p4Gsf.Eta(), "e")-sel.getLeptonScaleFactorError( selElectrons[1].p4Gsf.Pt(), selElectrons[1].p4Gsf.Eta(), "e"));		  
 	  }
 	  //to do for synch, leptonSF = 1
 	  LeptonSF=1;
@@ -826,7 +826,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	        cout << decayChannel << " :" << event->general.eventNb << "; ";
 	        if(IChannel == 0){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selMuons[1].p4.Pt() <<  "; ";}
 	        if(IChannel == 1){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selElectrons[0].p4.Pt() <<  "; ";}
-	        if(IChannel == 2){ cout << selElectrons[0].p4.Pt() <<  "; "; cout << selElectrons[1].p4.Pt() <<  "; ";}
+	        if(IChannel == 2){ cout << selElectrons[0].p4Gsf.Pt() <<  "; "; cout << selElectrons[1].p4Gsf.Pt() <<  "; ";}
 		
 	        if(IChannel == 0){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";}
 	        if(IChannel == 1){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; ";}

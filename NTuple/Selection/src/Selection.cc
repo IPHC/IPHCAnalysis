@@ -694,7 +694,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
     }
     
     for(unsigned int iel=0; iel< elec_cand.size(); iel++){
-      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4);
+      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4Gsf);
       if(deltaR < deltaRel) deltaRel = deltaR;
     }
     
@@ -862,7 +862,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJetsForLJets(
     
     for(unsigned int iel=0; iel< elec_cand.size(); iel++)
     {
-      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4);
+      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4Gsf);
       if(deltaR < deltaRel) deltaRel = deltaR;
     }
     
@@ -1323,8 +1323,8 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTT
     
     //useless 
     if (!localElectrons[i].isGsfElectron)                       continue; 
-    if(localElectrons[i].p4.Pt()        <=PtThr)                continue;
-    if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)               continue;
+    if(localElectrons[i].p4Gsf.Pt()        <=PtThr)                continue;
+    if(fabs(localElectrons[i].p4Gsf.Eta()) >=EtaThr)               continue;
     if(fabs(localElectrons[i].dxy_vertex)>=cfg.ElectronD0Cut_)  continue; 
     if(!localElectrons[i].passConversionVeto)                   continue;
     if( elecID < 0.5 )                                          continue;
@@ -1380,8 +1380,8 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsIsoNonIDDilepto
    
   for(unsigned int i=0;i<localElectrons.size();i++)
   {
-    if(localElectrons[i].p4.Pt()        < cfg.ElectronPtThreshold_ ) continue;
-    if(fabs(localElectrons[i].p4.Eta()) > cfg.ElectronEtaThreshold_) continue;
+    if(localElectrons[i].p4Gsf.Pt()        < cfg.ElectronPtThreshold_ ) continue;
+    if(fabs(localElectrons[i].p4Gsf.Eta()) > cfg.ElectronEtaThreshold_) continue;
     if(static_cast<double>(RelIso03PF(localElectrons[i])) 
                                             > cfg.ElectronRelIso_)  continue;
     selectedElectrons.push_back(localElectrons[i]);
@@ -1409,8 +1409,8 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoNonIDDilep
  
   for(unsigned int i=0;i<localElectrons.size();i++)
   {
-    if(localElectrons[i].p4.Pt()        < cfg.ElectronPtThreshold_ ) continue;
-    if(fabs(localElectrons[i].p4.Eta()) > cfg.ElectronEtaThreshold_) continue;
+    if(localElectrons[i].p4Gsf.Pt()        < cfg.ElectronPtThreshold_ ) continue;
+    if(fabs(localElectrons[i].p4Gsf.Eta()) > cfg.ElectronEtaThreshold_) continue;
     if(!localElectrons[i].isGsfElectron) continue; 
     
     selectedElectrons.push_back(localElectrons[i]);

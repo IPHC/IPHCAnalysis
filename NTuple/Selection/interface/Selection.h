@@ -521,7 +521,7 @@ static   double EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
       
       return (
       ( theelec.isolation["PATCharH"] + 
-      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.p4.Eta()), 0. )
+      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.p4Gsf.Eta()), 0. )
       
       )/ theelec.p4.Pt() );
    }
