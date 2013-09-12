@@ -79,11 +79,14 @@ void DiLeptonSelection::LoadEvent (const NTEvent * event)
 bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vector < IPHCTree::NTElectron > elec_in, std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out,
 				       string & CandPairType, bool isForMM, float iso1_in, float iso2_in)
 {
-
+  
+  
+  
+  
   //important: reset the out collections
   muon_out.clear ();
   elec_out.clear ();
-
+  
   float sum_pT_ee = 0.;
   bool pass_elec = false;
   int ie1 = -1;
@@ -93,8 +96,7 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
       for (unsigned int j = i + 1; j < elec_in.size (); j++) {
 	if (pass_elec)
 	  continue;
-	if ((elec_in[i].charge != elec_in[j].charge) && 
-	(!isForMM || (isForMM && ((RelIso03PF(elec_in[i]) < iso1_in && RelIso03PF(elec_in[j]) < iso2_in) || (RelIso03PF(elec_in[i]) < iso2_in && RelIso03PF(elec_in[j]) < iso1_in))))){
+	if ( elec_in[i].charge != elec_in[j].charge) {
 	  pass_elec = true;
 	  sum_pT_ee = elec_in[i].p4.Pt () + elec_in[j].p4.Pt ();
 	  ie1 = i;
@@ -113,9 +115,7 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
       for (unsigned int j = i + 1; j < muon_in.size (); j++) {
 	if (pass_muon)
 	  continue;
-	if ((muon_in[i].charge != muon_in[j].charge) && 
-	  (!isForMM || (isForMM && ((RelIso03PFDeltaBeta(muon_in[i]) < iso1_in && RelIso03PFDeltaBeta(muon_in[j]) < iso2_in) || (RelIso03PFDeltaBeta(muon_in[i]) < iso2_in && RelIso03PFDeltaBeta(muon_in[j]) < iso1_in))))){
-	  pass_muon = true;
+	if (muon_in[i].charge != muon_in[j].charge) {	  pass_muon = true;
 	  sum_pT_mumu = muon_in[i].p4.Pt () + muon_in[j].p4.Pt ();
 	  imu1 = i;
 	  imu2 = j;
@@ -132,8 +132,7 @@ bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > muon_in, std::vect
   if (muon_in.size () >= 1 && elec_in.size () >= 1) {
     for (unsigned int i = 0; i < muon_in.size (); i++) {
       for (unsigned int j = 0; j < elec_in.size (); j++) {
-	if ((muon_in[i].charge != elec_in[j].charge) && 
-	 (!isForMM || (isForMM && ((RelIso03PFDeltaBeta(muon_in[i]) < iso1_in && RelIso03PF(elec_in[j]) < iso2_in) || (RelIso03PFDeltaBeta(muon_in[i]) < iso2_in && RelIso03PF(elec_in[j]) < iso1_in))))){
+	if (muon_in[i].charge != elec_in[j].charge){
 	  sum_pT_emu = muon_in[i].p4.Pt () + elec_in[j].p4.Pt ();
 	  if (sum_pT_emu > sum_pT_emu_start) {
 	    sum_pT_emu_start = sum_pT_emu;
@@ -290,8 +289,9 @@ bool DiLeptonSelection::GetLeptonPairForMM(float iso1_in , float iso2_in, std::v
 
 
 bool DiLeptonSelection::GetLeptonPair (std::vector < NTMuon > &muon_out, std::vector < NTElectron > &elec_out, string & CandPairType, bool isForMM, float iso1_in, float iso2_in, float rho)
-{
-  return GetLeptonPair (GetSelectedMuonsDileptonTTbar (), GetSelectedElectronsDileptonTTbar (rho), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
+{ 
+  
+  return GetLeptonPair (GetSelectedMuonsDileptonTTbar (), GetSelectedElectronsDileptonTTbar (), muon_out, elec_out, CandPairType, isForMM, iso1_in, iso2_in);
 }
 
 

@@ -186,17 +186,65 @@ std::vector<IPHCTree::NTJet>  Selection::GetSmearedJets(
                            float jetResFactor) const
 {
   std::vector<IPHCTree::NTJet> newJets = GetJets();
+  
+  
   for (unsigned int i=0; i<newJets.size(); i++)
   {
-    double gen_pt  = newJets[i].p4Gen.Pt(); //to be changed
-    double jet_pt  = newJets[i].p4.Pt();
-    double deltapt = (jet_pt - gen_pt) * jetResFactor;
-    double ptscale = ((jet_pt + deltapt) / jet_pt);
-    if (ptscale<0) ptscale = 0;
-    newJets[i].p4.SetPxPyPzE(ptscale*newJets[i].p4.Px(),
-                             ptscale*newJets[i].p4.Py(),
-                             ptscale*newJets[i].p4.Pz(),
-                             ptscale*newJets[i].p4.E());
+    TLorentzVector jet = newJets[i].p4;
+    TLorentzVector genJet = newJets[i].p4Gen;
+    
+    double Px = 0;
+    double Py = 0;
+    double Pz = 0;
+    double E = 0;
+    
+    double pt = jet.Pt();		   
+    double factor = 0.;
+    if ( fabs(jet.Eta()) < 0.5 ) {
+      factor = .052;
+      if(jetResFactor > 0.1  )  factor += 0.012+0.062;
+      if(jetResFactor < -0.1 )  factor -= 0.012-0.061;
+    }
+    else if ( fabs(jet.Eta()) < 1.1 && fabs(jet.Eta()) >= 0.5 ) {
+      factor = 0.057;
+      if(jetResFactor > 0.1  )  factor += 0.012+0.056;
+      if(jetResFactor < -0.1 )  factor -= 0.012-0.055;
+    }
+    else if ( fabs(jet.Eta()) < 1.7 && fabs(jet.Eta()) >= 1.1 ) {
+      factor = 0.096;
+      if(jetResFactor > 0.1  )  factor += 0.017+0.063;
+      if(jetResFactor < -0.1 )  factor -= 0.017-0.062;
+    }
+    else if ( fabs(jet.Eta()) < 2.3 && fabs(jet.Eta()) >= 1.7 ) {
+      factor = 0.134;
+      if(jetResFactor > 0.1  )  factor += 0.035+0.087;
+      if(jetResFactor < -0.1 )  factor -= 0.035-0.085;
+
+    }
+    else if (fabs(jet.Eta()) < 5.0 && fabs(jet.Eta()) >=2.3 ) {
+      factor = 0.288;
+      if(jetResFactor > 0.1  )  factor += 0.127+0.155;
+      if(jetResFactor < -0.1 )  factor -= 0.127-0.153;
+    }
+    
+    
+    
+    double ptscale = 1;
+    if ( genJet.Pt()>15. && (fabs(genJet.Pt()/pt-1)<0.5)){
+      double gen_pt = genJet.Pt();
+      double reco_pt = pt;
+      double deltapt = (reco_pt - gen_pt) * factor;
+      ptscale = max(0.0, (reco_pt + deltapt) / reco_pt);
+    }
+
+      
+    Px   = ptscale*newJets[i].p4.Px();
+    Py   = ptscale*newJets[i].p4.Py();
+    Pz   = ptscale*newJets[i].p4.Pz();
+    E	= ptscale*newJets[i].p4.E();
+    newJets[i].p4.SetPxPyPzE(Px, Py, Pz, E);
+      		     
+			     
   }
   return newJets;
 }
@@ -582,7 +630,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
     if (fabs(scaledJets[i].p4.Eta())> cfg.JetEtaThreshold_ ||
         scaledJets[i].p4.Pt()<cfg.JetPtThreshold_) continue;
 	
-    if (!scaledJets[i].ID["TIGHT"]) continue;
+    if (!scaledJets[i].ID["LOOSE"]) continue;
     
         
     double deltaRmu = 10000;
@@ -600,7 +648,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
       if(deltaR < deltaRel) deltaRel = deltaR;
     }
     
-    if( deltaRmu > 0.4  && deltaRel > 0.4) 
+    if( deltaRmu > 0.5  && deltaRel > 0.5) 
                          selectedJets.push_back(scaledJets[i]);
   }
   std::sort(selectedJets.begin(),selectedJets.end(),HighestPt());
@@ -656,7 +704,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
       if(deltaR < deltaRtau) deltaRtau = deltaR;
     }
     
-    if( deltaRmu > 0.4  && deltaRel > 0.4 && deltaRtau > 0.4) 
+    if( deltaRmu > 0.5  && deltaRel > 0.5 && deltaRtau > 0.5) 
       selectedJets.push_back(scaledJets[i]);
   }
   std::sort(selectedJets.begin(),selectedJets.end(),HighestPt());
@@ -1273,17 +1321,16 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTT
     //std::cout << "hadId " << hadId << endl;
     //std::cout << "localElectrons[i].ID[mvaTrigV0] " <<  localElectrons[i].ID["mvaTrigV0"]<< endl;
     
-    bool hadId = false;
-    if(elecID > 0.5) hadId = true;
-    
     //useless 
-    if (!localElectrons[i].isGsfElectron) continue; 
-    if (!hadId)                           continue;
-    if(!localElectrons[i].passConversionVeto)                  continue;
-    if(fabs(localElectrons[i].D0)       >=cfg.ElectronD0Cut_)  continue; 
-    if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)              continue;
-    if(localElectrons[i].p4.Pt()        <=PtThr)               continue;
-    if(localElectrons[i].missingHits > 0)                      continue;
+    if (!localElectrons[i].isGsfElectron)                       continue; 
+    if(localElectrons[i].p4.Pt()        <=PtThr)                continue;
+    if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)               continue;
+    if(fabs(localElectrons[i].dxy_vertex)>=cfg.ElectronD0Cut_)  continue; 
+    if(!localElectrons[i].passConversionVeto)                   continue;
+    if( elecID < 0.5 )                                          continue;
+    if(localElectrons[i].missingHits > 0)                       continue;
+    
+    
      selectedElectrons.push_back(localElectrons[i]);
   }
   std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
@@ -1307,7 +1354,6 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsDileptonTTbar(
 
   for(unsigned int i=0;i<electrons.size();i++)
   {
-    //if ( RelIso03PF(electrons[i])  > ElectronRelIso) continue;
     if ( EffArea03PF(electrons[i], rho)  > ElectronRelIso) continue;
     selectedElectrons.push_back(electrons[i]);
   }
@@ -1725,6 +1771,23 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsNoIsoDileptonTTbar(
     if (localMuons[i].p4.Pt()        <  PtThr)                   continue;
     if (!localMuons[i].isGlobalMuon && !localMuons[i].isTrackerMuon )  continue; // isGlobalMuon
     if (!localMuons[i].isPFMuon) continue; // isTrackerMuon
+    
+    //---------------------------
+    //old muon ID
+    //if (!localMuons[i].isGlobalMuon)  continue; // isGlobalMuon
+    //if (!localMuons[i].isTrackerMuon) continue; // isTrackerMuon
+    //if (localMuons[i].Chi2	     >= cfg.MuonNormChi2_)	 continue;
+    //if (localMuons[i].NTrValidHits   <= cfg.MuonNofValidTrHits_) continue;
+    //if (localMuons[i].NValidHits     <= cfg.MuonNofValidHits_  ) continue;
+    //if (fabs(localMuons[i].D0Inner)  >= cfg.MuonD0Cut_) 	 continue;
+    //if (fabs(localMuons[i].p4.Eta()) >= EtaThr) 		 continue;
+    //if (localMuons[i].p4.Pt()	     <  PtThr)  		 continue;
+    //if (GetSelectedVertex().size() == 0) continue;
+    //if ( fabs( localMuons[i].vertex.Z() - 
+    //     GetSelectedVertex()[0].p3.Z() ) > cfg.MuonVertexMatchThr_ ) continue;
+
+    
+    
     
     selectedMuons.push_back(localMuons[i]);
     

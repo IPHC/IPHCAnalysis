@@ -517,6 +517,8 @@ static   double RelIso03PF(IPHCTree::NTElectron &theelec) {
    
       
 static   double EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
+     
+      
       return (
       ( theelec.isolation["PATCharH"] + 
       max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.p4.Eta()), 0. )
@@ -531,14 +533,20 @@ static double AeffDR03_2012(double eta){
   double theAeff = 0.;
   
   double abseta = fabs(eta);
-  
-    if(abseta<1.0) 	                  theAeff = 0.13;
-    else if(abseta>1.0   && abseta<1.479) theAeff = 0.14;
-    else if(abseta>1.479 && abseta<2.0)   theAeff = 0.07;
-    else if(abseta>2.0   && abseta<2.2)   theAeff = 0.09;
-    else if(abseta>2.2   && abseta<2.3)   theAeff = 0.11;
-    else if(abseta>2.3   && abseta<2.4)   theAeff = 0.11;
-    else if(abseta>2.4)                   theAeff = 0.14 ;
+    
+  if(abseta<1.0)			theAeff = 0.13;
+  else if(abseta>1.0   && abseta<1.479) theAeff = 0.14;
+  else if(abseta>1.479 && abseta<2.0)	theAeff = 0.07;
+  else if(abseta>2.0   && abseta<2.2)	theAeff = 0.09;
+  else if(abseta>2.2   && abseta<2.3)	theAeff = 0.11;
+  else if(abseta>2.3   && abseta<2.4)	theAeff = 0.11;
+  else if(abseta>2.4)			theAeff = 0.14 ;
+    
+    
+    
+    
+    
+    
    
    return theAeff;
   

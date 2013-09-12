@@ -83,7 +83,24 @@ class FakeRate_LeptEff {
      std::pair<float, float> GetLeptEffElectronPtNJet(  float pt,  int   njets );
      std::pair<float, float> GetLeptEffElectronEtaNJet( float eta, int   njets );
      
-    
+     double RelIso03PFDeltaBeta(IPHCTree::NTMuon &themuon) const{
+     
+     return (
+      ( themuon.isolation["PF03Char"] + max(0., themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]-0.5*themuon.isolation["PF03PU"] ) 
+      )/ themuon.p4.Pt() );
+   }
+   
+   
+      
+   double RelIso03PF(IPHCTree::NTElectron &theelec) const{
+     
+     return (
+      ( theelec.isolation["PATChar"] +theelec.isolation["PATNeut"] + theelec.isolation["PATPhot"] ) 
+      / theelec.p4.Pt() );
+   }
+   
+   
+
     private:
      
      

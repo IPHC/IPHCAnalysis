@@ -137,7 +137,7 @@ void FakeRate_LeptEff::FillHistos(NTMET theMet, std::vector<NTJet> thejets, stri
     double mT = pow(2*(muons[0].p4.Pt())*(theMet.p2.Mod())*(1-cos(deltaphiMuMET))  , 0.5);
     
     
-    double relIso = muons[0].RelIso03();
+    double relIso = RelIso03PFDeltaBeta(muons[0]);
     for(unsigned int i=0; i< hlist_Mu_Loose.size(); i++){
      if(relIso < 0.5){
        if((datasetname+TypeSel+"_loose_pt")   == hlist_Mu_Loose[i]->GetName() )  hlist_Mu_Loose[i]->Fill(mT, muons[0].p4.Pt());

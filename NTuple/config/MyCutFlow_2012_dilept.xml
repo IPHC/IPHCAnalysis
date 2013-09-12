@@ -40,7 +40,7 @@
 
 <s type="Vertex"   Loaded="1" Algo="offlinePrimaryVertices"    VertexNdofThr="4" VertexZThr="24."   VertexRhoThr="2." />  
 <s type="Electron" Loaded="1" Algo="selectedPatElectronsPFlow" PtThreshold="20." EtaThreshold="2.5" RelIso="0.15" D0Cut="0.04" VertexMatchThr="1." DElectronETSCThr="15" RemuThr="0.1"/>
-<s type="Muon"     Loaded="1" Algo="selectedPatMuonsPFlow"     PtThreshold="20." EtaThreshold="2.4" RelIso="0.15" D0Cut="1000" VertexMatchThr="1." NofValidHits="0"  NofValidTkHits="0" NormChi2="10000" />
+<s type="Muon"     Loaded="1" Algo="selectedPatMuonsPFlow"     PtThreshold="20." EtaThreshold="2.4" RelIso="0.15" D0Cut="0.02" VertexMatchThr="1." NofValidHits="0"  NofValidTkHits="10" NormChi2="10" />
 <s type="Tau"      Loaded="0" Algo="selectedPatTaus"           PtThreshold="20." EtaThreshold="2.5" RelIso="0.15" D0Cut="0.04" VertexMatchThr="1." TauLeadTrkPtCut="10."/>
 <s type="Vertex"   Loaded="1" Algo="offlinePrimaryVertices"    VertexNdofThr="4" VertexZThr="24."   VertexRhoThr="2." />  
 <s type="Jet" Loaded="1" Algo="pf" PtThreshold="30." EtaThreshold="2.5" />  

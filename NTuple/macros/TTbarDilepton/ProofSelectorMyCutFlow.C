@@ -71,8 +71,8 @@ ProofSelectorMyCutFlow::ProofSelectorMyCutFlow()
   
   applyJES  = false;
   scale     = -1; // +1 or -1
-  applyJER  = false;
-  ResFactor = 0.1;
+  applyJER  = true; // alsways set to true to account for JER corrections 
+  ResFactor = 0.;  //0 is defauls, -1. for -1sigma deviation, +1 for +1 sigma deviation
   
   applyLeptonSFUp    = false;
   applyLeptonSFDown  = false;
@@ -373,10 +373,19 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
   int maxdebugcc=10;
   sel.LoadEvent(event);
   
+  
+  double rho = event->pileup.rho_PUUE_dens;
+  
+  
+  
   //Collection of selected objects
   vector<NTVertex>   selVertices  = sel.GetSelectedVertex();
-  vector<NTElectron> selElectrons = sel.GetSelectedElectronsDileptonTTbar(); 
-  vector<NTMuon>     selMuons     = sel.GetSelectedMuonsDileptonTTbar();
+  vector<NTElectron> selElectrons_init = sel.GetSelectedElectronsDileptonTTbar(20, 2.5, 0.15, 0, 0, 0, 0, rho); 
+  vector<NTMuon>     selMuons_init     = sel.GetSelectedMuonsDileptonTTbar();
+  
+  vector<NTElectron> selElectrons;
+  vector<NTMuon>     selMuons;   
+
   //vector<NTMuon>     selMuons     = sel.GetSelectedMuons();
   
   //NTMET met			   = sel.GetMET(); 
@@ -421,7 +430,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       
       
       if(IReweight ){
-	weightITypeMC = weightITypeMC_save*LumiWeights->weight3D(event->pileup.before_npu, event->pileup.intime_npu, event->pileup.after_npu);
+	//weightITypeMC = weightITypeMC_save*LumiWeights->weight3D(event->pileup.before_npu, event->pileup.intime_npu, event->pileup.after_npu);
       }
       else weightITypeMC = weightITypeMC_save;
     }
@@ -530,7 +539,13 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       // determine decay channel
       //***************************************************************** 
       string decayChannel_tmp = "";
-      sel.GetLeptonPair(selMuons, selElectrons, decayChannel_tmp ); 
+       //sel.GetLeptonPair(selMuons, selElectrons, decayChannel_tmp , rho); 
+      //sel.GetLeptonPair(selMuons, selElectrons, decayChannel_tmp , false, 1., 1., rho); 
+      sel.GetLeptonPair(selMuons_init, selElectrons_init, selMuons, selElectrons, decayChannel_tmp , false, 1., 1.); 
+      
+      
+           
+      
       TString decayChannel = decayChannel_tmp;
       //to do : makes pat iso configurable
       
@@ -661,7 +676,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	// apply lepton invM selection
 	//*****************************************************************   
 	
-	if( fabs(InvDilMass-91) > 15) {
+	if( fabs(InvDilMass-91) > 15 || IChannel == 1) {
 	  
 	  
 	  //*****************************************************************
@@ -692,6 +707,9 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	  //*****************************************************************   
 		
 	  vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons, applyJES, scale, applyJER, ResFactor);
+	  
+	  
+	  
 	  if(selJets.size() >= 2){
 	    
 	    
@@ -722,7 +740,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	    //***************************************************************** 
 	    double theMET = met.p2.Mod();
 	    
-	    if(decayChannel == "emu" || theMET > 40){
+	    if( IChannel == 1 || theMET > 40){
 	      
 	       
 	      //*****************************************************************
@@ -803,13 +821,16 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      
 	      
 	      
-	      if(IChannel == 0 ) {
+	      if(IChannel > -1 ) {
 	
 	        cout << decayChannel << " :" << event->general.eventNb << "; ";
-	        cout << selMuons[0].p4.Pt() <<  "; ";
-	        cout << selMuons[1].p4.Pt() <<  "; ";
-	        cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; ";
-	        cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";
+	        if(IChannel == 0){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selMuons[1].p4.Pt() <<  "; ";}
+	        if(IChannel == 1){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selElectrons[0].p4.Pt() <<  "; ";}
+	        if(IChannel == 2){ cout << selElectrons[0].p4.Pt() <<  "; "; cout << selElectrons[1].p4.Pt() <<  "; ";}
+		
+	        if(IChannel == 0){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";}
+	        if(IChannel == 1){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; ";}
+	        if(IChannel == 2){cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; "; cout << sel.EffArea03PF(selElectrons[1], rho) <<  "; ";}
 	        cout << InvDilMass <<  "; ";
 	        cout << selJets.size() <<  "; ";
 	        cout << selJets[0].p4.Pt() <<  "; ";
