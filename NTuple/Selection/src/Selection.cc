@@ -644,7 +644,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
     
     for(unsigned int iel=0; iel< elec_cand.size(); iel++)
     {
-      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4);
+      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4Gsf);
       if(deltaR < deltaRel) deltaRel = deltaR;
     }
     
@@ -1446,6 +1446,42 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsDileptonTTbar(
                               applyLER, resol,  rho);
 }
 
+
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedElectron
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsLooseDileptonTTbar(float rho) const
+{
+	
+   std::vector<IPHCTree::NTElectron> localElectrons = *GetPointer2Electrons();
+   std::vector<IPHCTree::NTElectron> selectedElectrons;
+   for(unsigned int i=0;i<localElectrons.size();i++)
+    {
+      if(localElectrons[i].p4Gsf.Pt()        < 10 ) continue;
+      if(fabs(localElectrons[i].p4Gsf.Eta()) > 2.5) continue;
+      //if(!localElectrons[i].isGsfElectron) continue; 
+      
+      
+      
+      //double elecID = localElectrons[i].ID["mvaTrigV0"];
+      //if ( elecID < 0.) continue; 
+      //if ( EffArea03PF(localElectrons[i], rho)  > 0.15) continue;
+      
+      
+      
+      selectedElectrons.push_back(localElectrons[i]);
+    } 
+    
+    
+    
+    
+    std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
+    return selectedElectrons;
+
+	
+}
 
 
 

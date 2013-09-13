@@ -705,8 +705,16 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	  //*****************************************************************
 	  // apply jets mutli. selection
 	  //*****************************************************************   
-		
-	  vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons, applyJES, scale, applyJER, ResFactor);
+          
+	  
+	  vector<NTElectron> selElectrons_loose = sel.GetSelectedElectronsLooseDileptonTTbar(rho);
+	  
+	  if(selElectrons.size() != selElectrons_loose.size()) cout << "loose and tight nit matching " << endl;
+	  cout << "------------------" << endl;
+	  cout << "selElectrons " << selElectrons.size() << endl;
+	  cout << "selElectrons_loose " << selElectrons_loose.size() << endl;
+	  cout << "------------------" << endl;
+	  vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons_loose, applyJES, scale, applyJER, ResFactor);
 	  
 	  
 	  
@@ -844,7 +852,8 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      //***************************************************************** 
 	      
 
-	      if( (isData && NBtaggedJets >=1) || !isData){
+	      //if( (isData && NBtaggedJets >=1) || !isData){
+	      if(NBtaggedJets >=1){
 	        
 	        //*****************************************************************
 	        // fill cutflow jets mutli. selection

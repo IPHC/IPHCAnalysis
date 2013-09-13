@@ -148,7 +148,9 @@ class Selection : public Event
   std::vector<IPHCTree::NTElectron> GetSelectedElectronsNoIsoNonIDDileptonTTbar(
                           bool applyLES = false, float scale = 1.,
                           bool applyLER = false, float resol = 1.) const;
-
+			  
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsLooseDileptonTTbar(float rho)  const;
+  
   // -------------- accessor to muon collections -------------
 
   //! Get scaled muons
@@ -521,7 +523,7 @@ static   double EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
       
       return (
       ( theelec.isolation["PATCharH"] + 
-      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.p4Gsf.Eta()), 0. )
+      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.etaSuperCluster), 0. )
       
       )/ theelec.p4.Pt() );
    }

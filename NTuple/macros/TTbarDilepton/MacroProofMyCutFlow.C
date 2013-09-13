@@ -144,7 +144,7 @@ int main(int argc, char* argv[]){
   //cout<<"## Merging of all the dataset into one single file with hadd: "<<outputFileName<<endl;
   //system(MergingCommand.c_str());
   cout << "start backuping proof root files " << endl;
-  system("mkdir backup_outputProof`date +\"%d-%m-%y_%H-%M\"`;mv proof*.root  backup_outputProof`date +\"%d-%m-%y_%H-%M\"`/.");
+  //system("mkdir outputProof`date +\"%d-%m-%y_%H-%M\"`;mv proof*.root  outputProof`date +\"%d-%m-%y_%H-%M\"`/.");
   
   cout<<"###############################################################"<<endl;
   cout<<"################ 	   May your job 	##############"<<endl;
