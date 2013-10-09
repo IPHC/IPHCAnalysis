@@ -518,7 +518,7 @@ static   double RelIso03PF(IPHCTree::NTElectron &theelec) {
    
    
       
-static   double EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
+static   float EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
      
       
       return (
@@ -530,9 +530,9 @@ static   double EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
    
 
 
-static double AeffDR03_2012(double eta){
+static float AeffDR03_2012(double eta){
 
-  double theAeff = 0.;
+  float theAeff = 0.;
   
   double abseta = fabs(eta);
     

@@ -512,7 +512,10 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       passtrigger_mumu =  sel.passTriggerSelection8TeV ( dataset, "mumu");
       passtrigger_emu  =  sel.passTriggerSelection8TeV ( dataset, "emu" );
       passtrigger_ee   =  sel.passTriggerSelection8TeV ( dataset, "ee" );
-    
+      
+      //cout << " passtrigger_mumu " << passtrigger_mumu << endl;
+      //cout << " passtrigger_emu " << passtrigger_emu << endl;
+      //cout << " passtrigger_ee " << passtrigger_ee << endl;
     
       if (   passtrigger_mumu ||  passtrigger_emu ||  passtrigger_ee ) {
     
@@ -583,8 +586,26 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
       if (IChannel == 1 )  InvDilMass = (selMuons[0].p4     +selElectrons[0].p4Gsf).M();
       if (IChannel == 2 )  InvDilMass = (selElectrons[0].p4Gsf +selElectrons[1].p4Gsf).M();
 
-	
-	
+	if( event->general.eventNb  == 3001882) {
+      cout << decayChannel << " :" << event->general.eventNb << "; ";
+      if(IChannel == 0){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selMuons[1].p4.Pt() <<  "; ";}
+      if(IChannel == 1){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selElectrons[0].p4.Pt() <<  "; ";}
+      if(IChannel == 2){ cout << selElectrons[0].p4Gsf.Pt() <<  "; "; cout << selElectrons[1].p4Gsf.Pt() <<  "; ";}
+
+      if(IChannel == 0){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";}
+      if(IChannel == 1){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; ";}
+      if(IChannel == 2){cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; "; cout << sel.EffArea03PF(selElectrons[1], rho) <<  "; ";}
+       vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons, applyJES, scale, applyJER, ResFactor);
+	 
+      
+      cout << InvDilMass <<  "; ";
+      cout << selJets.size() <<  "; ";
+      cout << selJets[0].p4.Pt() <<  "; ";
+      cout << selJets[1].p4.Pt() <<  "; ";
+      cout << met.p2.Mod() <<  "; ";
+      cout << 0<<  "; "<< endl;;
+
+	}
       
       //*****************************************************************
       // apply dilepton selection
@@ -709,12 +730,13 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	  
 	  vector<NTElectron> selElectrons_loose = sel.GetSelectedElectronsLooseDileptonTTbar(rho);
 	  
-	  if(selElectrons.size() != selElectrons_loose.size()) cout << "loose and tight nit matching " << endl;
-	  cout << "------------------" << endl;
-	  cout << "selElectrons " << selElectrons.size() << endl;
-	  cout << "selElectrons_loose " << selElectrons_loose.size() << endl;
-	  cout << "------------------" << endl;
-	  vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons_loose, applyJES, scale, applyJER, ResFactor);
+	  //if(selElectrons.size() != selElectrons_loose.size()) cout << "loose and tight nit matching " << endl;
+	  //cout << "------------------" << endl;
+	  //cout << "selElectrons " << selElectrons.size() << endl;
+	  //cout << "selElectrons_loose " << selElectrons_loose.size() << endl;
+	  //cout << "------------------" << endl;
+	  //vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons_loose, applyJES, scale, applyJER, ResFactor);
+	  vector<NTJet>  selJets = sel.GetSelectedJets(selMuons, selElectrons, applyJES, scale, applyJER, ResFactor);
 	  
 	  
 	  
@@ -829,24 +851,6 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	      
 	      
 	      
-	      if(IChannel > -1 ) {
-	
-	        cout << decayChannel << " :" << event->general.eventNb << "; ";
-	        if(IChannel == 0){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selMuons[1].p4.Pt() <<  "; ";}
-	        if(IChannel == 1){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selElectrons[0].p4.Pt() <<  "; ";}
-	        if(IChannel == 2){ cout << selElectrons[0].p4Gsf.Pt() <<  "; "; cout << selElectrons[1].p4Gsf.Pt() <<  "; ";}
-		
-	        if(IChannel == 0){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";}
-	        if(IChannel == 1){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; ";}
-	        if(IChannel == 2){cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; "; cout << sel.EffArea03PF(selElectrons[1], rho) <<  "; ";}
-	        cout << InvDilMass <<  "; ";
-	        cout << selJets.size() <<  "; ";
-	        cout << selJets[0].p4.Pt() <<  "; ";
-	        cout << selJets[1].p4.Pt() <<  "; ";
-	        cout << theMET <<  "; ";
-	        cout << NBtaggedJets<<  "; "<< endl;;
-	      }
-	      
 	      //*****************************************************************
 	      // apply btag selection
 	      //***************************************************************** 
@@ -858,7 +862,25 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	        //*****************************************************************
 	        // fill cutflow jets mutli. selection
 	        //*****************************************************************   
-	        
+	            
+	        if(IChannel > -1  && IChannel == 2 ) {
+	
+	          cout << decayChannel << " :" << event->general.eventNb << "; ";
+	          if(IChannel == 0){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selMuons[1].p4.Pt() <<  "; ";}
+	          if(IChannel == 1){ cout << selMuons[0].p4.Pt() <<  "; "; cout << selElectrons[0].p4.Pt() <<  "; ";}
+	          if(IChannel == 2){ cout << selElectrons[0].p4Gsf.Pt() <<  "; "; cout << selElectrons[1].p4Gsf.Pt() <<  "; ";}
+		
+	          if(IChannel == 0){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";}
+	          if(IChannel == 1){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; ";}
+	          if(IChannel == 2){cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; "; cout << sel.EffArea03PF(selElectrons[1], rho) <<  "; ";}
+	          cout << InvDilMass <<  "; ";
+	          cout << selJets.size() <<  "; ";
+	          cout << selJets[0].p4.Pt() <<  "; ";
+	          cout << selJets[1].p4.Pt() <<  "; ";
+	          cout << theMET <<  "; ";
+	          cout << NBtaggedJets<<  "; "<< endl;;
+	      }
+	  
 		
 		// to do disable for synch ex.
 		//Dweight[ITypeMC] *= btagweight_1selBtag;

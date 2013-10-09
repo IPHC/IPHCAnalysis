@@ -1228,18 +1228,8 @@ bool DiLeptonSelection::passTriggerSelection8TeV (Dataset * dataset, string chan
   bool passEl = false;
   bool passMu = false;
   bool passElMu = false;
-  int skim = -1;
-
+ 
   string datasetName = dataset->Name ();
-  
-// to be compatible with MyCutFlow and others
-  if (datasetName.compare(0,6,"DataMu")==0)
-    skim = 0;
-  if (datasetName.compare(0,6,"DataEG")==0)
-    skim = 1;
-//  if (datasetName == "DataMuEG" || datasetName == "DataEGMu")
-  if ( datasetName.compare(0,8,"DataMuEG")==0 || datasetName.compare(0,8,"DataEGMu")==0 )
-    skim = 2;
   
   
   //cout << " datasetName " << datasetName << endl;
@@ -1271,34 +1261,19 @@ bool DiLeptonSelection::passTriggerSelection8TeV (Dataset * dataset, string chan
   } // end DATA
   
 
-  if (channelName == string ("ee") && ( (skim==-1) || (skim==1) ) ) {
-    if (passEl)
-      return true;
-    else
-      return false;
+  if (channelName == string ("ee") ){
+   if( passEl ) return true;
+    else return false;
   }
-  if (channelName == string ("mumu") && ( (skim==-1) || (skim==0) ) ) {
-    if (passMu)
-      return true;
-    else
-      return false;
+  if (channelName == string ("mumu") ){
+    if( passMu ) return true;
+    else return false;
   }
-  if (channelName == string ("emu")) {
-     bool thereturn = false;
-//     if (  (passEl && skim==1 ) || ( passMu && skim==0 && !passEl ) ) thereturn = true;
-//     if ( skim == -1 && (passEl  || passMu ) ) thereturn = true;
-    if ( skim == -1 &&  passElMu) return true;
-    if ( skim == 2 && (passElMu) )
-      thereturn = true;
-    return thereturn;
+  
+  if (channelName == string ("emu") ){
+    if( passElMu ) return true;
+    else return false;
   }
-  if (channelName == string ("") || channelName == string ("*") || channelName == string ("allChannels")) {
-    if (passEl || passMu || passElMu)
-      return true;
-    return false;
-  }
-
-  return false;
 
 }
 

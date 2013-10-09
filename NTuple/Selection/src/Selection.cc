@@ -630,7 +630,11 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
     if (fabs(scaledJets[i].p4.Eta())> cfg.JetEtaThreshold_ ||
         scaledJets[i].p4.Pt()<cfg.JetPtThreshold_) continue;
 	
-    if (!scaledJets[i].ID["LOOSE"]) continue;
+    //if (!scaledJets[i].ID["LOOSE"]) continue;
+    
+    //re-implement loose ID
+    
+    
     
         
     double deltaRmu = 10000;
@@ -1323,15 +1327,26 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTT
     
     //useless 
     if (!localElectrons[i].isGsfElectron)                       continue; 
-    if(localElectrons[i].p4Gsf.Pt()        <=PtThr)                continue;
-    if(fabs(localElectrons[i].p4Gsf.Eta()) >=EtaThr)               continue;
-    if(fabs(localElectrons[i].dxy_vertex)>=cfg.ElectronD0Cut_)  continue; 
+    if(localElectrons[i].p4Gsf.Pt()        <=PtThr)             continue;
+    if(fabs(localElectrons[i].p4Gsf.Eta()) >=EtaThr)            continue;
+    //if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)            continue;
+    if(fabs(localElectrons[i].dxy_vertex)>=0.04)                continue; 
     if(!localElectrons[i].passConversionVeto)                   continue;
     if( elecID < 0.5 )                                          continue;
     if(localElectrons[i].missingHits > 0)                       continue;
     
+    std::vector<IPHCTree::NTMuon> localMuon = *GetPointer2Muons();
+    double deltaRMu = 1000;
+    for(unsigned int j=0; j<localMuon.size(); j++){
+      if( !localMuon[j].isGlobalMuon ) continue;
+      
+      double deltaRMuEl = localMuon[j].p4.DeltaR(localElectrons[i].p4Gsf);
+      if(deltaRMuEl < deltaRMu) deltaRMu = deltaRMuEl;
+      //cout << "deltaRMu " << deltaRMu << endl;
+      
+    }
     
-     selectedElectrons.push_back(localElectrons[i]);
+    if(deltaRMu > 0.1)  selectedElectrons.push_back(localElectrons[i]);
   }
   std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
   return selectedElectrons;
