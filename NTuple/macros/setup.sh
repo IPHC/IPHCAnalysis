@@ -8,6 +8,9 @@ export NTUPLEANA=$dir
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/lib:$dir/../../../IPHCDataFormat/NTFormat/src/.:$dir/../.lib/
 export NTUPLEDATAFORMAT_PATH=$dir/../../../IPHCDataFormat/NTFormat/
 
+# PoD
+export SBGPODPATH=$dir/../../../PoD/
+export PATH=$PATH:$SBGPODPATH
 
 echo NTUPLEANA_PATH=$NTUPLEANA_PATH
 echo NTUPLEANA=$NTUPLEANA_PATH
