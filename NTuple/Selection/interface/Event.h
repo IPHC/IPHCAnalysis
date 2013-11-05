@@ -46,6 +46,10 @@ class Event
   std::vector<IPHCTree::NTTrack> GetTracks() const
   { return (*tracks_); }
 
+  //! Get a copy of the pfcandidate collection
+  std::vector<IPHCTree::NTPFCandidate> GetPFCandidates() const
+  { return (*pfcandidates_); }
+
   //! Get a copy of the photon collection
   std::vector<IPHCTree::NTPhoton> GetPhotons() const
   { return (*photons_); }
@@ -53,6 +57,10 @@ class Event
   //! Get a copy of the jet collection
   std::vector<IPHCTree::NTJet> GetJets() const
   { return (*jets_); }
+  
+  //! Get a copy of the heavyTag jets collection
+  std::vector<IPHCTree::NTJet> GetHeavyTagJets() const
+  { return (*heavyTagJets_); }
 
   //! Get a copy of the MET collection
   IPHCTree::NTMET GetMET() const
@@ -88,6 +96,10 @@ class Event
   const std::vector<IPHCTree::NTTrack>* GetPointer2Tracks() const
   { return tracks_; }
 
+  //! Get a const pointer to the pfcandidate collection
+  const std::vector<IPHCTree::NTPFCandidate>* GetPointer2PFCandidates() const
+  { return pfcandidates_; }
+
   //! Get a const pointer to the photon collection
   const std::vector<IPHCTree::NTPhoton>* GetPointer2Photons() const
   { return photons_; }
@@ -95,6 +107,10 @@ class Event
   //! Get a const pointer to the jet collection
   const std::vector<IPHCTree::NTJet>* GetPointer2Jets() const
   { return jets_; }
+  
+  //! Get a const pointer to the heavyTag jet collection
+  const std::vector<IPHCTree::NTJet>* GetPointer2HeavyTagJets() const
+  { return heavyTagJets_; }
 
   //! Get a const pointer to the MET collection
   const IPHCTree::NTMET* GetPointer2MET() const
@@ -129,6 +145,10 @@ class Event
   //! Initialize the JetMet collection label
   void SetJetMetCollectionLabel(const std::string& label)
   { JetMetType_=label; }
+  
+  //! Initialize the HeavyTagJet collection label
+  void SetHeavyTagJetCollectionLabel(const std::string& label)
+  { HeavyTagJetType_=label; }
 
   //! Initialize the photon collection label
   void SetPhotonCollectionLabel(const std::string& label)
@@ -150,6 +170,10 @@ class Event
   void SetTrackCollectionLabel(const std::string& label)
   { TrackType_=label; }
 
+  //! Initialize the pfcandidate collection label
+  void SetPFCandidateCollectionLabel(const std::string& label)
+  { PFCandidateType_=label; }
+
   //! Initialize the vertex collection label
   void SetVertexCollectionLabel(const std::string& label)
   { VertexType_=label; }
@@ -160,6 +184,10 @@ class Event
   //! Access to the JetMet collection label
   std::string GetJetMetCollectionLabel() const
   { return JetMetType_; }
+  
+  //! Access to the HeavyTagJet collection label
+  std::string GetHeavyTagJetCollectionLabel() const
+  { return HeavyTagJetType_; }
 
   //! Access to the photon collection label
   std::string GetPhotonCollectionLabel() const
@@ -181,6 +209,10 @@ class Event
   std::string GetTrackCollectionLabel() const
   { return TrackType_; }
 
+  //! Access to the pfcandidate collection label
+  std::string GetPFCandidateCollectionLabel() const
+  { return PFCandidateType_; }
+
   //! Access to the vertex collection label
   std::string GetVertexCollectionLabel() const
   { return VertexType_; }
@@ -190,6 +222,10 @@ class Event
   //! Initialize the JetMet collection label
   void EnableJetMetCollection()
   { JetMetEnabled_=true; }
+  
+  //! Initialize the HeavyTagJet collection label
+  void EnableHeavyTagJetCollection()
+  { HeavyTagJetEnabled_=true; }
 
   //! Initialize the photon collection label
   void EnablePhotonCollection()
@@ -211,6 +247,10 @@ class Event
   void EnableTrackCollection()
   { TrackEnabled_=true; }
 
+  //! Initialize the pfcandidate collection label
+  void EnablePFCandidateCollection()
+  { PFCandidateEnabled_=true; }
+
   //! Initialize the vertex collection label
   void EnableVertexCollection()
   { VertexEnabled_=true; }
@@ -218,6 +258,10 @@ class Event
   //! Initialize the JetMet collection label
   void DisableJetMetCollection()
   { JetMetEnabled_=false; }
+  
+  //! Initialize the HeavyTagJet collection label
+  void DisableHeavyTagJetCollection()
+  { HeavyTagJetEnabled_=false; }
 
   //! Initialize the photon collection label
   void DisablePhotonCollection()
@@ -239,6 +283,10 @@ class Event
   void DisableTrackCollection()
   { TrackEnabled_=false; }
 
+  //! Initialize the pfcandidate collection label
+  void DisablePFCandidateCollection()
+  { PFCandidateEnabled_=false; }
+
   //! Initialize the vertex collection label
   void DisableVertexCollection()
   { VertexEnabled_=false; }
@@ -252,6 +300,11 @@ class Event
   UInt_t getNpu() const
   {return pileup_->intime_npu;}
 
+  UInt_t getTnpv() const
+  {return pileup_->Tnpv;}
+
+  float getRho() const
+  {return pileup_->rho_PUUE_dens;}
 
   //  double getEleHLTMatch(){return eleHLTMatch;};
 
@@ -266,41 +319,48 @@ class Event
   const IPHCTree::NTTrigger*               trigger_;
   const IPHCTree::NTPileUp*                pileup_;
   const std::vector<IPHCTree::NTJet>*      jets_;
+  const std::vector<IPHCTree::NTJet>*      heavyTagJets_;
   const IPHCTree::NTMET*                   met_;
   const std::vector<IPHCTree::NTPhoton>*   photons_;
   const std::vector<IPHCTree::NTElectron>* electrons_;
   const std::vector<IPHCTree::NTMuon>*     muons_;
   const std::vector<IPHCTree::NTTau>*      taus_;
   const std::vector<IPHCTree::NTTrack>*    tracks_; 
+  const std::vector<IPHCTree::NTPFCandidate>* pfcandidates_; 
   const std::vector<IPHCTree::NTVertex>*   vertices_; 
 
   // Collection name initialized by XML configurator 
   std::string PhotonType_;
   std::string JetMetType_;
+  std::string HeavyTagJetType_;
   std::string ElectronType_;
   std::string MuonType_;
   std::string TauType_;
   std::string TrackType_;
   std::string VertexType_;
+  std::string PFCandidateType_;
 
   // Collection Enabled
   bool PhotonEnabled_;
   bool JetMetEnabled_;
+  bool HeavyTagJetEnabled_;
   bool ElectronEnabled_;
   bool MuonEnabled_;
   bool TauEnabled_;
   bool TrackEnabled_;
   bool VertexEnabled_;
+  bool PFCandidateEnabled_;
 
   // Static empty collection if a collection 
   // is not stored in the NTuple
   static const std::vector<IPHCTree::NTJet>      empty_jets_;
-  static const IPHCTree::NTMET                   empty_met_;
+  static const std::vector<IPHCTree::NTJet>      empty_heavyTagJets_;
   static const std::vector<IPHCTree::NTPhoton>   empty_photons_;
   static const std::vector<IPHCTree::NTElectron> empty_electrons_;
   static const std::vector<IPHCTree::NTMuon>     empty_muons_;
   static const std::vector<IPHCTree::NTTau>      empty_taus_;
   static const std::vector<IPHCTree::NTTrack>    empty_tracks_; 
+  static const std::vector<IPHCTree::NTPFCandidate>    empty_pfcandidates_; 
   static const std::vector<IPHCTree::NTVertex>   empty_vertices_; 
 };
 

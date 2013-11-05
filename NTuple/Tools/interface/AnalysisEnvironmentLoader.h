@@ -102,6 +102,7 @@ public:
 //<<<<<<< AnalysisEnvironmentLoader.h
   void LoadGeneralInfo(int& DataType, float& Luminosity, float& LumiError, int& verbosity, int& btagAlgo_, float& btagDiscriCut_ );
   void LoadGeneralInfo(int& DataType, float& Luminosity, float& LumiError,string& PUWeightFile, int& verbosity );
+  std::string GetInfo(string node, string type, string info);
 
 
  

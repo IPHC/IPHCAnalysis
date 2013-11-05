@@ -187,6 +187,24 @@ void AnalysisEnvironmentLoader::LoadGeneralInfo(int& DataType, float& Luminosity
  
 }
 
+std::string AnalysisEnvironmentLoader::GetInfo(string node, string type, string info)
+{
+
+    elem = NodeLoader(node);
+    if(!elem) return string("");
+
+    while (elem)
+    {
+        if (elem->Attribute("type") == type)
+        {
+            return elem->Attribute(info.c_str());
+        }
+
+        elem = elem->NextSiblingElement ();
+    }
+
+    return string("");
+}
 
 void AnalysisEnvironmentLoader::LoadObservables(vector<Observable>& vobs){
   Reset();
@@ -561,6 +579,9 @@ void AnalysisEnvironmentLoader::LoadPLRInformation(PLRMeasurement& plr, int& doP
 */
 
 void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
+
+  bool verbose = true;
+
   Reset();
   elem = NodeLoader(string("Datasets"));
   if(!elem) return;
@@ -568,7 +589,6 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
     {
 	string name = elem->Attribute("name");
 	string filename = elem->Attribute("filenames");
-	cout<<"Load for dataset "<<name<<" the files "<<filename<<endl;
 	int isData = 0;
 	int add = 0;
 	int ls = 1;
@@ -587,7 +607,26 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 	elem->QueryIntAttribute ("isData", &isData);
 	elem->QueryFloatAttribute ("xsErrorMinus", &xsErrorMinus);
 	elem->QueryFloatAttribute ("xsErrorPlus", &xsErrorPlus);
- 	vector<string> filenames;
+ 	if (verbose)
+	{
+		if (add)
+		{
+			cout << endl;
+			cout << "          > Loading " << name;
+			if (isData) cout << " (data)" << endl;
+			else        cout << " (MC)" << endl;
+			cout << "             files : "<< filename <<endl;
+		}
+		else
+		{
+			cout << endl;
+			cout << "          > Skipping " << name;
+			if (isData) cout << " (data)" << endl;
+			else        cout << " (MC)" << endl;
+		}
+	}
+	
+	vector<string> filenames;
 	bool star = SearchStar(filename,filenames);
         if(!star){
 		filenames.clear();
@@ -603,11 +642,11 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 		if(add) datasets.push_back(d);
 	}
 	else{
-		cout<<"THere "<<name<<" "<<isData<<endl;
+		//cout<<"THere "<<name<<" "<<isData<<endl;
 		Dataset d(name, (bool) isData, true, color, ls, lw, normf, xsection, filenames);
-		cout<<d.isData()<<endl;
+		//cout<<d.isData()<<endl;
 		d.SetIsData(isData);
-		cout<<d.isData()<<endl;
+		//cout<<d.isData()<<endl;
 		d.SetCrossSectionError(xsErrorMinus,xsErrorPlus);
 		//Norm with Eff and NofEvts
 		float PreselEff = -1.;
@@ -640,6 +679,9 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 
 
 void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets, string datasetname){
+
+  bool verbose = true;
+	
   Reset();
   elem = NodeLoader(string("Datasets"));
   if(!elem) return;
@@ -647,7 +689,7 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets, string da
     {
 	string name = elem->Attribute("name");
 	string filename = elem->Attribute("filenames");
-	cout<<"Load for dataset "<<name<<" the files "<<filename<<endl;
+
 	int isData = 0;
 	int add = 0;
 	int ls = 1;
@@ -666,7 +708,16 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets, string da
 	elem->QueryIntAttribute ("isData", &isData);
 	elem->QueryFloatAttribute ("xsErrorMinus", &xsErrorMinus);
 	elem->QueryFloatAttribute ("xsErrorPlus", &xsErrorPlus);
- 	vector<string> filenames;
+	if (verbose) 
+	{
+		cout << endl;
+		cout << "          > Loading " << name;
+		if (isData) cout << " (data)" << endl;
+		else        cout << " (MC)" << endl;
+		cout << "             files : "<< filename <<endl;
+	}
+	
+	vector<string> filenames;
 	bool star = SearchStar(filename,filenames);
         if(!star){
 		filenames.clear();
@@ -683,11 +734,11 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets, string da
 	}
 	else{
 	     if(add && datasetname == name) {
-		cout<<"THere "<<name<<" "<<isData<<endl;
+		//cout<<"THere "<<name<<" "<<isData<<endl;
 		Dataset d(name, (bool) isData, true, color, ls, lw, normf, xsection, filenames);
-		cout<<d.isData()<<endl;
+		//cout<<d.isData()<<endl;
 		d.SetIsData(isData);
-		cout<<d.isData()<<endl;
+		//cout<<d.isData()<<endl;
 		d.SetCrossSectionError(xsErrorMinus,xsErrorPlus);
 		//Norm with Eff and NofEvts
 		float PreselEff = -1.;
@@ -729,17 +780,33 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets, string da
 
 void AnalysisEnvironmentLoader::LoadSelection (Selection& sel)
 {
+  bool verbose = true;
 
   Reset();
-  std::cout<<"Selection loading .."<<std::endl;
+  if (verbose)
+  {
+	  std::cout << endl;
+  	  std::cout << "          > Loading selection ..." << std::endl;
+  }
   elem = NodeLoader(string("Selection"));
   if(!elem) return;
   while (elem)
   {
     string type = elem->Attribute ("type");
-    if (type == string ("Vertex"))
+    if (type == string ("PFCandidate"))
     {
-      std::cout<<"Vertex loading .."<<std::endl;
+      if (verbose) std::cout << "              > PFCandidate " << std::endl;
+      int loaded=0;
+      string Algo;
+      Algo = elem->Attribute("Algo");
+      sel.SetPFCandidateCollectionLabel(Algo);
+   		elem->QueryIntAttribute("Loaded", &loaded);
+      if (loaded==0) sel.DisablePFCandidateCollection(); else sel.EnablePFCandidateCollection();
+      //std::cout<<"PFCandidate loaded"<<std::endl;
+    }
+	if (type == string ("Vertex"))
+    {
+      if (verbose) std::cout << "              > Vertex"<<std::endl;
       int loaded=0;
       string Algo;
       float VertexNdofThr=0;
@@ -753,11 +820,11 @@ void AnalysisEnvironmentLoader::LoadSelection (Selection& sel)
    		elem->QueryIntAttribute("Loaded", &loaded);
       if (loaded==0) sel.DisableVertexCollection(); else sel.EnableVertexCollection();
       sel.cfg.SetVertexRequirements(VertexNdofThr, VertexZThr, VertexRhoThr);
-      std::cout<<"Vertex loaded"<<std::endl;
+      //std::cout<<"Vertex loaded"<<std::endl;
     }
     if (type == string ("Electron"))
     {
-      std::cout<<"Electron loading .."<<std::endl;
+      if (verbose) std::cout << "              > Electron"<<std::endl;
       int loaded=0;
       string Algo;
       float PtThreshold=0;
@@ -779,11 +846,11 @@ void AnalysisEnvironmentLoader::LoadSelection (Selection& sel)
    		elem->QueryIntAttribute("Loaded", &loaded);
       if (loaded==0) sel.DisableElectronCollection(); else sel.EnableElectronCollection();
   	  sel.cfg.SetElectronRequirements(PtThreshold,EtaThreshold,RelIso,D0Cut,VertexMatchThr,ElectronETSCThr,DRemuThr);
-      std::cout<<"Electron loaded"<<std::endl;
+      //std::cout<<"Electron loaded"<<std::endl;
     }
     if (type == string ("Muon"))
     {
-      std::cout<<"Muon loading .."<<std::endl;
+      if (verbose) std::cout << "              > Muon "<<std::endl;
       int loaded=0;
       string Algo;
       float PtThreshold=0;
@@ -807,11 +874,11 @@ void AnalysisEnvironmentLoader::LoadSelection (Selection& sel)
    		elem->QueryIntAttribute("Loaded", &loaded);
       if (loaded==0) sel.DisableMuonCollection(); else sel.EnableMuonCollection();
   	  sel.cfg.SetMuonRequirements(PtThreshold,EtaThreshold,RelIso,D0Cut,VertexMatchThr,NofValidHits,NofValidTkHits,NormChi2);
-      std::cout<<"Muon loaded"<<std::endl;
+      //std::cout<<"Muon loaded"<<std::endl;
     }
     if (type == string ("Tau"))
     {
-      std::cout<<"Tau loading .."<<std::endl;
+      if (verbose) std::cout << "              > Tau "<<std::endl;
       int loaded=0;
       string Algo;
       float PtThreshold=0;
@@ -827,11 +894,11 @@ void AnalysisEnvironmentLoader::LoadSelection (Selection& sel)
    		elem->QueryIntAttribute("Loaded", &loaded);
       if (loaded==0) sel.DisableTauCollection(); else sel.EnableTauCollection();
   	  sel.cfg.SetTauRequirements(PtThreshold,EtaThreshold,VertexMatchThr,TauLeadTrkPtCut);
-      std::cout<<"Tau loaded"<<std::endl;
+      //std::cout<<"Tau loaded"<<std::endl;
     }
     if (type == string ("Jet"))
     {
-      std::cout<<"Jet loading .."<<std::endl;
+      if (verbose) std::cout << "              > Jet "<<std::endl;
       int loaded=0;
       string Algo;
       float PtThreshold=0;
@@ -843,11 +910,21 @@ void AnalysisEnvironmentLoader::LoadSelection (Selection& sel)
       sel.SetJetMetCollectionLabel(Algo);
    		elem->QueryIntAttribute("Loaded", &loaded);
       if (loaded==0) sel.DisableJetMetCollection(); else sel.EnableJetMetCollection();
-      std::cout<<"Jet loaded"<<std::endl;
+      //std::cout<<"Jet loaded"<<std::endl;
+    }
+    if (type == string ("HeavyTagJet"))
+    {
+      if (verbose) std::cout << "              > Heavy tag Jet "<<std::endl;
+      int loaded=0;
+      string Algo;
+      Algo = elem->Attribute("Algo");
+      sel.SetHeavyTagJetCollectionLabel(Algo);
+   		elem->QueryIntAttribute("Loaded", &loaded);
+      if (loaded==0) sel.DisableHeavyTagJetCollection(); else sel.EnableHeavyTagJetCollection();
     }
     elem = elem->NextSiblingElement ();	// iteration
   }
-  std::cout<<"Selection loaded "<<std::endl;
+  //std::cout<<"Selection loaded "<<std::endl;
 }
 
 
@@ -879,29 +956,6 @@ void AnalysisEnvironmentLoader::LoadDiLeptonSelection (DiLeptonSelection& sel)
       sel.SetParameters(MinMassCut, pair<float,float> (METEMu,METLL), pair<float,float> (ZMassWindowMin,ZMassWindowMax), btagAlgo, btagDiscriCut, NofBtagJets);
 }
 
-
-
-
-/*void AnalysisEnvironmentLoader::LoadSemiLeptonicTauSelection (SemiLeptonicTauSelection& sel)
-{
-
-  LoadSelection(dynamic_cast<Selection&>(sel));
-  Reset();
-  elem = NodeLoader(string("SemiLeptonicTauSelection"));
-  if(!elem) return;
-     
-      float METCut = 0;
-     
-      int btagAlgo = -1;
-      float btagDiscriCut = -999.;
-      int NofBtagJets = 0;
-      elem->QueryFloatAttribute ("METCut", &METCut);
-      elem->QueryIntAttribute ("btagAlgo", &btagAlgo);
-      elem->QueryFloatAttribute ("btagDiscriCut", &btagDiscriCut);
-      elem->QueryIntAttribute ("NofBtagJets", &NofBtagJets);
-      sel.cfg.SetParameters(btagAlgo, btagDiscriCut, NofBtagJets, METCut);
-}
-*/
 void AnalysisEnvironmentLoader::LoadWeight (DiLeptonSelection& sel)
 {
   LoadSelection(dynamic_cast<Selection&>(sel));
