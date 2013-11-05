@@ -111,6 +111,8 @@ std::vector<TH1F*> DYEstimation::CreateDYHisto(string TypeSel, string datasetnam
     if (TypeSel=="emu") return hlistemu;
     if (TypeSel=="ContCR") return hlistContCR;
 
+    std::vector<TH1F*> defaultReturnValue;
+    return defaultReturnValue;
 
 }
 
