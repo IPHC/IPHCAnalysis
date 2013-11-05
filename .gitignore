@@ -11,3 +11,12 @@
 *.lai
 *.la
 *.a
+
+# LHAPDF stuff created after install 
+# (/install/ also included, no change is expected in that folder,
+#  if needed, do a "add -f" to force add a new file)
+NTuple/LHAPDF/install/*
+NTuple/LHAPDF/lib/*
+NTuple/LHAPDF/include/*
+NTuple/LHAPDF/bin/*
+NTuple/LHAPDF/share/*
