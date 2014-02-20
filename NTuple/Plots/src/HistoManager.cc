@@ -650,7 +650,7 @@ void HistoManager::Write2D(TDirectory* dir){
 					if(varNumber == 0 ) dir3 = dir2->mkdir(Datasets[iDataset].Name().c_str());
 					else dir3 = dir2->GetDirectory(Datasets[iDataset].Name().c_str());
 					dir3->cd();
-					Check2D(iChannel,iSelStep,iDataset,varNumber);
+					if (Check2D(iChannel,iSelStep,iDataset,varNumber))
 					Histos2D[varNumber][iChannel][iSelStep][iDataset].Write();
 				}
 				dir2->cd();
@@ -661,7 +661,7 @@ void HistoManager::Write2D(TDirectory* dir){
 //				MCStack[varNumber][iSelStep][iChannel];
 //				if(MCStack.size()>0 && MCStack[varNumber][iSelStep][iChannel]) MCStack[varNumber][iSelStep][iChannel]->Write();
 				if(SumMCDatasetsHistos2D.size()>0) SumMCDatasetsHistos2D[varNumber][iSelStep][iChannel].Write();
-				SumDataDatasetsHistos2D[varNumber][iSelStep][iChannel].Write();
+				if(SumDataDatasetsHistos2D.size()>0) SumDataDatasetsHistos2D[varNumber][iSelStep][iChannel].Write();
 
 			}
 		}

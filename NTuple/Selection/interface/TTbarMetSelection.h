@@ -5,6 +5,12 @@
 #include "Selection/interface/Selection.h"
 #include "Selection/interface/SelectionTable.h"
 #include "Tools/interface/Dataset.h"
+//#include "JEC/interface/JetCorrectorParameters.h"
+//#include "JEC/interface/FactorizedJetCorrector.h"
+
+#include "EventReco/interface/StopAnaReco.h"
+#include "EventReco/interface/Resolution.h"
+#include "EventReco/interface/Mt2Com_bisect.h"
 
 // system include files
 #include <memory>
@@ -27,6 +33,11 @@ class TTbarMetSelection: public Selection
   //                       method members
   // -------------------------------------------------------------
  public:
+
+  /*
+  void CorrectSUSYstopJets(int DataType, std::vector<IPHCTree::NTJet> scaledJets) const;
+  void InitSUSYstopJEC(string tag);
+  */
 
   //! Constructor without argument
   TTbarMetSelection();
@@ -89,6 +100,36 @@ class TTbarMetSelection: public Selection
                                                                                              event of weight "weight" of a given dataset idataset - Returns the integer of doFullSelection() */
 
 
+  //
+  // Objects selection
+  //
+  
+  bool GetSUSYstopIsolatedTrackVeto(TLorentzVector lepton_p, float lepton_charge) const;
+  bool GetSUSYstopTauVeto(TLorentzVector lepton_p, float lepton_charge) const;
+
+  std::vector<IPHCTree::NTMuon> GetSUSYstopGoodMuons() const;
+  std::vector<IPHCTree::NTMuon> GetSUSYstopSelectedMuons() const;
+  
+  std::vector<IPHCTree::NTElectron> GetSUSYstopGoodElectrons(
+		    std::vector<IPHCTree::NTMuon> goodMuons) const;
+  std::vector<IPHCTree::NTElectron> GetSUSYstopSelectedElectrons(
+		    std::vector<IPHCTree::NTMuon> goodMuons) const;
+  
+  std::vector<IPHCTree::NTJet> GetSUSYstopSelectedJets(
+            int DataType,
+			const std::vector<IPHCTree::NTMuon>& muon_cand,
+            const std::vector<IPHCTree::NTElectron>& elec_cand) const;
+
+  IPHCTree::NTMET GetSUSYstopType1MET(
+    		    int DataType,
+				const std::vector<IPHCTree::NTMuon>& muon_cand,
+	            const std::vector<IPHCTree::NTElectron>& elec_cand) const;
+
+  IPHCTree::NTMET GetSUSYstopType1PhiMET(
+    	        int DataType,
+				const std::vector<IPHCTree::NTMuon>& muon_cand,
+    			const std::vector<IPHCTree::NTElectron>& elec_cand) const;
+
   /**
    * return a integer which correspond to the last step that the event passes in the selection 
    * - possibility to check if the candPair correspond to the correct channel 
@@ -96,12 +137,13 @@ class TTbarMetSelection: public Selection
    * -  compute also the weight associated to btag
    */
 
-  int doFullSelection(Dataset* dataset, string channelName=string(""), bool print = false, 
+  int doFullSelection(Dataset* dataset, string channelName=string(""), int* triggerME = 0, 
 	  bool applyJES = false, float JESParam = 1., bool applyEES = false, float EESParam = 1., bool applyMES = false, float MESParam = 1., bool applyJER = false, float JERFactor = 0., bool applyMETS = false, float METScale = 1.);
 
 
-  bool passTriggerSelection(Dataset* dataset, string channelName = string(""));
-     
+  bool passTriggerSelection(Dataset * dataset, string channelName);
+  
+
   int GetbtagAlgo() const;
   float GetbtagDiscriCut() const;
   int GetNofBtagJetsCut() const; 
@@ -129,9 +171,9 @@ class TTbarMetSelection: public Selection
   float Dphi_ljet4() const     { return the_lepton.DeltaPhi(the_4thjet);}
   float Dphi_tops() const      { return top_hadronic.DeltaPhi(top_leptonic);}
   float Deta_lth() const       { 
-      float deta_e_tophad= the_lepton.Eta() - top_hadronic.Eta();
-      if (deta_e_tophad<0.) deta_e_tophad*=-1.;
-     return deta_e_tophad; }
+                                 float deta_e_tophad= the_lepton.Eta() - top_hadronic.Eta();
+                                 if (deta_e_tophad<0.) deta_e_tophad*=-1.;
+                                 return deta_e_tophad; }
   float Deta_ljet4() const     { 
       float deta_e_jet4= the_lepton.Eta() - the_4thjet.Eta();
       if (deta_e_jet4<0.) deta_e_jet4*=-1.;
@@ -144,9 +186,61 @@ class TTbarMetSelection: public Selection
     else return -1;
   }
       
+  float HT_ratio() const      
+  { 
+      float HT_onTheSideOfMET = 0;
+      float HT_total = 0;
+      for (unsigned int i = 0 ; i < jetsAna.size() ; i++)
+      {
+          if (abs(the_met.DeltaPhi(jetsAna[i].p4)) < 3.1415/2.0) 
+              HT_onTheSideOfMET += jetsAna[i].p4.Pt();
+            
+          HT_total += jetsAna[i].p4.Pt();
+      }
+
+      return HT_onTheSideOfMET / HT_total;
+  }
       
+  float HadronicChi2(bool runningOnData) const
+  {
+    Resolution Chi2;
+    float value = Chi2.GetChi2(GetJetsForAna(),runningOnData);
+    return value;
+  }
 
+  float MT2W() const
+  {
+    Mt2Com_bisect Mt2;
+    float value = Mt2.calculateMT2w(GetJetsForAna(),
+                                     GetBJetsForAna(),
+                                     GetMuonsForAna(),
+                                     GetElectronsForAna(),
+                                     the_met.Vect().XYvector(),
+                                     "MT2w");
+    return value;
+  }
+  
+  float DPhi_MET_leadingJets() const
+  {
+    TLorentzVector firstLeadingJet;
+    TLorentzVector secondLeadingJet;
 
+    for (unsigned int j = 0 ; j < jetsAna.size() ; j++)
+    {
+       if (jetsAna[j].p4.Pt() > firstLeadingJet.Pt())
+           firstLeadingJet = jetsAna[j].p4;
+
+       else if (jetsAna[j].p4.Pt() > secondLeadingJet.Pt())
+           secondLeadingJet = jetsAna[j].p4;
+    }
+
+    if (abs(the_met.DeltaPhi(firstLeadingJet)) < abs(the_met.DeltaPhi(secondLeadingJet)))
+        return abs(the_met.DeltaPhi(firstLeadingJet));
+    else
+        return abs(the_met.DeltaPhi(secondLeadingJet));
+  }
+
+    
   // -------------------------------------------------------------
   //                        data members
   // -------------------------------------------------------------
@@ -177,6 +271,7 @@ class TTbarMetSelection: public Selection
   std::vector<IPHCTree::NTJet>      jetsAna;
   std::vector<IPHCTree::NTJet>      bjetsAna;
 
+  //FactorizedJetCorrector* JetCorrector;
 };
 
 #endif

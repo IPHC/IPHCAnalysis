@@ -7,8 +7,10 @@
 #include "Selection/interface/Requirement.h"
 #include "EffEstimation/interface/SFBweight.h"
 
-#include "../../../../JR_Standalone/JetMETObjects/interface/JetCorrectorParameters.h"
-#include "../../../../JR_Standalone/JetMETObjects/interface/JetCorrectionUncertainty.h"
+//#include "../../../../JR_Standalone/JetMETObjects/interface/JetCorrectorParameters.h"
+//#include "../../../../JR_Standalone/JetMETObjects/interface/JetCorrectionUncertainty.h"
+#include "JetCorrections/interface/JetCorrectionUncertainty.h"
+#include "JetCorrections/interface/JetCorrectorParameters.h"
 
 
 // ROOT headers
