@@ -21,8 +21,8 @@
  -->
 
 
-<!--d name="TTbar" add="1" isData="0" color="2" ls="1" lw="2" normf="1" xsection="1." filenames="/opt/sbg/data/safe1/cms/jandrea/UpdateFramework_2013_08_22/CMSSW_5_3_11/src/IPHCProducer/MiniTreeProducer/test/NTuple.root" /-->
-<d name="Zjets" add="1" isData="0" color="2" ls="1" lw="2" normf="1" xsection="1." filenames="/opt/sbg/data/safe1/cms/jandrea/UpdateFramework_2013_08_22/CMSSW_5_3_11/src/IPHCProducer/MiniTreeProducer/test/NTuple_DY.root" />
+<d name="TTbar" add="1" isData="0" color="2" ls="1" lw="2" normf="1" xsection="1." filenames="/opt/sbg/data/safe1/cms/jandrea/UpdateFramework_2013_08_22/CMSSW_5_3_11/src/IPHCProducer/MiniTreeProducer/test/NTuple.root" />
+<!--d name="Zjets" add="1" isData="0" color="2" ls="1" lw="2" normf="1" xsection="1." filenames="/opt/sbg/data/safe1/cms/jandrea/UpdateFramework_2013_08_22/CMSSW_5_3_11/src/IPHCProducer/MiniTreeProducer/test/NTuple_DY.root" /-->
 
 </Datasets>
 

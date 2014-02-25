@@ -11,6 +11,8 @@
 //#include "../../../../JR_Standalone/JetMETObjects/interface/JetCorrectionUncertainty.h"
 #include "JetCorrections/interface/JetCorrectionUncertainty.h"
 #include "JetCorrections/interface/JetCorrectorParameters.h"
+#include "JetCorrections/interface/JetCorrectionUncertainty.h"
+
 
 
 // ROOT headers
@@ -122,9 +124,21 @@ class Selection : public Event
   std::vector<IPHCTree::NTElectron> GetSelectedElectronsDileptonTTbar(
                           bool applyLES = false, float scale = 1.,
                           bool applyLER = false, float resol = 1., float rho=0.) const;
+			  
+  //! Get selected electrons
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsRhoIso(
+                          bool applyLES = false, float scale = 1.,
+                          bool applyLER = false, float resol = 1., float rho=0.) const;
 
   //! Get selected electrons
   std::vector<IPHCTree::NTElectron> GetSelectedElectronsDileptonTTbar(
+                          float PtThr, float EtaThr,
+                          float ElectronRelIso, bool applyLES = false,
+                          float scale = 1., bool applyLER = false,
+                          float resol = 1., float rho=0) const;   
+
+  //! Get selected electrons
+  std::vector<IPHCTree::NTElectron> GetSelectedElectronsRhoIso(
                           float PtThr, float EtaThr,
                           float ElectronRelIso, bool applyLES = false,
                           float scale = 1., bool applyLER = false,
@@ -203,6 +217,11 @@ class Selection : public Event
   std::vector<IPHCTree::NTMuon> GetSelectedMuonsDileptonTTbar(
                                            bool applyLES = false,
                                            float scale = 1.) const;
+					   
+  //! Get selected muons
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonsDeltaBetaIso(
+                                           bool applyLES = false,
+                                           float scale = 1.) const;
 
   //! Get selected muons no Iso
   std::vector<IPHCTree::NTMuon> GetSelectedMuonsNoIsoDileptonTTbar(
@@ -212,6 +231,13 @@ class Selection : public Event
 
   //! Get selected muons
   std::vector<IPHCTree::NTMuon> GetSelectedMuonsDileptonTTbar(
+                                           float PtThr, float EtaThr,
+                                           float MuonRelIso, 
+                                           bool applyLES = false,
+                                           float scale = 1.) const;
+
+  //! Get selected muons
+  std::vector<IPHCTree::NTMuon> GetSelectedMuonsDeltaBetaIso(
                                            float PtThr, float EtaThr,
                                            float MuonRelIso, 
                                            bool applyLES = false,
@@ -299,6 +325,10 @@ class Selection : public Event
   //! Get scaled jets
   std::vector<IPHCTree::NTJet> GetScaledJets(float factor = 1.) const; 
 
+  //! Get scaled jets
+  std::vector<IPHCTree::NTJet> GetScaledJets( JetCorrectionUncertainty* theJESuncertainty, bool upOrDown  ) const; 
+  
+  
   //! Get smeared jets
   std::vector<IPHCTree::NTJet> GetSmearedJets(
                           const vector<IPHCTree::NTJet>& injets,
@@ -316,6 +346,17 @@ class Selection : public Event
                           const std::vector<IPHCTree::NTElectron>& elec_cand,
                           bool applyJES = false, float scale = 1.,
                           bool applyJER = false, float ResFactor = 0.) const;
+
+
+
+  //! Get selected jets for 8TeV uncertainties
+  std::vector<IPHCTree::NTJet> GetSelectedJets(
+                          const std::vector<IPHCTree::NTMuon>& muon_cand,
+                          const std::vector<IPHCTree::NTElectron>& elec_cand,
+                          bool applyJES = false, JetCorrectionUncertainty* theJESuncertainty = 0, bool upOrDown = true, 
+                          bool applyJER = false, float ResFactor = 0.) const;
+			  
+			  
 
   //! Get selected jets
   std::vector<IPHCTree::NTJet> GetSelectedJets(
@@ -395,6 +436,9 @@ class Selection : public Event
 
   //! Get scaled MET
   IPHCTree::NTMET GetScaledMET(float scale = 1.) const; 
+  
+  //! Get scaled MET
+  IPHCTree::NTMET GetScaledMET(JetCorrectionUncertainty* theJESuncertainty, bool upOrDown) const; 
 
   //! Get smeared MET
   IPHCTree::NTMET GetSmearedMET(const std::vector<IPHCTree::NTJet>& injets,
@@ -407,6 +451,13 @@ class Selection : public Event
   //! Get smeared MET
   IPHCTree::NTMET GetSelectedMET(bool applyJES = false, 
                          float scale = 1., 
+                         bool applyJER = false,
+                         float ResFactor = 0.) const;
+      
+  //! Get smeared MET for 8TeV uncertainties
+  IPHCTree::NTMET GetSelectedMET(bool applyJES = false, 
+  		         JetCorrectionUncertainty* theJESuncertainty = 0, 
+			 bool upOrDown = true,
                          bool applyJER = false,
                          float ResFactor = 0.) const;
       
