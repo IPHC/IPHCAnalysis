@@ -2014,17 +2014,17 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsNoIsoDileptonTTbar(
     
     //---------------------------
     //old muon ID
-    //if (!localMuons[i].isGlobalMuon)  continue; // isGlobalMuon
-    //if (!localMuons[i].isTrackerMuon) continue; // isTrackerMuon
-    //if (localMuons[i].Chi2	     >= cfg.MuonNormChi2_)	 continue;
-    //if (localMuons[i].NTrValidHits   <= cfg.MuonNofValidTrHits_) continue;
-    //if (localMuons[i].NValidHits     <= cfg.MuonNofValidHits_  ) continue;
-    //if (fabs(localMuons[i].D0Inner)  >= cfg.MuonD0Cut_) 	 continue;
-    //if (fabs(localMuons[i].p4.Eta()) >= EtaThr) 		 continue;
-    //if (localMuons[i].p4.Pt()	     <  PtThr)  		 continue;
-    //if (GetSelectedVertex().size() == 0) continue;
-    //if ( fabs( localMuons[i].vertex.Z() - 
-    //     GetSelectedVertex()[0].p3.Z() ) > cfg.MuonVertexMatchThr_ ) continue;
+    if (!localMuons[i].isGlobalMuon)  continue; // isGlobalMuon
+    if (!localMuons[i].isTrackerMuon) continue; // isTrackerMuon
+    if (localMuons[i].Chi2	   >= cfg.MuonNormChi2_)       continue;
+    if (localMuons[i].NTrValidHits   <= cfg.MuonNofValidTrHits_) continue;
+    if (localMuons[i].NValidHits     <= cfg.MuonNofValidHits_  ) continue;
+    if (fabs(localMuons[i].D0Inner)  >= cfg.MuonD0Cut_)        continue;
+    if (fabs(localMuons[i].p4.Eta()) >= EtaThr) 	       continue;
+    if (localMuons[i].p4.Pt()	   <  PtThr)		       continue;
+    if (GetSelectedVertex().size() == 0) continue;
+    if ( fabs( localMuons[i].vertex.Z() - 
+    	 GetSelectedVertex()[0].p3.Z() ) > cfg.MuonVertexMatchThr_ ) continue;
 
     
     

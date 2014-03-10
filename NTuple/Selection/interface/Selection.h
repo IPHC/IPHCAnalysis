@@ -557,9 +557,22 @@ static   double RelIso03PFDeltaBeta(IPHCTree::NTMuon &themuon) {
      return (
       ( themuon.isolation["PF03Char"] + max(0., themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]-0.5*themuon.isolation["PF03PU"] ) 
       )/ themuon.p4.Pt() );
+      
+         
+     //return (
+     // ( themuon.isolation["PF03Char"] + themuon.isolation["PF03Neut"] + themuon.isolation["PF03Phot"]) 
+     // / themuon.p4.Pt() );
+      
+      
    }
    
-   
+  
+static   double RelIso04PFDeltaBeta(IPHCTree::NTMuon &themuon) {
+     
+     return (
+      ( themuon.isolation["PF04Char"] + max(0., themuon.isolation["PF04Neut"] + themuon.isolation["PF04Phot"]-0.5*themuon.isolation["PF04PU"] ) 
+      )/ themuon.p4.Pt() );
+   } 
       
 static   double RelIso03PF(IPHCTree::NTElectron &theelec) {
      

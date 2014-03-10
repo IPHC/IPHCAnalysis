@@ -83,7 +83,9 @@ class ProofSelectorMyCutFlow : public TSelector {
   int DataType;
   //Info analysis macro specific 
   
-
+  
+  int nselevents_mumumu;
+  
   string datasetName ;
   //------------------------------------
   //For JES uncerainties
@@ -108,6 +110,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   bool IReweight_pu;
   
    
+   
   //------------------------------------
   //For PDF reweighting
   //------------------------------------
@@ -131,6 +134,44 @@ class ProofSelectorMyCutFlow : public TSelector {
   float looseIso;
   float themetcut;
    
+ 
+  //------------------------------------
+  //Trigger scale factors
+  //------------------------------------
+  
+  bool applyTrigger ;
+  bool applyTriggerUp ;
+  bool applyTriggerDown ;
+  
+  double SF_trig_mumumu ;  
+  double SF_trig_mumue;  
+  double SF_trig_eemu ;
+  double SF_trig_eee ;  
+  
+  double SF_trig_mumumu_error ;  
+  double SF_trig_mumue_error;  
+  double SF_trig_eemu_error ;  
+  double SF_trig_eee_error ;
+  
+  //------------------------------------
+  //Lepton scale factors
+  //------------------------------------
+  
+  bool applyLeptonSF;
+  bool applyLeptonSFUp;
+  bool applyLeptonSFDown;
+  
+  
+  //------------------------------------
+  //background scale factors
+  //------------------------------------
+  bool applyWZ ;
+  bool applyWZ_finalSel ;
+  bool applyFakescale ;
+  std::vector <double > SF_WZ;
+  std::vector <double > SF_Fake;
+  
+  
   std::vector<TH1F> SelABjet;
   std::vector<TH1F> SelABjet_afterjetsel;
   
@@ -620,10 +661,87 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH2D> HT_vs_Mll_eemu_afterleptsel;
   std::vector<TH2D> HT_vs_Mll_eee_afterleptsel;
   
+   
   
-  
-  
-  
+  std::vector<TH1F> *pCutFlow;
+  std::vector<TH1F> *pErrCutFlow;
+       
+  std::vector<TH1F> *pDijetInvM_afterleptsel_inZpeak;
+  std::vector<TH1F> *pMt_afterbjetsel;
+  std::vector<TH1F> *pMt_afterbjetveto;
+  std::vector<TH1F> *pNJet_afterZsel;  
+  std::vector<TH1F> *pNJet_afterbsel;
+  std::vector<TH1F> *pNJet_afterleptsel_mWT110;
+  std::vector<TH1F> *pNLept_afterbsel;
+  std::vector<TH1F> *pNBJet_afterZsel;
+  std::vector<TH1F> *pNBJet_afterjetsel;
+  std::vector<TH1F> *pNBJet_afterjetsel_bjets;
+  std::vector<TH1F> *pNBJet_afterjetsel_cjets;
+  std::vector<TH1F> *pNBJet_afterjetsel_ljets;
+  std::vector<TH1F> *pBJetDiscri_afterjetsel_bjets;
+  std::vector<TH1F> *pBJetDiscri_afterjetsel_cjets;
+  std::vector<TH1F> *pBJetDiscri_afterjetsel_ljets;
+  std::vector<TH1F> *pNBJet_afterleptsel_mWT110;
+  std::vector<TH1F> *pNvtx_afterleptsel;
+  std::vector<TH1F> *pInvM_ll_afterleptsel;  
+  std::vector<TH1F> *pInvM_ll_afterleptsel_mWT110;  
+  std::vector<TH1F> *pInvM_ll_afterleptsel_lowbin;  
+  std::vector<TH1F> *pInvM_ll_afterleptsel_highSumPt;  
+  std::vector<TH1F> *pInvM_ll_afterjetsel;
+  std::vector<TH1F> *pInvM_ll_afterbjetsel;  
+  std::vector<TH1F> *pLeptPt_afterleptsel;  
+  std::vector<TH1F> *pLeptPt_afterjetsel;  
+  std::vector<TH1F> *pLeptPt_afterbjetsel;  
+  std::vector<TH1F> *pLeptZPt_afterleptsel;  
+  std::vector<TH1F> *pLeptZPt_afterjetsel;  
+  std::vector<TH1F> *pLeptZPt_afterbjetsel;
+  std::vector<TH1F> *pLeptWPt_afterleptsel;  
+  std::vector<TH1F> *pLeptWPt_afterjetsel;
+  std::vector<TH1F> *pLeptWPt_afterbjetsel;
+  std::vector<TH1F> *pLeptWPt_afterbjetveto;
+  std::vector<TH1F> *pLeptWPt_afterleptsel_mWT110;
+  std::vector<TH1F> *pJetPt_afterleptsel;
+  std::vector<TH1F> *pJetPt_afterjetsel;
+  std::vector<TH1F> *pJetPt_afterbjetsel;
+  std::vector<TH1F> *pJetPt_afterbjetveto;  
+  std::vector<TH1F> *pJetEta_afterleptsel;
+  std::vector<TH1F> *pJetEta_afterjetsel;  
+  std::vector<TH1F> *pJetEta_afterbjetsel;  
+  std::vector<TH1F> *pJetEta_afterbjetveto;
+  std::vector<TH1F> *pHT_afterleptsel;  
+  std::vector<TH1F> *pHT_afterjetsel;
+  std::vector<TH1F> *pHT_afterbjetsel;  
+  std::vector<TH1F> *pHT_afterbjetveto;  
+  std::vector<TH1F> *pMET_afterleptsel;
+  std::vector<TH1F> *pMET_afterleptsel_mWT110;
+  std::vector<TH1F> *pMET_afterjetsel;
+  std::vector<TH1F> *pAsym_afterbjetsel;  
+  std::vector<TH1F> *pmWT_afterjetsel;
+  std::vector<TH1F> *pRecoPtZ_afterbjetsel;
+  std::vector<TH1F> *pRecoPtZ_afterbjetveto;
+  std::vector<TH1F> *pRecoPtZ_afterleptsel;  
+  std::vector<TH1F> *pRecoPtZ_afterleptsel_nojet;
+  std::vector<TH1F> *pRecoTopMass_afterbjetsel;
+  std::vector<TH1F> *pRecoTopMass_afterbjetveto;  
+  std::vector<TH1F> *pdeltaPhilb_afterbjetsel;
+  std::vector<TH1F> *pdeltaPhilj_afterbjetveto;  
+  std::vector<TH1F> *pdeltaR_afterleptsel;  
+  std::vector<TH1F> *pdeltaRLeptJet_afterleptsel_mWT110;  
+  std::vector<TH1F> *pdeltaRLeptMet_afterleptsel_mWT110;  
+  std::vector<TH1F> *pWmissAssing_afterleptsel;  
+  std::vector<TH1F> *pmWT_afterleptsel; 
+  std::vector<TH1F> *pmWT_afterbjetsel;  
+  std::vector<TH1F> *pmWT_afterbjetveto;  
+  std::vector<TH1F> *pCharge_afterleptsel;  
+  std::vector<TH1F> *pCharge_afterleptsel_mWT110;   
+  std::vector<TH1F> *pNvertex; 
+  std::vector<TH2D> *pInvM_ll_vs_mWT_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_MET_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_NJet_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_NBJet_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_LeptPt_afterleptsel;
+  std::vector<TH2D> *pHT_vs_JetPt_afterleptsel;
+  std::vector<TH2D> *pHT_vs_Mll_afterleptsel;
   
   
   
@@ -706,6 +824,8 @@ class ProofSelectorMyCutFlow : public TSelector {
 		std::vector<NTElectron> *theZeeCand,  std::vector<NTMuon> *theZmumuCand, 
 		std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand
 		); 
+  
+  void defineHistoPointer(int channel);
   
 };
 
