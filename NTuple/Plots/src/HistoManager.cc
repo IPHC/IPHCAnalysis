@@ -58,7 +58,7 @@ void HistoManager::AddHisto(string name, string title, string xaxis, const int& 
   HistoManager::ncounter++;
   std::stringstream str;
   str << name.c_str() << "_" << HistoManager::ncounter;
-
+	str << name.c_str();
 	TH1F h (str.str().c_str(),title.c_str(),nbins,min,max);
 	h.GetXaxis()->SetTitle(xaxis.c_str());
         h.Sumw2();
@@ -150,11 +150,11 @@ void HistoManager::AddHisto2D_BC(string name, string title, string xaxis, const 
 void HistoManager::Fill(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& value, const float& weight){
 	Histos[varNumber][iChannel][iSelStep][iDataset].Fill(value, weight);
 }   
-
-void HistoManager::Fill2D(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& value, const float& weight){
-	Histos2D[varNumber][iChannel][iSelStep][iDataset].Fill(value, weight);
+///////////////////////////////////////////////////////MODIF
+void HistoManager::Fill2D(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& valuex, const float& valuey, const float& weight){
+	Histos2D[varNumber][iChannel][iSelStep][iDataset].Fill(valuex, valuey, weight);
 }   
-
+///////////////////////////////////////////////////////////
 
 bool HistoManager::Check(const int& iChannel, const int& iDataset){
 	if(iChannel<0 || iChannel>= (int)Channels.size()){
@@ -615,10 +615,18 @@ void HistoManager::Write2D(TDirectory* dir){
 	TDirectory* dir3 = dir;
 	TDirectory* dir4 = dir;
 	for(unsigned int varNumber =0; varNumber < Histos2D.size();varNumber++){
+	
 		dir->cd();
 		for(unsigned int iChannel = 0;iChannel<Channels.size();iChannel++){
-			if(varNumber == 0 ) dir1 = dir->mkdir(Channels[iChannel].c_str());
+		
+			if(varNumber == 0 ) {
+			dir1 = dir->GetDirectory(Channels[iChannel].c_str());
+			
+			if(!dir1) dir1 = dir->mkdir(Channels[iChannel].c_str());
+			}
+			
 			else dir1 = dir->GetDirectory(Channels[iChannel].c_str());
+	
 			//dir1->pwd();
 			//And cut by cut histos	
                         bool check1=Check(CutEffectCanvasDebug2D,0,0,0);
@@ -628,36 +636,64 @@ void HistoManager::Write2D(TDirectory* dir){
 			 else dir2 = dir1->GetDirectory("CutByCut");
 			 dir2->cd();
 	                 for(unsigned int iSelStep = 0;iSelStep<SelectionSteps.size();iSelStep++){
+			 
 			   if(varNumber == 0 ) dir3 = dir2->mkdir(SelectionSteps[iSelStep].c_str());
                            else dir3 = dir2->GetDirectory(SelectionSteps[iSelStep].c_str());
                            dir3->cd();
     			   if (check1) CutEffectCanvasDebug2D[varNumber][iChannel][iSelStep]->Write();
 		  	   if (check2) {
                             for(unsigned int iDataset =0;iDataset<Datasets.size();iDataset++){
+			  
 				if(varNumber == 0 ) dir4 = dir3->mkdir(Datasets[iDataset].Name().c_str());
 				else dir4 = dir3->GetDirectory(Datasets[iDataset].Name().c_str());
 				dir4->cd();
 				CutEffectCanvas2D[varNumber][iChannel][iSelStep][iDataset]->Write();
+				
                             }
 		   	   }   
                          }
                         }
 			for(unsigned int iSelStep=0;iSelStep<SelectionSteps.size();iSelStep++){
-				if(varNumber == 0) dir2 = dir1->mkdir(SelectionSteps[iSelStep].c_str());
-				else dir2 = dir1->GetDirectory(SelectionSteps[iSelStep].c_str());
+			
+				if(varNumber == 0) {
+				
+				dir2 = dir1->GetDirectory(SelectionSteps[iSelStep].c_str());
+				
+				if(!dir2) dir2 = dir1->mkdir(SelectionSteps[iSelStep].c_str());
+				
+				
+				}
+				
+				else {
+				
+				dir2 = dir1->GetDirectory(SelectionSteps[iSelStep].c_str());
+				
+				}
 				//dir2->pwd();
-				for(unsigned int iDataset =0;iDataset<Datasets.size();iDataset++){
-					if(varNumber == 0 ) dir3 = dir2->mkdir(Datasets[iDataset].Name().c_str());
+				for(unsigned int iDataset =0;iDataset<Datasets.size();iDataset++)
+				
+				{
+				
+					if(varNumber == 0 ) {
+					dir3 = dir2->GetDirectory(Datasets[iDataset].Name().c_str());
+					if(!dir3) dir3 = dir2->mkdir(Datasets[iDataset].Name().c_str());
+					}
 					else dir3 = dir2->GetDirectory(Datasets[iDataset].Name().c_str());
 					dir3->cd();
 					if (Check2D(iChannel,iSelStep,iDataset,varNumber))
 					Histos2D[varNumber][iChannel][iSelStep][iDataset].Write();
+					
 				}
+				
 				dir2->cd();
 				//Stack & SumHisto
-				if(varNumber == 0 ) dir3 = dir2->mkdir("SumOverDatasets");
+				if(varNumber == 0 ) {
+				dir3 = dir2->GetDirectory("SumOverDatasets");
+				if(!dir3) dir3 = dir2->mkdir("SumOverDatasets");
+				}
 				else dir3 = dir2->GetDirectory("SumOverDatasets");
 				dir3->cd();
+				
 //				MCStack[varNumber][iSelStep][iChannel];
 //				if(MCStack.size()>0 && MCStack[varNumber][iSelStep][iChannel]) MCStack[varNumber][iSelStep][iChannel]->Write();
 				if(SumMCDatasetsHistos2D.size()>0) SumMCDatasetsHistos2D[varNumber][iSelStep][iChannel].Write();

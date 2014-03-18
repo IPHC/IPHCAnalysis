@@ -68,7 +68,7 @@ class HistoManager{
         //Fill method
         void Fill(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& value, const float& weight);   
 //modif 2D
-        void Fill2D(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& value, const float& weight);   
+        void Fill2D(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& valuex, const float& valuey, const float& weight);   
         bool Check2D(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber);/** Call this method to see if the size of Histos is correct or not */
 //end modif 2D
 
