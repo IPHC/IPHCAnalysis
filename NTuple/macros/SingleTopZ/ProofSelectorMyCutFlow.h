@@ -33,7 +33,10 @@
 
 
 #include "Tools/interface/PDFReweighter.h"
+#include "Tools/interface/PUWeighting.h"
 
+
+#include "JetCorrections/interface/JetCorrectionUncertainty.h"
 
 
 #include <TFile.h>
@@ -80,52 +83,66 @@ class ProofSelectorMyCutFlow : public TSelector {
   int DataType;
   //Info analysis macro specific 
   
-
-  JetCorrector JEC_L2L3Residuals;
   
+  int nselevents_mumumu;
   
-  reweight::LumiReWeighting *LumiWeights;
+  string datasetName ;
+  //------------------------------------
+  //For JES uncerainties
+  //------------------------------------
+  
+  JetCorrectionUncertainty *theJESuncertainty;
+  bool  doJESuncert;
+  bool  upOrDown;
+  bool  applyJES;
+  bool  applyJER;
+  float ResFactor;
+  
+  //------------------------------------
+  //For PU reweighting
+  //------------------------------------
+  PUWeighting *LumiWeights;
   float LumiError ;
   string PUWeightFileName;
-  reweight::PoissonMeanShifter PShiftUp_;
-  reweight::PoissonMeanShifter PShiftDown_;
-
+  bool IReweight;
+  bool IReweight_puUp  ;
+  bool IReweight_puDown;
+  bool IReweight_pu;
   
-  // Here define the studied channel (ee/mumu/emu)
-  //  string ChannelName  = "ee";  // "mumu", "ee", "emu"
-  // on va tourner sur les 3 canaux en meme temps!!!
+   
+   
+  //------------------------------------
+  //For PDF reweighting
+  //------------------------------------
+  bool doPDF ;
+  int pdftype ;
+  PDFReweighter pdf; 
   
-  bool IReweight             ;
-  bool IReweight_puUp        ;
-  bool IReweight_puDown      ;
-  bool IDYestimateWithMetCut ;
+ 
+  //------------------------------------
+  //Definition of the various histograms
+  //------------------------------------
+  HistoManager MyhistoManager;
+  int ITypeMC ;
   
+    
+  //------------------------------------
+  //loose isolation on W cand
+  //for background estimations
+  //------------------------------------
   bool useNonIsoWcand;
+  float looseIso;
+  float themetcut;
+   
+ 
+  //------------------------------------
+  //Trigger scale factors
+  //------------------------------------
+  
   bool applyTrigger ;
   bool applyTriggerUp ;
   bool applyTriggerDown ;
   
-  bool applyWZ ;
-  bool applyWZ_finalSel ;
-  bool applyFakescale ;
-
-  bool applyLeptonSF;
-  bool applyLeptonSFUp;
-  bool applyLeptonSFDown;
-  
-  
-  double SF_WZ_finalSel;
-  double looseIso;
-  
-  std::vector <double > SF_WZ;
-  std::vector <double > SF_Fake;
-  
-  
-  bool doBTagCVScorr ;
-  int doBTagCSV_syst;
-  
-  //Here define Scale Factors
-  //SF_trigger applied for mumu
   double SF_trig_mumumu ;  
   double SF_trig_mumue;  
   double SF_trig_eemu ;
@@ -136,62 +153,24 @@ class ProofSelectorMyCutFlow : public TSelector {
   double SF_trig_eemu_error ;  
   double SF_trig_eee_error ;
   
-  double SF_BranchingRatio_ll ; 
-  double SF_BranchingRatio_lj ; 
-  double SF_BranchingRatio_had ; 
-    
-   
-  bool  applyJES;
-  float scale;
-  bool  applyJER;
-  float ResFactor;
-   
+  //------------------------------------
+  //Lepton scale factors
+  //------------------------------------
   
-  bool PUup;
-  bool PUdown;
-  
-  TRandom rand;
-  
-  double themetcut;
-  
-  bool doPDF ;
-  int pdftype ;
-  PDFReweighter pdf; 
+  bool applyLeptonSF;
+  bool applyLeptonSFUp;
+  bool applyLeptonSFDown;
   
   
+  //------------------------------------
+  //background scale factors
+  //------------------------------------
+  bool applyWZ ;
+  bool applyWZ_finalSel ;
+  bool applyFakescale ;
+  std::vector <double > SF_WZ;
+  std::vector <double > SF_Fake;
   
-  double sumSFlept_mumumu;
-  double sumSFlept_mumue;
-  double sumSFlept_eemu;
-  double sumSFlept_eee;
-  
-  double nEvents_mumumu;
-  double nEvents_mumue;
-  double nEvents_eemu;
-  double nEvents_eee;
-  
-   
-   
-  double SF_Wjets_ee;
-  double SF_Wjets_mm;
-  double SF_Wjets_em;
-  
-  double SF_QCD_ee;
-  double SF_QCD_mm;
-  double SF_QCD_em;
-  
-  double scaleElec; // 1 to switch off
-  double resolElec; // 0 to switch off
-  
-  
-  
-  
-  int ITypeMC ;
-  int ICut    ;  
-  
-    
-  
-  TH1F* fHist;
   
   std::vector<TH1F> SelABjet;
   std::vector<TH1F> SelABjet_afterjetsel;
@@ -682,8 +661,103 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH2D> HT_vs_Mll_eemu_afterleptsel;
   std::vector<TH2D> HT_vs_Mll_eee_afterleptsel;
   
+   
   
+  std::vector<TH1F> *pCutFlow;
+  std::vector<TH1F> *pErrCutFlow;
+       
+  std::vector<TH1F> *pDijetInvM_afterleptsel_inZpeak;
+  std::vector<TH1F> *pMt_afterbjetsel;
+  std::vector<TH1F> *pMt_afterbjetveto;
+  std::vector<TH1F> *pNJet_afterZsel;  
+  std::vector<TH1F> *pNJet_afterbsel;
+  std::vector<TH1F> *pNJet_afterleptsel_mWT110;
+  std::vector<TH1F> *pNLept_afterbsel;
+  std::vector<TH1F> *pNBJet_afterZsel;
+  std::vector<TH1F> *pNBJet_afterjetsel;
+  std::vector<TH1F> *pNBJet_afterjetsel_bjets;
+  std::vector<TH1F> *pNBJet_afterjetsel_cjets;
+  std::vector<TH1F> *pNBJet_afterjetsel_ljets;
+  std::vector<TH1F> *pBJetDiscri_afterjetsel_bjets;
+  std::vector<TH1F> *pBJetDiscri_afterjetsel_cjets;
+  std::vector<TH1F> *pBJetDiscri_afterjetsel_ljets;
+  std::vector<TH1F> *pNBJet_afterleptsel_mWT110;
+  std::vector<TH1F> *pNvtx_afterleptsel;
+  std::vector<TH1F> *pInvM_ll_afterleptsel;  
+  std::vector<TH1F> *pInvM_ll_afterleptsel_mWT110;  
+  std::vector<TH1F> *pInvM_ll_afterleptsel_lowbin;  
+  std::vector<TH1F> *pInvM_ll_afterleptsel_highSumPt;  
+  std::vector<TH1F> *pInvM_ll_afterjetsel;
+  std::vector<TH1F> *pInvM_ll_afterbjetsel;  
+  std::vector<TH1F> *pLeptPt_afterleptsel;  
+  std::vector<TH1F> *pLeptPt_afterjetsel;  
+  std::vector<TH1F> *pLeptPt_afterbjetsel;  
+  std::vector<TH1F> *pLeptZPt_afterleptsel;  
+  std::vector<TH1F> *pLeptZPt_afterjetsel;  
+  std::vector<TH1F> *pLeptZPt_afterbjetsel;
+  std::vector<TH1F> *pLeptWPt_afterleptsel;  
+  std::vector<TH1F> *pLeptWPt_afterjetsel;
+  std::vector<TH1F> *pLeptWPt_afterbjetsel;
+  std::vector<TH1F> *pLeptWPt_afterbjetveto;
+  std::vector<TH1F> *pLeptWPt_afterleptsel_mWT110;
+  std::vector<TH1F> *pJetPt_afterleptsel;
+  std::vector<TH1F> *pJetPt_afterjetsel;
+  std::vector<TH1F> *pJetPt_afterbjetsel;
+  std::vector<TH1F> *pJetPt_afterbjetveto;  
+  std::vector<TH1F> *pJetEta_afterleptsel;
+  std::vector<TH1F> *pJetEta_afterjetsel;  
+  std::vector<TH1F> *pJetEta_afterbjetsel;  
+  std::vector<TH1F> *pJetEta_afterbjetveto;
+  std::vector<TH1F> *pHT_afterleptsel;  
+  std::vector<TH1F> *pHT_afterjetsel;
+  std::vector<TH1F> *pHT_afterbjetsel;  
+  std::vector<TH1F> *pHT_afterbjetveto;  
+  std::vector<TH1F> *pMET_afterleptsel;
+  std::vector<TH1F> *pMET_afterleptsel_mWT110;
+  std::vector<TH1F> *pMET_afterjetsel;
+  std::vector<TH1F> *pAsym_afterbjetsel;  
+  std::vector<TH1F> *pmWT_afterjetsel;
+  std::vector<TH1F> *pRecoPtZ_afterbjetsel;
+  std::vector<TH1F> *pRecoPtZ_afterbjetveto;
+  std::vector<TH1F> *pRecoPtZ_afterleptsel;  
+  std::vector<TH1F> *pRecoPtZ_afterleptsel_nojet;
+  std::vector<TH1F> *pRecoTopMass_afterbjetsel;
+  std::vector<TH1F> *pRecoTopMass_afterbjetveto;  
+  std::vector<TH1F> *pdeltaPhilb_afterbjetsel;
+  std::vector<TH1F> *pdeltaPhilj_afterbjetveto;  
+  std::vector<TH1F> *pdeltaR_afterleptsel;  
+  std::vector<TH1F> *pdeltaRLeptJet_afterleptsel_mWT110;  
+  std::vector<TH1F> *pdeltaRLeptMet_afterleptsel_mWT110;  
+  std::vector<TH1F> *pWmissAssing_afterleptsel;  
+  std::vector<TH1F> *pmWT_afterleptsel; 
+  std::vector<TH1F> *pmWT_afterbjetsel;  
+  std::vector<TH1F> *pmWT_afterbjetveto;  
+  std::vector<TH1F> *pCharge_afterleptsel;  
+  std::vector<TH1F> *pCharge_afterleptsel_mWT110;   
+  std::vector<TH1F> *pNvertex; 
+  std::vector<TH2D> *pInvM_ll_vs_mWT_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_MET_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_NJet_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_NBJet_afterleptsel;  
+  std::vector<TH2D> *pHT_vs_LeptPt_afterleptsel;
+  std::vector<TH2D> *pHT_vs_JetPt_afterleptsel;
+  std::vector<TH2D> *pHT_vs_Mll_afterleptsel;
+  
+  
+  
+  
+  
+  
+  
+  //------------------------------------
+  //BTag scale factors
+  //------------------------------------
+  
+  BtagHardcodedConditions BTagSFManager;
+  
+   //------------------------------------
   //TTree and banches used for BDT
+  //------------------------------------
   TTree *TheTree;
   
   
@@ -713,39 +787,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   int   tree_SampleType;
   int   tree_Channel;
   
-  
-  
   float tree_EvtWeight;
-  
-  ofstream ofile;
-  
-  //------------------------------------
-  //Definition of the various histograms
-  //------------------------------------
-  int nbins ;
-  float minx;
-  float maxx;
-  HistoManager MyhistoManager;
-  
-  
-  std::map<TString, int> initMCevents;
-  std::map<TString, int> skimMCevents;
-   
-   
-   
-  //------------------------------------
-  //BTag scale factors
-  //------------------------------------
-  
-  BtagHardcodedConditions BTagSFManager;
-  
-  //------------------------------------
-  // for PileUP reweighting
-  //------------------------------------
-  PUWeighting  thePUReweighter;
-  
-  
-  string datasetName ;
   
   
   //------------------------------------
@@ -767,115 +809,23 @@ class ProofSelectorMyCutFlow : public TSelector {
   
   ClassDef(ProofSelectorMyCutFlow,0);
   
+  //to determine the MC event weight
+  std::vector< double > determineWeights(TString, double , double);
   
-  std::vector<double>  GetNvertexWeight(TString datasetName);
-  
-  std::vector<double>  TableToVector(double * theTable, int size);
-  
-  
-  
-double functionDiscriLjet(double CVSvalue){
-  
-  double a = 0.958359;
-  double b = 1.06131;
-  double c = -1.9045;
-  double d = 0.884829;
-  
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-double functionDiscriCjet(double CVSvalue){
-  double a = 1.11389;
-  double b = -0.538485;
-  double c = 0.428048;
-  double d = 0;
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-double functionDiscriBjet(double CVSvalue){
-  double a = 0.942535;
-  double b = -0.264954;
-  double c = 0.328049;
-  double d = 0;
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-  
-    
-double functionDiscriLjet_up(double CVSvalue){
-  
-  double a = 1.01955;
-double b = 1.06079;
-double c = -2.02085;
-double d = 0.940512;
-
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-double functionDiscriCjet_up(double CVSvalue){
-double a = 1.12734;
-double b = -0.374471;
-double c = 0.24919;
-double d = 0;
-
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-double functionDiscriBjet_up(double CVSvalue){
-double a = 1.12734;
-double b = -0.374471;
-double c = 0.24919;
-double d = 0;
-
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
+  void createTheHisto(HistoManager *thehistomanag);
+  void WriteTheHisto(TFile* theoutputfile, HistoManager *thehistomanag);
+  void cleanHistoVector();
   
   
+  void determineLeptonCandidates(
+  		bool UseLooseWcand, float looseIsoCut, double rhocorr,
+  		std::vector<NTElectron> *selE,        std::vector<NTMuon> *selM, 
+  		std::vector<NTElectron> *selENonIso,  std::vector<NTMuon> *selMNonIso, 
+		std::vector<NTElectron> *theZeeCand,  std::vector<NTMuon> *theZmumuCand, 
+		std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand
+		); 
   
-    
-double functionDiscriLjet_down(double CVSvalue){
-  double a = 0.979725;
-double b = 0.528246;
-double c = -0.838917;
-double d = 0.330947;
-
-  
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-double functionDiscriCjet_down(double CVSvalue){
-double a = 1.01008;
-double b = -0.422312;
-double c = 0.418221;
-double d = 0;
-
-
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-double functionDiscriBjet_down(double CVSvalue){
-
-double a = 0.777746;
-double b = -0.209792;
-double c = 0.440256;
-double d = 0;
-
-  double corrected_cvs = a*CVSvalue +b*pow(CVSvalue,2)  +c*pow(CVSvalue,3) +d*pow(CVSvalue,4) ;
-      return corrected_cvs;
-}
-
-  
-  
-  
+  void defineHistoPointer(int channel);
   
 };
 

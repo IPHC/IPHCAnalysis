@@ -1255,8 +1255,88 @@ bool DiLeptonSelection::passTriggerSelection8TeV (Dataset * dataset, string chan
 
     //    int runNumber = getRunNumber();
 
-//
-
+//  
+   /* 
+   std::vector<IPHCTree::NTTriggerPathType> subtable_mu;
+    
+   triggers->GetSubTable("HLT_Mu17_Mu8_v*", subtable_mu);
+    
+   std::vector<IPHCTree::NTTriggerPathType> subtable_el;
+    
+   triggers->GetSubTable("HLT_Ele*", subtable_el);
+   cout << "******************************" << endl;
+   for(unsigned int i=0; i<subtable_mu.size(); i++){
+    
+      cout << subtable_mu[i].name << endl;
+    
+   }
+   for(unsigned int i=0; i<subtable_el.size(); i++){
+    
+      cout << subtable_el[i].name << endl;
+    
+   }
+   */
+    
+    int runNumber = getRunNumber();
+    //if(runNumber >= 190456 && runNumber <= 193805){
+      
+      
+      std::vector<IPHCTree::NTTriggerPathType> subtable_dimu1, subtable_dimu2 ;
+      
+      
+      triggers->GetSubTable("HLT_Mu17_Mu8_v*", subtable_dimu1);
+      triggers->GetSubTable("HLT_Mu17_TkMu8_v*", subtable_dimu2);
+      for(unsigned int i=0; i<subtable_dimu1.size(); i++){
+        if(subtable_dimu1[i].fired == 1) passMu = true;
+      }
+      for(unsigned int i=0; i<subtable_dimu2.size(); i++){
+        if(subtable_dimu2[i].fired == 1) passMu = true;
+      }
+      
+      
+      
+      std::vector<IPHCTree::NTTriggerPathType> subtable_diel ;
+      triggers->GetSubTable("HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*", subtable_diel);
+      for(unsigned int i=0; i< subtable_diel.size(); i++){
+        if(subtable_diel[i].fired == 1)  passEl= true;
+      }
+    
+      
+      
+      std::vector<IPHCTree::NTTriggerPathType> subtable_elmu1, subtable_elmu2 ;
+      
+      triggers->GetSubTable("HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*", subtable_elmu1);
+      triggers->GetSubTable("HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*", subtable_elmu2);
+      for(unsigned int i=0; i<subtable_elmu1.size(); i++){
+        if(subtable_elmu1[i].fired == 1)  passElMu = true;
+      }
+		
+		
+    /*
+    }else if(runNumber >= 193806 && runNumber<=198021) {
+    
+      
+      passMu = (triggers->IsFired("HLT_Mu17_Mu8_v*") || triggers->IsFired("HLT_Mu17_TkMu8_v*"));
+    
+      
+      passEl = (triggers->IsFired("HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*"));
+    
+      
+      passElMu = (triggers->IsFired("HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*") || 
+    	        triggers->IsFired("HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*"));
+    }else if(runNumber >= 198022 ) {
+    
+      
+      passMu = (triggers->IsFired("HLT_Mu17_Mu8_v21") || triggers->IsFired("HLT_Mu17_TkMu8_v13"));
+    
+      
+      passEl = (triggers->IsFired("HLT_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*"));
+    
+      
+      passElMu = (triggers->IsFired("HLT_Mu17_Ele8_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*") || 
+    	        triggers->IsFired("HLT_Mu8_Ele17_CaloIdT_CaloIsoVL_TrkIdVL_TrkIsoVL_v*"));
+      
+    }*/
        
   } // end DATA
   

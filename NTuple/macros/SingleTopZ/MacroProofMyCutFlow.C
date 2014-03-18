@@ -17,10 +17,13 @@ int main(int argc, char* argv[]){
   // Global variables: could be give as argument later
   //---------------------------------------//
   
-  int nwnodes = 12; //8 to 10 is the optimal
+  int nwnodes = 1; //8 to 10 is the optimal
   string macroName = "ProofSelectorMyCutFlow.C+"; //"+" should be put at the end to use ACLIC complication - This macro should inherit from TSelector 
   //In order to allow the node to access the xml, the name should be given with the full path
-  string xmlFileName = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml");
+  //string xmlFileName = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml");
+  string xmlFileName = getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/config/MyCutFlow_2012_FCNCkut.xml");
+  ///grid_mnt/opt__sbg__data__safe1/cms/jandrea/UpdateFramework_2013_08_22/CMSSW_5_3_11/src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml
+  
   //string xmlFileName = "/opt/sbg/data/data1/cms/jandrea/JLAgram_06072012/CMSSW_4_2_8_patch7//src/IPHCAnalysis/NTuple/config/MyCutFlow_2011AB_FCNCkut.xml";
   string outputFileName = "proof.root";
   
@@ -43,10 +46,10 @@ int main(int argc, char* argv[]){
   cout<<" DONE [don't worry with symlink error - do rm NTAna if you change NTAna.par in the meanwhile !] "<<endl;
   proof->EnablePackage("NTAna");
   //Adding histograms for feedback: must exist in the TSelector !
-  proof->AddFeedback("fHist"); //give the "name" of the histogram and not the name of the variable TH1F* (could be the same !)
+  //proof->AddFeedback("fHist"); //give the "name" of the histogram and not the name of the variable TH1F* (could be the same !)
   
   //This line is required to display histograms durint the process
-  TDrawFeedback fb(proof);
+  //TDrawFeedback fb(proof);
   
   
   //---------------------------------------//
@@ -98,7 +101,6 @@ int main(int argc, char* argv[]){
   
   
   for(unsigned int i=0;i<datasets.size();i++){
-    proof->AddInput(new TNamed("PROOF_DATASETNAME", datasets[i].Name()));
     //---------------------------------------//
     // 	Loading of the xml file
     //---------------------------------------//
@@ -107,7 +109,7 @@ int main(int argc, char* argv[]){
     //proof->SetParameter("IN_FLOAT",f);
     string outputnameSample = "proof_"+datasets[i].Name();
     
-    
+    proof->AddInput(new TNamed("PROOF_DATASETNAME", datasets[i].Name()));   
     proof->AddInput(new TNamed("PROOF_XMLFILENAME", xmlFileName));
     //proof->AddInput(new TNamed("PROOF_OUTPUTFILE", outputFileName));
     proof->AddInput(new TNamed("PROOF_OUTPUTFILE", outputnameSample));
@@ -125,10 +127,11 @@ int main(int argc, char* argv[]){
     //system("ps -ef |grep jandrea");
     //gSystem->Load("../.lib/libNTupleAna_22-09-11_12-08-49.so");
     //gSystem->Load("../../../MiniTreeFormat/NTFormat/src/libNTuple.so");
+    cout << "start  proof process " << endl;
     proof->Process(datasets[i].Name().c_str(),macroName.c_str());
     string newFileName = outputFileNameModif+"_"+datasets[i].Name()+".root";
     system("sleep 10");
-    cout<<"Copying the output file with the name "<<endl;
+
     //string command = "cp "+outputFileName+" "+newFileName;
     //MergingCommand+=newFileName+" ";
     //system(command.c_str());
@@ -165,8 +168,13 @@ int main(int argc, char* argv[]){
   
   
   
+  delete proof; 
   
-  
+  for(unsigned int i=0;i<datasets.size();i++){
+    delete fileCollec[i];
+  }
+
+  delete fileCollec;
   
   
   return (0);

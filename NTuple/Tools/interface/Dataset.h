@@ -34,13 +34,14 @@ public:
         Name_(name), isData_(isData), DotIt_(doIt), 
         Color_(color), LineStyle_(lineStyle), LineWidth_(lineWidth), 
         NormFactor_(normFactor), Xsection_(xsection), PreSelEfficiency_(1.), NofEvtsToRunOver_(-999), Filenames_(filenames)
-    {
+    {   
+    
         //Dataset constructor
         nSkimmedEvent = 0;
         numberOfEventsBeforeMTSkimmer = 0;
         eventTree_ = new TChain("MyModule/Event"); 
         for(unsigned int i=0;i<Filenames_.size();i++)
-        {
+        { 
           eventTree_->AddFile(Filenames_[i].c_str());
           TFile * theTempFile = new TFile(Filenames_[i].c_str());
           theTempFile->cd("MyModule");
@@ -49,7 +50,7 @@ public:
           nSkimmedEvent += normHisto->GetEntries();
 
           TH1F* histoFromMTSkimmer = (TH1F*)gROOT->FindObject("numberOfEventsBeforeMTSkimmer");
-          numberOfEventsBeforeMTSkimmer += histoFromMTSkimmer->GetBinContent(1);
+          if(histoFromMTSkimmer != 0) numberOfEventsBeforeMTSkimmer += histoFromMTSkimmer->GetBinContent(1);
 
         }
         if(nSkimmedEvent>0) PreSelEfficiency_ = (float) eventTree_->GetEntries()/nSkimmedEvent;

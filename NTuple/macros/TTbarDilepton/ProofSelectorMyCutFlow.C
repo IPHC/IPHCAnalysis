@@ -873,6 +873,9 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
 	          if(IChannel == 0){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.RelIso03PFDeltaBeta(selMuons[1]) <<  "; ";}
 	          if(IChannel == 1){cout << sel.RelIso03PFDeltaBeta(selMuons[0]) <<  "; "; cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; ";}
 	          if(IChannel == 2){cout << sel.EffArea03PF(selElectrons[0], rho) <<  "; "; cout << sel.EffArea03PF(selElectrons[1], rho) <<  "; ";}
+		  
+		  if(IChannel == 2){ cout << selElectrons[0].ID["mvaTrigV0"] <<  "; "; cout << selElectrons[1].ID["mvaTrigV0"] <<  "; ";}
+		  
 	          cout << InvDilMass <<  "; ";
 	          cout << selJets.size() <<  "; ";
 	          cout << selJets[0].p4.Pt() <<  "; ";

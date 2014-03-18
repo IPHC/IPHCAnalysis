@@ -37,6 +37,11 @@ class PUWeighting {
      void setPUHisto(TH1D * thehistData, TH1F * thehistMC);
      void setPUHisto(TH1D * thehistData);
      void setPUHisto(const string filename);
+     
+     
+     void initPUSummer12_S10(TH1D * thehistData);
+     double weight_Summer12_S10(int npu);
+     
      void setUseOutOfTimePU(bool useoot);
      bool getUseOutOfTimePU();
      void weightOOT_init();

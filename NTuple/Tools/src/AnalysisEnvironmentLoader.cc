@@ -624,8 +624,9 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 			if (isData) cout << " (data)" << endl;
 			else        cout << " (MC)" << endl;
 		}
+	  cout << "file loaded " << endl;
 	}
-	
+	cout << "retrieve filenames" << endl;
 	vector<string> filenames;
 	bool star = SearchStar(filename,filenames);
         if(!star){
@@ -633,6 +634,7 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 		StringSeparator(filename,string(","),filenames);
 	}
 
+	cout << " filenames retrieved" << endl;
 	//create a Dataset and push it back in the vector
 	if(filenames.size()==0 || filenames[0] == string("")){
 		Dataset d;
@@ -643,10 +645,11 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 	}
 	else{
 		//cout<<"THere "<<name<<" "<<isData<<endl;
+		//cout << "filenames[0] " << filenames[0]  << endl;
 		Dataset d(name, (bool) isData, true, color, ls, lw, normf, xsection, filenames);
-		//cout<<d.isData()<<endl;
+		cout<<d.isData()<<endl;
 		d.SetIsData(isData);
-		//cout<<d.isData()<<endl;
+		cout<<d.isData()<<endl;
 		d.SetCrossSectionError(xsErrorMinus,xsErrorPlus);
 		//Norm with Eff and NofEvts
 		float PreselEff = -1.;
@@ -670,7 +673,8 @@ void AnalysisEnvironmentLoader::LoadSamples(vector<Dataset>& datasets){
 	}
 
 	elem = elem->NextSiblingElement ();	// iteration
-    }
+    } 
+    cout << "end LoadSamples " << endl;
 }
 
 
