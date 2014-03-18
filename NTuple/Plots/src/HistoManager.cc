@@ -150,11 +150,11 @@ void HistoManager::AddHisto2D_BC(string name, string title, string xaxis, const 
 void HistoManager::Fill(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& value, const float& weight){
 	Histos[varNumber][iChannel][iSelStep][iDataset].Fill(value, weight);
 }   
-///////////////////////////////////////////////////////MODIF
+
 void HistoManager::Fill2D(const int& iChannel, const int& iSelStep, const int& iDataset, const int& varNumber, const float& valuex, const float& valuey, const float& weight){
 	Histos2D[varNumber][iChannel][iSelStep][iDataset].Fill(valuex, valuey, weight);
 }   
-///////////////////////////////////////////////////////////
+
 
 bool HistoManager::Check(const int& iChannel, const int& iDataset){
 	if(iChannel<0 || iChannel>= (int)Channels.size()){
