@@ -26,25 +26,25 @@
 
     // plot met after btag
     //PlotStack("Mt_",jchan,"_afterbjetsel", i, k);
-    /*PlotStack("Mt_",jchan,"_afterbjetveto", i, k);
-    PlotStack("NJet_",jchan,"_afterZsel", i, k);
+    //PlotStack("Mt_",jchan,"_afterbjetveto", i, k);
+    //PlotStack("NJet_",jchan,"_afterZsel", i, k);
     
-    PlotStack("NBJet_",jchan,"_afterZsel", i, k);
-    PlotStack("NBJet_",jchan,"_afterjetsel", i, k);
+    //PlotStack("NBJet_",jchan,"_afterZsel", i, k);
+    //PlotStack("NBJet_",jchan,"_afterjetsel", i, k);
     
-    PlotStack("InvM_ll_",jchan,"_afterleptsel_highSumPt", i, k);
-    PlotStack("InvM_ll_",jchan,"_afterleptsel_lowbin", i, k);
-    PlotStack("InvM_ll_",jchan,"_afterjetsel", i, k);
-    PlotStack("InvM_ll_",jchan,"_afterleptsel", i, k);*/
+    //PlotStack("InvM_ll_",jchan,"_afterleptsel_highSumPt", i, k);
+    //PlotStack("InvM_ll_",jchan,"_afterleptsel_lowbin", i, k);
+    //PlotStack("InvM_ll_",jchan,"_afterjetsel", i, k);
+    //PlotStack("InvM_ll_",jchan,"_afterleptsel", i, k);
     //PlotStack("InvM_ll_",jchan,"_afterbjetsel", i, k);
     
-    /*PlotStack("LeptPt_",jchan,"_afterleptsel", i, k);
-    PlotStack("LeptPt_",jchan,"_afterjetsel", i, k);
-    PlotStack("LeptPt_",jchan,"_afterbjetsel", i, k);*/
+    //PlotStack("LeptPt_",jchan,"_afterleptsel", i, k);
+   // PlotStack("LeptPt_",jchan,"_afterjetsel", i, k);
+   // PlotStack("LeptPt_",jchan,"_afterbjetsel", i, k);
     
     //PlotStack("LeptPt_",jchan,"_afterbjetsel", i, k);
     
-    PlotStack("NBJet_",jchan,"_afterjetsel", i, k);
+    //PlotStack("NBJet_",jchan,"_afterjetsel", i, k);
     
     
     //PlotStack("LeptZPt_",jchan,"_afterleptsel", i, k);
@@ -73,12 +73,12 @@
     //PlotStack("JetPt_",jchan,"_afterbjetveto", i, k);
     
     
-    //PlotStack("RecoTopMass_",jchan,"_afterbjetsel", i, k);
+    PlotStack("RecoTopMass_",jchan,"_afterbjetsel", i, k);
     //PlotStack("RecoTopMass_",jchan,"_afterbjetveto", i, k);
-    //PlotStack("RecoPtZ_",jchan,"_afterbjetsel", i, k);
+    PlotStack("RecoPtZ_",jchan,"_afterbjetsel", i, k);
     //PlotStack("RecoPtZ_",jchan,"_afterbjetveto", i, k);
-    //PlotStack("Asym_",jchan,"_afterbjetsel", i, k);
-    //PlotStack("deltaPhilb_",jchan,"_afterbjetsel", i, k);
+    PlotStack("Asym_",jchan,"_afterbjetsel", i, k);
+    PlotStack("deltaPhilb_",jchan,"_afterbjetsel", i, k);
     //PlotStack("deltaPhilj_",jchan,"_afterbjetveto", i, k);
     
     //PlotStack("RecoPtZ_",jchan,"_afterbjetveto", i, k);

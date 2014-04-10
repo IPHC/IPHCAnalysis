@@ -32,3 +32,6 @@ fi
 
 echo " Setup is DONE"
 echo "#################################" 
+
+
+export CMSSW_BASE=/opt/sbg/data/safe1/cms/jandrea/UpdateFramework_2013_08_22/CMSSW_5_3_11/

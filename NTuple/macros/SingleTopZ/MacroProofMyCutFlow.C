@@ -7,7 +7,7 @@
 
 #include "../../Tools/interface/Dataset.h"
 #include "../../Tools/interface/AnalysisEnvironmentLoader.h"
-
+ 
 int main(int argc, char* argv[]){
   
   //This line could be commented if you don't want display while running, by example using screen.
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
   system("rm -r $HOME/.proof");
   
   TProof *proof = TProof::Open("");
-  proof->SetParallel(nwnodes);
+  proof->SetParallel(nwnodes); 
   //you should not have any package yet
   proof->ShowPackages();
   //proof->ClearPackages();
@@ -77,6 +77,7 @@ int main(int argc, char* argv[]){
     //register dataset in proof
     proof->RegisterDataSet(datasets[i].Name().c_str(),fileCollec[i]);
     proof->VerifyDataSet(datasets[i].Name().c_str());
+    proof->SetDataSetTreeName( datasets[i].Name().c_str(), "MyModule/Event");
   }
   
   //summarize the list of datasets

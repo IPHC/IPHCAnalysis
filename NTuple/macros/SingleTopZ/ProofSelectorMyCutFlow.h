@@ -715,6 +715,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> *pMET_afterleptsel;
   std::vector<TH1F> *pMET_afterleptsel_mWT110;
   std::vector<TH1F> *pMET_afterjetsel;
+  std::vector<TH1F> *pMET_afterbjetsel;
   std::vector<TH1F> *pAsym_afterbjetsel;  
   std::vector<TH1F> *pmWT_afterjetsel;
   std::vector<TH1F> *pRecoPtZ_afterbjetsel;
@@ -779,6 +780,8 @@ class ProofSelectorMyCutFlow : public TSelector {
   float tree_NBJets;
   float tree_totPt;
   float tree_totEta;
+  float tree_met;
+  float tree_mTW;
   
   float tree_leptWPt, tree_leptWEta;
   float tree_leadJetPt, tree_leadJetEta;
