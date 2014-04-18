@@ -10,6 +10,7 @@ export NTUPLEDATAFORMAT_PATH=$dir/../../../IPHCDataFormat/NTFormat/
 
 # PoD
 export SBGPODPATH=$dir/../../../PoD/
+#cd ${SBGPODPATH}3.14;source PoD_env.sh;cd $dir
 export PATH=$PATH:$SBGPODPATH
 
 echo NTUPLEANA_PATH=$NTUPLEANA_PATH
