@@ -521,7 +521,7 @@ Bool_t ProofSelectorMyCutFlow::Process(Long64_t entry)
   if(isData){
     if(passtrigger_mumu  && !passtrigger_emu && !passtrigger_ee && datasetName=="DataMu"  )   IChannel = 0;
     if(passtrigger_emu   &&                                        datasetName=="DataMuEG")   IChannel = 12;
-    if(passtrigger_ee    && !passtrigger_emu &&  passtrigger_ee && datasetName=="DataEG"  )   IChannel = 3;
+    if(passtrigger_ee    && !passtrigger_emu && !passtrigger_mumu && datasetName=="DataEG"  )   IChannel = 3;
   }else{
     if( passtrigger_mumu && !passtrigger_emu && !passtrigger_ee ) IChannel = 0;
     if( passtrigger_emu                                         ) IChannel = 12;
