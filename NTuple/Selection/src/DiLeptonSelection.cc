@@ -1393,7 +1393,24 @@ std::pair<bool,bool> DiLeptonSelection::passMETTriggerSelection (Dataset * datas
                       || triggers->IsFired("HLT_MET100_v7")
                       || triggers->IsFired("HLT_MET120_v7")
                       || triggers->IsFired("HLT_MET200_v7")
-                      || triggers->IsFired("HLT_MET400_v7")   );
+                      || triggers->IsFired("HLT_MET400_v7")
+
+                      || triggers->IsFired("HLT_DiCentralPFJet30_PFMET80_v2")  // 8TeV 
+                      || triggers->IsFired("HLT_DiCentralPFJet50_PFMET80_v6")   
+                      || triggers->IsFired("HLT_MET80_v3")
+                      || triggers->IsFired("HLT_MET120_v10") 
+                      || triggers->IsFired("HLT_MET200_v10") 
+                      || triggers->IsFired("HLT_MET300_v2") 
+                      || triggers->IsFired("HLT_MET400_v5") 
+                      || triggers->IsFired("HLT_PFHT350_PFMET100_v6") 
+                      || triggers->IsFired("HLT_PFHT400_PFMET100_v6") 
+                      || triggers->IsFired("HLT_PFMET150_v4")
+                      || triggers->IsFired("HLT_PFMET180_v4")             
+                      || triggers->IsFired("HLT_MET120_HBHENoiseCleaned_v3")             
+                      || triggers->IsFired("HLT_MET200_HBHENoiseCleaned_v3")             
+                      || triggers->IsFired("HLT_MET300_HBHENoiseCleaned_v3")             
+                      || triggers->IsFired("HLT_MET400_HBHENoiseCleaned_v3")             
+                     );
    
     if( passTriggerMET ) 
       passTriggerBTAGMET = (   triggers->IsFired("HLT_BTagMu_DiJet20_Mu5_v2") // Summer 11
@@ -1404,7 +1421,28 @@ std::pair<bool,bool> DiLeptonSelection::passMETTriggerSelection (Dataset * datas
                             || triggers->IsFired("HLT_BTagMu_DiJet20_Mu5_v10") // Fall 11
                 	    || triggers->IsFired("HLT_BTagMu_DiJet60_Mu5_v10")
                 	    || triggers->IsFired("HLT_BTagMu_DiJet80_Mu5_v10")
-                	    || triggers->IsFired("HLT_BTagMu_DiJet100_Mu5_v10")   );
+                	    || triggers->IsFired("HLT_BTagMu_DiJet100_Mu5_v10")
+
+                            || triggers->IsFired("HLT_DiCentralPFJet30_PFMET80_BTagCSV07_v1")  // 8TeV
+                            || triggers->IsFired("HLT_DiJet40Eta2p6_BTagIP3DFastPV_v4")
+                            || triggers->IsFired("HLT_DiJet80Eta2p6_BTagIP3DFastPVLoose_v4")
+                            || triggers->IsFired("HLT_DiPFJet80_DiPFJet30_BTagCSVd07d05_v1")
+                            || triggers->IsFired("HLT_DiPFJet80_DiPFJet30_BTagCSVd07d05d03_PFDiJetPt120_v1")
+                            || triggers->IsFired("HLT_DiPFJet80_DiPFJet30_BTagCSVd07d05d03_v1")
+                            || triggers->IsFired("HLT_DiPFJet80_DiPFJet30_BTagCSVd07d05d05_v1")
+                            || triggers->IsFired("HLT_Jet160Eta2p4_Jet120Eta2p4_DiBTagIP3DFastPVLoose_v4")
+                            || triggers->IsFired("HLT_Jet60Eta1p7_Jet53Eta1p7_DiBTagIP3DFastPV_v4")
+                            || triggers->IsFired("HLT_Jet80Eta1p7_Jet70Eta1p7_DiBTagIP3DFastPV_v4")
+                            || triggers->IsFired("HLT_QuadJet75_55_35_20_BTagIP_VBF_v3")
+                            || triggers->IsFired("HLT_QuadJet75_55_38_20_BTagIP_VBF_v3")
+                            || triggers->IsFired("HLT_QuadPFJet78_61_44_31_BTagCSV_VBF_v1")
+                            || triggers->IsFired("HLT_QuadPFJet82_65_48_35_BTagCSV_VBF_v1")
+                            || triggers->IsFired("HLT_BTagMu_DiJet110_Mu5_v3")
+                            || triggers->IsFired("HLT_BTagMu_DiJet20_Mu5_v3")
+                            || triggers->IsFired("HLT_BTagMu_DiJet40_Mu5_v3")
+                            || triggers->IsFired("HLT_BTagMu_DiJet70_Mu5_v3")
+                            || triggers->IsFired("HLT_BTagMu_Jet300_Mu5_v3")
+                           );
      
    }
   else {
