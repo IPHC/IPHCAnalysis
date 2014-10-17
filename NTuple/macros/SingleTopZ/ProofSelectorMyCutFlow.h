@@ -58,6 +58,7 @@ class TTree;
 class AnalysisEnvironmentLoader;
 class DiLeptonSelection;
 
+
 class ProofSelectorMyCutFlow : public TSelector {
  public :
   
@@ -812,21 +813,9 @@ class ProofSelectorMyCutFlow : public TSelector {
   
   ClassDef(ProofSelectorMyCutFlow,0);
   
-  //to determine the MC event weight
-  std::vector< double > determineWeights(TString, double , double);
-  
   void createTheHisto(HistoManager *thehistomanag);
   void WriteTheHisto(TFile* theoutputfile, HistoManager *thehistomanag);
   void cleanHistoVector();
-  
-  
-  void determineLeptonCandidates(
-  		bool UseLooseWcand, float looseIsoCut, double rhocorr,
-  		std::vector<NTElectron> *selE,        std::vector<NTMuon> *selM, 
-  		std::vector<NTElectron> *selENonIso,  std::vector<NTMuon> *selMNonIso, 
-		std::vector<NTElectron> *theZeeCand,  std::vector<NTMuon> *theZmumuCand, 
-		std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand
-		); 
   
   void defineHistoPointer(int channel);
   
