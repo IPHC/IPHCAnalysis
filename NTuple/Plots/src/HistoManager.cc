@@ -980,10 +980,12 @@ void HistoManager::SetCutFlowAxisTitleFCNCMonotop(vector<TH1F>& hlist, string v,
   
      hlist[i].GetXaxis()->SetLabelSize(0.07);
      hlist[i].GetXaxis()->SetBinLabel(1, "trigger");
-     hlist[i].GetXaxis()->SetBinLabel(2, "dilepton sel.");
-     hlist[i].GetXaxis()->SetBinLabel(3, "Z mass");
-     hlist[i].GetXaxis()->SetBinLabel(4, "Njets");
-     hlist[i].GetXaxis()->SetBinLabel(5, "NBjets");
+     hlist[i].GetXaxis()->SetBinLabel(2, "2 sf os lept.");
+     hlist[i].GetXaxis()->SetBinLabel(3, "3 lept.");
+     hlist[i].GetXaxis()->SetBinLabel(4, "Z mass cut");
+     hlist[i].GetXaxis()->SetBinLabel(5, ">= 1 jet");
+     hlist[i].GetXaxis()->SetBinLabel(6, ">= 1 bjet");
+     hlist[i].GetXaxis()->SetBinLabel(7, "met > 20 GeV");
     
      
      
