@@ -161,7 +161,7 @@ bool Event::LoadEvent(const IPHCTree::NTEvent* evt)
   // get one HeavyTagJet collection 
   if (HeavyTagJetEnabled_)
   {
-    heavyTagJets_ = evt->jets.GetCollection(HeavyTagJetType_);
+    /*heavyTagJets_ = evt->jets.GetCollection(HeavyTagJetType_);
     if(heavyTagJets_==0)
     {
       success=false;
@@ -175,7 +175,7 @@ bool Event::LoadEvent(const IPHCTree::NTEvent* evt)
         if (it!=names.begin()) std::cerr << " , ";
       }
       std::cerr << std::endl;
-    }
+    }*/
   }
 
   // get only one electron collection 

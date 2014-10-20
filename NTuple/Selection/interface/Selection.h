@@ -17,6 +17,7 @@
 
 // ROOT headers
 #include "TH2F.h"
+#include "TGraphAsymmErrors.h"
 
 // STL headers
 #include <memory>
@@ -326,26 +327,26 @@ class Selection : public Event
   std::vector<IPHCTree::NTJet> GetScaledJets(float factor = 1.) const; 
 
   //! Get scaled jets
-  std::vector<IPHCTree::NTJet> GetScaledJets( JetCorrectionUncertainty* theJESuncertainty, bool upOrDown  ) const; 
+  std::vector<IPHCTree::NTJet> GetScaledJets( JetCorrectionUncertainty* theJESuncertainty, bool upOrDown , int jetResFactor = 0 ) const; 
   
   
   //! Get smeared jets
   std::vector<IPHCTree::NTJet> GetSmearedJets(
                           const vector<IPHCTree::NTJet>& injets,
-                          float jetResFactor = 1.) const; 
+                          int jetResFactor = 0) const; 
 
   //! Get selected jets
   std::vector<IPHCTree::NTJet> GetSelectedJets(bool applyJES = false, 
                                                float scale = 1., 
                                                bool applyJER = false,
-                                               float ResFactor = 0.) const;
+                                               int ResFactor = 0) const;
 
   //! Get selected jets
   std::vector<IPHCTree::NTJet> GetSelectedJets(
                           const std::vector<IPHCTree::NTMuon>& muon_cand,
                           const std::vector<IPHCTree::NTElectron>& elec_cand,
                           bool applyJES = false, float scale = 1.,
-                          bool applyJER = false, float ResFactor = 0.) const;
+                          bool applyJER = false, int ResFactor = 0) const;
 
 
 
@@ -354,7 +355,16 @@ class Selection : public Event
                           const std::vector<IPHCTree::NTMuon>& muon_cand,
                           const std::vector<IPHCTree::NTElectron>& elec_cand,
                           bool applyJES = false, JetCorrectionUncertainty* theJESuncertainty = 0, bool upOrDown = true, 
-                          bool applyJER = false, float ResFactor = 0.) const;
+                          bool applyJER = false, int ResFactor = 0) const;
+			  
+			  
+
+  //! Get selected jets for 8TeV uncertainties
+  std::vector<IPHCTree::NTJet> GetSelectedJetsLoose(
+                          const std::vector<IPHCTree::NTMuon>& muon_cand,
+                          const std::vector<IPHCTree::NTElectron>& elec_cand,
+                          bool applyJES = false, JetCorrectionUncertainty* theJESuncertainty = 0, bool upOrDown = true, 
+                          bool applyJER = false, int ResFactor = 0) const;
 			  
 			  
 
@@ -364,29 +374,30 @@ class Selection : public Event
                           const std::vector<IPHCTree::NTElectron>& elec_cand,
                           const std::vector<IPHCTree::NTTau>& tau_cand,
                           bool applyJES = false, float scale = 1.,
-                          bool applyJER = false, float ResFactor = 0.) const;
+                          bool applyJER = false, int ResFactor = 0) const;
  
   //! Get selected jets 
   std::vector<IPHCTree::NTJet> GetSelectedJets(
                           const std::vector<NTTau>& tau_cand, 
 			  bool applyJES = false, float scale = 1., 
-			  bool applyJER = false, float ResFactor = 0.) const;
+			  bool applyJER = false, int ResFactor = 0) const;
  
   //! Get selected jets
   std::vector<IPHCTree::NTJet> GetSelectedJets(
                           float PtThr, float EtaThr,
                           bool applyJES = false, float scale = 1.,
-                          bool applyJER = false, float ResFactor = 0.) const;
+                          bool applyJER = false, int ResFactor = 0) const;
 
   //! Get selected jets For L+Jets
   std::vector<IPHCTree::NTJet> GetSelectedJetsForLJets(
                           bool applyJES = false, float scale = 1.,
-                          bool applyJER = false, float ResFactor = 0.) const;
+                          bool applyJER = false, int ResFactor = 0) const;
+			  
   std::vector<IPHCTree::NTJet> GetSelectedJetsForLJets(
                           const std::vector<IPHCTree::NTMuon>& muon_cand,
                           const std::vector<IPHCTree::NTElectron>& elec_cand,
                           bool applyJES = false, float scale = 1.,
-                          bool applyJER = false, float ResFactor = 0.) const;
+                          bool applyJER = false, int ResFactor = 0) const;
 
 
   //! Get selected B jets
@@ -442,7 +453,7 @@ class Selection : public Event
 
   //! Get smeared MET
   IPHCTree::NTMET GetSmearedMET(const std::vector<IPHCTree::NTJet>& injets,
-                                float jetResFactor = 1.) const;
+                                int jetResFactor = 1) const;
 
   //! Get unclusmeared MET
   IPHCTree::NTMET GetUnclusScaledMET(
@@ -452,27 +463,27 @@ class Selection : public Event
   IPHCTree::NTMET GetSelectedMET(bool applyJES = false, 
                          float scale = 1., 
                          bool applyJER = false,
-                         float ResFactor = 0.) const;
+                         int ResFactor = 0) const;
       
   //! Get smeared MET for 8TeV uncertainties
   IPHCTree::NTMET GetSelectedMET(bool applyJES = false, 
   		         JetCorrectionUncertainty* theJESuncertainty = 0, 
 			 bool upOrDown = true,
                          bool applyJER = false,
-                         float ResFactor = 0.) const;
+                         int ResFactor = 0) const;
       
   //! tools for Type1 MET calculated ourselves, on the flight.  
   IPHCTree::NTMET GetScaledType1METWithJER(vector<IPHCTree::NTJet> injets, 
                                            bool applyJES = false, float scale = 1., 
-					   bool applyJER = false, float ResFactor = 0.) const;
+					   bool applyJER = false, int ResFactor = 0) const;
 					   
   IPHCTree::NTMET GetType1MET(vector<IPHCTree::NTJet> injets, 
                               bool applyJES = false, float scale = 1., 
-			      bool applyJER = false, float ResFactor = 0.) const;  
+			      bool applyJER = false, int ResFactor = 0) const;  
 			      
   IPHCTree::NTMET GetScaledType1MET(IPHCTree::NTMET &themet, float scale = 1.) const; 
   
-  IPHCTree::NTMET GetSmearedType1MET(IPHCTree::NTMET &themet, vector<NTJet> injets, float jetResFactor = 1.) const;
+  IPHCTree::NTMET GetSmearedType1MET(IPHCTree::NTMET &themet, vector<NTJet> injets, int jetResFactor = 0) const;
 
   IPHCTree::NTMET GetGenMET(std::vector<IPHCTree::WDecaysMC> &wAndDecays);
 
@@ -521,7 +532,21 @@ class Selection : public Event
       
   void LoadElScaleFactors();
   void LoadMuScaleFactors();
-      
+  
+  void LoadMuIDScaleFactors();
+  std::vector <double > getScaleFactorMuID(double pT, double eta);
+  
+  void LoadMuIsoScaleFactors12();
+  std::vector <double > getScaleFactorMuIso12(double pT, double eta);
+  
+  void LoadMuIsoScaleFactors20();
+  std::vector <double > getScaleFactorMuIso20(double pT, double eta);
+  
+  
+  std::vector <double > getSscaleFactorElectronAllID05(double pT, double eta);
+  
+  
+  
   TH2F * getScaleFactEl() {return scaleFactEl;};
   TH2F * getScaleFactMu() {return scaleFactMu;};
 
@@ -587,39 +612,81 @@ static   double RelIso03PF(IPHCTree::NTElectron &theelec) {
 static   float EffArea03PF(IPHCTree::NTElectron &theelec, double rho) {
      
       
-      return (
+      /*return (
       ( theelec.isolation["PATCharH"] + 
-      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.etaSuperCluster), 0. )
+      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*theelec.isolation["Aeff"], 0. )
       
-      )/ theelec.p4.Pt() );
+      )/ theelec.p4.Pt() );*/
+     
+     	return (
+      ( theelec.isolation["PATCharH"] + 
+      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR03_2012(theelec.etaSuperCluster ), 0. )
+      
+      )/ theelec.p4Gsf.Pt() );
+		
+		
+      //return isolation;
+      
+      
    }
    
 
 
 static float AeffDR03_2012(double eta){
 
+
+float theAeff = 0.;                                                                                                       
+                                                                                                                            
+  double abseta = fabs(eta);                                                                                                
+                                                                                                                            
+  if(abseta<1.0)                        theAeff = 0.13;                                                                     
+  else if(abseta>1.0   && abseta<1.479) theAeff = 0.14;                                                                     
+  else if(abseta>1.479 && abseta<2.0)   theAeff = 0.07;                                                                     
+  else if(abseta>2.0   && abseta<2.2)   theAeff = 0.09;                                                                     
+  else if(abseta>2.2   && abseta<2.3)   theAeff = 0.11;                                                                     
+  else if(abseta>2.3   && abseta<2.4)   theAeff = 0.11;                                                                     
+  else if(abseta>2.4)                   theAeff = 0.14 ;                                                                                                                                                                                           
+                                                                                                                            
+   return theAeff;                                                  
+
+
+     
+   
+}
+  
+  
+       
+static   float EffArea04PF(IPHCTree::NTElectron &theelec, double rho) {
+     
+      
+      return (
+      ( theelec.isolation["PATCharH"] + 
+      max(theelec.isolation["PATNeutH"] + theelec.isolation["PATPhoto"]- rho*AeffDR04_2012(theelec.etaSuperCluster), 0. )
+      
+      )/ theelec.p4.Pt() );
+   }
+   
+
+
+static float AeffDR04_2012(double eta){
+
   float theAeff = 0.;
   
   double abseta = fabs(eta);
     
-  if(abseta<1.0)			theAeff = 0.13;
-  else if(abseta>1.0   && abseta<1.479) theAeff = 0.14;
-  else if(abseta>1.479 && abseta<2.0)	theAeff = 0.07;
-  else if(abseta>2.0   && abseta<2.2)	theAeff = 0.09;
-  else if(abseta>2.2   && abseta<2.3)	theAeff = 0.11;
-  else if(abseta>2.3   && abseta<2.4)	theAeff = 0.11;
-  else if(abseta>2.4)			theAeff = 0.14 ;
-    
-    
-    
-    
-    
-    
-   
-   return theAeff;
-  
-
+  if(abseta<1.0)			theAeff = 0.208;
+  else if(abseta>1.0   && abseta<1.479) theAeff = 0.209;
+  else if(abseta>1.479 && abseta<2.0)	theAeff = 0.115;
+  else if(abseta>2.0   && abseta<2.2)	theAeff = 0.143;
+  else if(abseta>2.2   && abseta<2.3)	theAeff = 0.183;
+  else if(abseta>2.3   && abseta<2.4)	theAeff = 0.194;
+  else if(abseta>2.4)			theAeff = 0.261;
+  return theAeff;
 }
+   
+  
+  
+  
   
  private:
 
@@ -629,7 +696,27 @@ static float AeffDR03_2012(double eta){
   //! Scale factors
   TH2F * scaleFactEl;
   TH2F * scaleFactMu;
-
+  
+  TGraphAsymmErrors * scaleFactMu_ID_abseta_inf0p9;
+  TGraphAsymmErrors * scaleFactMu_ID_abseta_0p9_1p2;
+  TGraphAsymmErrors * scaleFactMu_ID_abseta_1p2_2p1;
+  TGraphAsymmErrors * scaleFactMu_ID_abseta_2p1_2p4;
+  
+  
+  
+  TGraphAsymmErrors * scaleFactMu_Iso12_abseta_inf0p9;
+  TGraphAsymmErrors * scaleFactMu_Iso12_abseta_0p9_1p2;
+  TGraphAsymmErrors * scaleFactMu_Iso12_abseta_1p2_2p1;
+  TGraphAsymmErrors * scaleFactMu_Iso12_abseta_2p1_2p4;
+  
+  
+  TGraphAsymmErrors * scaleFactMu_Iso20_abseta_inf0p9;
+  TGraphAsymmErrors * scaleFactMu_Iso20_abseta_0p9_1p2;
+  TGraphAsymmErrors * scaleFactMu_Iso20_abseta_1p2_2p1;
+  TGraphAsymmErrors * scaleFactMu_Iso20_abseta_2p1_2p4;
+  
+  
+  
   //! BTag variables
   int flag_btagweight_;
   SFBweight sfb_;

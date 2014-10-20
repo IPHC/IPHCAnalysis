@@ -92,7 +92,7 @@ std::vector<IPHCTree::NTVertex> Selection::GetSelectedVertex() const
   {
     const IPHCTree::NTVertex* myvertex = &((*vertices)[i]);
 		if (myvertex->isFake)                        continue;
-		if (myvertex->ndof<=cfg.VertexNdofThr_)      continue;
+		if (myvertex->ndof< cfg.VertexNdofThr_)      continue;
 		if (fabs(myvertex->p3.Z())> cfg.VertexZThr_) continue;
 		if (myvertex->Rho()>= cfg.VertexRhoThr_)     continue;
 		selectedVertex.push_back(*myvertex);
@@ -100,7 +100,7 @@ std::vector<IPHCTree::NTVertex> Selection::GetSelectedVertex() const
 	return selectedVertex;
 } 
     
-
+ 
 
 // ----------------------------------------------------------------------------
 // GetCleanJets
@@ -145,6 +145,7 @@ std::vector<IPHCTree::NTJet> Selection::GetCleanJets(
 std::vector<IPHCTree::NTJet> Selection::GetScaledJets(float scale) const
 {
   std::vector<IPHCTree::NTJet> newJets = GetJets();
+  //cout << "in scale jet " << endl;
   
   for (unsigned int i=0; i<newJets.size(); i++)
   {
@@ -181,30 +182,35 @@ std::vector<IPHCTree::NTJet> Selection::GetScaledJets(float scale) const
 // ----------------------------------------------------------------------------
 // GetScaledJets for 8TeV uncertainties
 // ----------------------------------------------------------------------------
-std::vector<IPHCTree::NTJet> Selection::GetScaledJets( JetCorrectionUncertainty* theJESuncertainty, bool upOrDown ) const
+std::vector<IPHCTree::NTJet> Selection::GetScaledJets( JetCorrectionUncertainty* theJESuncertainty, bool upOrDown, int resol ) const
 {
-  std::vector<IPHCTree::NTJet> newJets = GetJets();
-  
+  //cout << "do smear jets " << endl;
+  std::vector<IPHCTree::NTJet> newJets = GetSmearedJets(GetJets(), resol);
+  //cout << "in scale jet " << endl;
+  //if(newJets.size() > 0)  cout << "in scale before pt " << newJets[0].p4.Pt() << endl;
   for (unsigned int i=0; i<newJets.size(); i++)
   {
     float newscale = 0;
     float eta  = newJets[i].p4.Eta();
     float pt   = newJets[i].p4.Pt();
     
-    
+    //cout << "pt unshifted " << pt << endl;
     theJESuncertainty->setJetPt(pt);
     theJESuncertainty->setJetEta(eta);
      
-    
-    
-    if(upOrDown)  newscale = (1 + theJESuncertainty->getUncertainty(upOrDown));
-    else          newscale = (1 - theJESuncertainty->getUncertainty(upOrDown));
+    double theuncert =  theJESuncertainty->getUncertainty(true);
+    //cout << "the uncert " << theuncert << endl;
+    //cout << "upOrDown   " << upOrDown << endl;
+    if(upOrDown)  newscale = (1 + theuncert);
+    else          newscale = (1 - theuncert) ;
 
     newJets[i].p4.SetPxPyPzE(newscale*newJets[i].p4.Px(),
                              newscale*newJets[i].p4.Py(),
                              newscale*newJets[i].p4.Pz(),
                              newscale*newJets[i].p4.E());
+   //cout << "new pt " << newJets[i].p4.Pt() << endl;
   }
+  //if(newJets.size() > 0)  cout << "in scale after pt " << newJets[0].p4.Pt() << endl;
     
   return newJets;
 }
@@ -213,70 +219,78 @@ std::vector<IPHCTree::NTJet> Selection::GetScaledJets( JetCorrectionUncertainty*
 // ----------------------------------------------------------------------------
 std::vector<IPHCTree::NTJet>  Selection::GetSmearedJets(
                            const vector<IPHCTree::NTJet>& injets,
-                           float jetResFactor) const
+                           int jetResFactor) const
 {
-  std::vector<IPHCTree::NTJet> newJets = GetJets();
+  std::vector<IPHCTree::NTJet> newJets ;
   
+  if(jetResFactor == -100) return injets;
+  else{
   
-  for (unsigned int i=0; i<newJets.size(); i++)
-  {
-    TLorentzVector jet = newJets[i].p4;
-    TLorentzVector genJet = newJets[i].p4Gen;
+    for (unsigned int i=0; i<injets.size(); i++)
+    { 
+      if(injets[i].p4.Pt() < 10 ) continue;
+      TLorentzVector jet = injets[i].p4;
+      TLorentzVector genJet = injets[i].p4Gen;
     
-    double Px = 0;
-    double Py = 0;
-    double Pz = 0;
-    double E = 0;
+     
+      double pt = jet.Pt();		   
+      double factor = 1.;
+      //for 8TeV analysis
     
-    double pt = jet.Pt();		   
-    double factor = 0.;
-    if ( fabs(jet.Eta()) < 0.5 ) {
-      factor = .052;
-      if(jetResFactor > 0.1  )  factor += 0.012+0.062;
-      if(jetResFactor < -0.1 )  factor -= 0.012-0.061;
-    }
-    else if ( fabs(jet.Eta()) < 1.1 && fabs(jet.Eta()) >= 0.5 ) {
-      factor = 0.057;
-      if(jetResFactor > 0.1  )  factor += 0.012+0.056;
-      if(jetResFactor < -0.1 )  factor -= 0.012-0.055;
-    }
-    else if ( fabs(jet.Eta()) < 1.7 && fabs(jet.Eta()) >= 1.1 ) {
-      factor = 0.096;
-      if(jetResFactor > 0.1  )  factor += 0.017+0.063;
-      if(jetResFactor < -0.1 )  factor -= 0.017-0.062;
-    }
-    else if ( fabs(jet.Eta()) < 2.3 && fabs(jet.Eta()) >= 1.7 ) {
-      factor = 0.134;
-      if(jetResFactor > 0.1  )  factor += 0.035+0.087;
-      if(jetResFactor < -0.1 )  factor -= 0.035-0.085;
-
-    }
-    else if (fabs(jet.Eta()) < 5.0 && fabs(jet.Eta()) >=2.3 ) {
-      factor = 0.288;
-      if(jetResFactor > 0.1  )  factor += 0.127+0.155;
-      if(jetResFactor < -0.1 )  factor -= 0.127-0.153;
-    }
-    
-    
-    
-    double ptscale = 1;
-    if ( genJet.Pt()>15. && (fabs(genJet.Pt()/pt-1)<0.5)){
+      if ( fabs(jet.Eta()) < 0.5 ) {
+        factor = 1.079;
+        if(jetResFactor == 1 )  factor = 1.105 ;
+        if(jetResFactor == -1 )  factor = 1.053;
+      }
+      else if ( fabs(jet.Eta()) < 1.1 && fabs(jet.Eta()) >= 0.5 ) {
+        factor = 1.099;
+        if(jetResFactor == 1 )  factor = 1.127 	;
+        if(jetResFactor == -1 )  factor = 1.071;
+      }
+      else if ( fabs(jet.Eta()) < 1.7 && fabs(jet.Eta()) >= 1.1 ) {
+        factor = 1.121;
+        if(jetResFactor == 1 )  factor = 1.150 ;
+        if(jetResFactor == -1 )  factor = 1.092;
+      }
+      else if ( fabs(jet.Eta()) < 2.3 && fabs(jet.Eta()) >= 1.7 ) {
+        factor = 1.208 ;
+        if(jetResFactor == 1 )  factor = 1.254;
+        if(jetResFactor == -1 )  factor = 1.162;
+      }
+      else if (fabs(jet.Eta()) < 2.8 && fabs(jet.Eta()) >=2.3 ) {
+        factor = 1.254;
+        if(jetResFactor == 1 )  factor = 1.316 ;
+        if(jetResFactor == -1 )  factor = 1.192 ;
+      }
+      else if (fabs(jet.Eta()) < 3.2 && fabs(jet.Eta()) >=2.8 ) {
+        factor = 1.395;
+        if(jetResFactor == 1 )  factor = 1.458 ;
+        if(jetResFactor == -1 )  factor = 1.332;
+      }
+      else if (fabs(jet.Eta()) < 5.0 && fabs(jet.Eta()) >=3.8 ) {
+        factor = 1.056;
+        if(jetResFactor == 1  )  factor = 1.247 ;
+        if(jetResFactor == -1 )  factor = 0.865;
+      }
+      double ptscale = 1;
       double gen_pt = genJet.Pt();
       double reco_pt = pt;
+      //ptscale = max(0.0, gen_pt+factor*(reco_pt-gen_pt));
+      // double deltapt = factor*(reco_pt-gen_pt);
+      // ptscale = max(0.0, (reco_pt + deltapt)/reco_pt);
+      factor = factor-1;
       double deltapt = (reco_pt - gen_pt) * factor;
+    
       ptscale = max(0.0, (reco_pt + deltapt) / reco_pt);
+    
+    
+      TLorentzVector newP4 = injets[i].p4*ptscale;
+      NTJet tmpjet =  injets[i];
+      tmpjet.p4.SetPxPyPzE(newP4.Px(),newP4.Py() , newP4.Pz(), newP4.E());	     
+      newJets.push_back(tmpjet);
     }
-
-      
-    Px   = ptscale*newJets[i].p4.Px();
-    Py   = ptscale*newJets[i].p4.Py();
-    Pz   = ptscale*newJets[i].p4.Pz();
-    E	= ptscale*newJets[i].p4.E();
-    newJets[i].p4.SetPxPyPzE(Px, Py, Pz, E);
-      		     
-			     
+    return newJets;
   }
-  return newJets;
 }
 
 
@@ -348,7 +362,7 @@ IPHCTree::NTMET Selection::GetScaledMET( JetCorrectionUncertainty* theJESuncerta
 // ----------------------------------------------------------------------------
 IPHCTree::NTMET Selection::GetSmearedMET(
                          const std::vector<IPHCTree::NTJet>& injets,
-                         float jetResFactor) const
+                         int jetResFactor) const
 {
   // Create container for output
   IPHCTree::NTMET newMET;
@@ -442,19 +456,24 @@ bool Selection::cleanJet(const NTJet & theJet, const std::vector<NTMuon> & muon_
 IPHCTree::NTMET Selection::GetUnclusScaledMET(bool applyUnclusScale,
                                               float scale) const
 {
-  
+    
     TVector2 unclusMET = GetUnclusMET();
-    cout << unclusMET.Mod()<<  " "<< unclusMET.Px()<<  " "<< unclusMET.Py()<<  " "<<endl;
+    
+    //cout << unclusMET.Mod()<<  " "<< unclusMET.Px()<<  " "<< unclusMET.Py()<<  " "<<endl;
 
     // cout << "Change in MET: "<<sqrt(pow((scale-1)*missetX,2.) + pow((scale-1)*missetY,2.))<<  " "<< (scale-1)*missetX<<  " "<< (scale-1)*missetY<<  " "<<endl;
     // cout << "new NET      : "<<sqrt(pow(met.p4.Px()+(scale-1)*missetX,2.) + pow(met.p4.Py()+(scale-1)*missetY,2.) + met.p4.M())<<  " "<< met.p4.Px()+(scale-1)*missetX<<  " "<< met.p4.Py()+(scale-1)*missetY<<  " "<<endl;
 
 
-    const NTMET * met = GetPointer2MET();    
+    
+    const NTMET * met = GetPointer2MET(); 
+       
     NTMET newMET ;
     //met->p2.Px()+(scale-1)*unclusMET.Px(), met->p2.Py()+(scale-1)*unclusMET.Py(), 0 , sqrt(pow(met->p2.Px()+(scale-1)*unclusMET.Px(),2.) + pow(met->p2.Py()+(scale-1)*unclusMET.Py(),2.) + met->p2.M()));
     
+    
     newMET.p2.Set(met->p2.Px()+(scale-1)*unclusMET.Px(),  met->p2.Py()+(scale-1)*unclusMET.Py());
+    
     return newMET;
 
   
@@ -466,6 +485,7 @@ IPHCTree::NTMET Selection::GetUnclusScaledMET(bool applyUnclusScale,
 
 TVector2 Selection::GetUnclusMET() const{
 
+    
 
     const NTMET                   * met       = GetPointer2MET();
     const std::vector<NTJet>      * jets      = GetPointer2Jets();
@@ -473,6 +493,7 @@ TVector2 Selection::GetUnclusMET() const{
     const std::vector<NTMuon>     * muons     = GetPointer2Muons();
     const std::vector<NTTau>      * taus      = GetPointer2Taus();
        
+    
     double missetX = met->p2.Px();
     double missetY = met->p2.Py();
     
@@ -481,30 +502,35 @@ TVector2 Selection::GetUnclusMET() const{
     // cout << "Jets used to calculate unclustered MET\n"<<endl;
     
     
+    
     for (unsigned int i=0; i<jets->size(); i++){
-      if ((fabs((*jets)[i].p4.Eta())< 5.0) && ((*jets)[i].p4.Pt()>15.0) && looseJetId( (*jets)[i]) 
+      if ((fabs((*jets)[i].p4.Eta())< 5.0) && ((*jets)[i].p4.Pt()>1.0) && looseJetId( (*jets)[i]) 
       	&& cleanJet((*jets)[i], *muons, *electrons)) {
       // cout<<" jet eta,pt "<<jets[i].p4.Eta()<<" "<<jets[i].p4.Pt()<<endl;
       missetX += (*jets)[i].p4.Px();
       missetY += (*jets)[i].p4.Py();
       }
     }
+    
     // cout << "MET after jet  : "<<sqrt(pow(missetX,2.) + pow(missetY,2.))<<  " "<< missetX<<  " "<< missetY<<  " "<<endl;
     for (unsigned int i=0; i<electrons->size(); i++){
       // cout<<" e eta,pt "<<electrons[i].p4.Eta()<<" "<<electrons[i].p4.Pt()<<endl;
       missetX += (*electrons)[i].p4.Px();
       missetY += (*electrons)[i].p4.Py();
     }
+    
     for (unsigned int i=0; i<muons->size(); i++){
       // cout<<" mu eta,pt "<<muons[i].p4.Eta()<<" "<<muons[i].p4.Pt()<<endl;
       missetX += (*muons)[i].p4.Px();
       missetY += (*muons)[i].p4.Py();
     }
-    for (unsigned int i=0; i<taus->size(); i++){
+    
+    /*for (unsigned int i=0; i<taus->size(); i++){
       // cout<<" tau eta,pt "<<taus[i].p4.Eta()<<" "<<taus[i].p4.Pt()<<endl;
       missetX += (*taus)[i].p4.Px();
       missetY += (*taus)[i].p4.Py();
-    }
+    }*/
+    
     return TVector2(missetX,missetY);
 
 }
@@ -521,7 +547,7 @@ TVector2 Selection::GetUnclusMET() const{
 // GetMET
 // ----------------------------------------------------------------------------
 IPHCTree::NTMET Selection::GetSelectedMET(bool applyJES, float scale, 
-                                          bool applyJER, float ResFactor) const
+                                          bool applyJER, int ResFactor) const
 {
 	// WARNING: force to not apply the JES 
   // it's due to JES/JEC correction scenario in PAT
@@ -548,7 +574,7 @@ IPHCTree::NTMET Selection::GetSelectedMET(bool applyJES, float scale,
 IPHCTree::NTMET Selection::GetSelectedMET(bool applyJES, 
 					  JetCorrectionUncertainty* theJESuncertainty, 
 			                  bool upOrDown,
-                                          bool applyJER, float ResFactor) const
+                                          bool applyJER, int ResFactor) const
 {
   // WARNING: force to not apply the JES 
   // it's due to JES/JEC correction scenario in PAT
@@ -588,7 +614,7 @@ IPHCTree::NTMET Selection::GetScaledType1MET(IPHCTree::NTMET &themet, float scal
     return newMET;
 }
 
-IPHCTree::NTMET  Selection::GetSmearedType1MET(IPHCTree::NTMET &themet, vector<IPHCTree::NTJet> injets, float jetResFactor) const
+IPHCTree::NTMET  Selection::GetSmearedType1MET(IPHCTree::NTMET &themet, vector<IPHCTree::NTJet> injets, int jetResFactor) const
 {
     double missetX = 0.;
     double missetY = 0.;
@@ -610,7 +636,7 @@ IPHCTree::NTMET  Selection::GetSmearedType1MET(IPHCTree::NTMET &themet, vector<I
 }
 
 
-IPHCTree::NTMET Selection::GetType1MET( vector<IPHCTree::NTJet> injets, bool applyJES, float scale, bool applyJER, float ResFactor) const{
+IPHCTree::NTMET Selection::GetType1MET( vector<IPHCTree::NTJet> injets, bool applyJES, float scale, bool applyJER, int ResFactor) const{
 	//WARNING: force to not apply the JES - it's due to JES/JEC correction scenario in PAT
 	
 	double missetX = 0.;
@@ -643,7 +669,7 @@ IPHCTree::NTMET Selection::GetType1MET( vector<IPHCTree::NTJet> injets, bool app
 
 
 
-IPHCTree::NTMET Selection::GetScaledType1METWithJER(vector<IPHCTree::NTJet> injets, bool applyJES, float scale, bool applyJER, float ResFactor) const{
+IPHCTree::NTMET Selection::GetScaledType1METWithJER(vector<IPHCTree::NTJet> injets, bool applyJES, float scale, bool applyJER, int ResFactor) const{
     
     double missetX = 0.;
     double missetY = 0.;
@@ -704,7 +730,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
             const std::vector<IPHCTree::NTMuon>& muon_cand,
             const std::vector<IPHCTree::NTElectron>& elec_cand,
             bool applyJES, float scale, 
-            bool applyJER, float ResFactor) const
+            bool applyJER, int ResFactor) const
 {
   // Containers for output
   std::vector<IPHCTree::NTJet> selectedJets;
@@ -722,7 +748,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
     if (fabs(scaledJets[i].p4.Eta())> cfg.JetEtaThreshold_ ||
         scaledJets[i].p4.Pt()<cfg.JetPtThreshold_) continue;
 	
-    //if (!scaledJets[i].ID["LOOSE"]) continue;
+    if (!scaledJets[i].ID["LOOSE"]) continue;
     
     //re-implement loose ID
     
@@ -754,8 +780,6 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
 
 
 
-
-
 // ----------------------------------------------------------------------------
 // GetSelectedJets for 8TeV uncertainties
 // ----------------------------------------------------------------------------
@@ -763,18 +787,17 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
             const std::vector<IPHCTree::NTMuon>& muon_cand,
             const std::vector<IPHCTree::NTElectron>& elec_cand,
             bool applyJES, JetCorrectionUncertainty* theJESuncertainty, bool upOrDown, 
-            bool applyJER, float ResFactor) const
+            bool applyJER, int ResFactor) const
 {
   // Containers for output
   std::vector<IPHCTree::NTJet> selectedJets;
   std::vector<IPHCTree::NTJet> scaledJets;
 
-  // Get scaled jets
-  if(applyJES) scaledJets = GetScaledJets(theJESuncertainty, upOrDown);
-  else if (GetPointer2Jets()!=0) scaledJets = *GetPointer2Jets();
-
-  // Apply JER
-  if(applyJER) scaledJets = GetSmearedJets(scaledJets, ResFactor);
+  if(      applyJES  && applyJER )  scaledJets = GetScaledJets(theJESuncertainty, upOrDown, 0);
+  else if(!applyJES  && applyJER )  scaledJets = GetSmearedJets(*GetPointer2Jets(), ResFactor);
+  else if( applyJES  && !applyJER)  scaledJets = GetScaledJets(theJESuncertainty, upOrDown, -100);
+  else if(!applyJES  && !applyJER)  scaledJets = *GetPointer2Jets();
+  
   
   for(unsigned int i=0;i<scaledJets.size();i++)
   {
@@ -782,6 +805,59 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
         scaledJets[i].p4.Pt()<cfg.JetPtThreshold_) continue;
 	
     if (!scaledJets[i].ID["LOOSE"]) continue;
+        
+    double deltaRmu = 10000;
+    double deltaRel = 10000;
+    
+    for(unsigned int imu=0; imu< muon_cand.size(); imu++)
+    {
+      double deltaR = scaledJets[i].p4.DeltaR(muon_cand[imu].p4);
+      if(deltaR < deltaRmu) deltaRmu = deltaR;
+    }
+    
+    for(unsigned int iel=0; iel< elec_cand.size(); iel++)
+    {
+      double deltaR = scaledJets[i].p4.DeltaR(elec_cand[iel].p4Gsf);
+      if(deltaR < deltaRel) deltaRel = deltaR;
+    }
+    
+    if( deltaRmu > 0.5  && deltaRel > 0.5) 
+                         selectedJets.push_back(scaledJets[i]);
+  }
+  std::sort(selectedJets.begin(),selectedJets.end(),HighestPt());
+  return selectedJets;
+}
+
+
+
+
+// ----------------------------------------------------------------------------
+// GetSelectedJets for 8TeV uncertainties
+// ----------------------------------------------------------------------------
+std::vector<IPHCTree::NTJet> Selection::GetSelectedJetsLoose(
+            const std::vector<IPHCTree::NTMuon>& muon_cand,
+            const std::vector<IPHCTree::NTElectron>& elec_cand,
+            bool applyJES, JetCorrectionUncertainty* theJESuncertainty, bool upOrDown, 
+            bool applyJER, int ResFactor) const
+{
+  // Containers for output
+  std::vector<IPHCTree::NTJet> selectedJets;
+  std::vector<IPHCTree::NTJet> scaledJets;
+  
+  
+  
+  if(      applyJES  && applyJER )  scaledJets = GetScaledJets(theJESuncertainty, upOrDown, 0);
+  else if(!applyJES  && applyJER )  scaledJets = GetSmearedJets(*GetPointer2Jets(), ResFactor);
+  else if( applyJES  && !applyJER)  scaledJets = GetScaledJets(theJESuncertainty, upOrDown, -100);
+  else if(!applyJES  && !applyJER)  scaledJets = *GetPointer2Jets();
+  
+  
+  for(unsigned int i=0;i<scaledJets.size();i++)
+  {
+    if (fabs(scaledJets[i].p4.Eta())> 5.0 ||
+        scaledJets[i].p4.Pt()< 10.) continue;
+	
+    //if (!scaledJets[i].ID["LOOSE"]) continue;
         
     double deltaRmu = 10000;
     double deltaRel = 10000;
@@ -817,7 +893,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
                   const std::vector<IPHCTree::NTElectron>& elec_cand,
                   const std::vector<IPHCTree::NTTau>& tau_cand,
                   bool applyJES, float scale, 
-                  bool applyJER, float ResFactor) const
+                  bool applyJER, int ResFactor) const
 {
 
   // Create containers for output
@@ -870,7 +946,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
 std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
                   const std::vector<IPHCTree::NTTau>& tau_cand, 
 		  bool applyJES, float scale, 
-		  bool applyJER, float ResFactor) const
+		  bool applyJER, int ResFactor) const
 {
   // Container for output
   std::vector<IPHCTree::NTJet> selectedJets;
@@ -906,7 +982,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
 // ----------------------------------------------------------------------------
 std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
                                bool applyJES, float scale, 
-                               bool applyJER, float ResFactor) const
+                               bool applyJER, int ResFactor) const
 {
   // Container for output
   std::vector<IPHCTree::NTJet> selectedJets;
@@ -935,7 +1011,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
 std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
                                 float PtThr, float EtaThr,
                                 bool applyJES, float scale,
-                                bool applyJER, float ResFactor) const
+                                bool applyJER, int ResFactor) const
 {
   // Container for output
   std::vector<IPHCTree::NTJet> selectedJets;
@@ -961,7 +1037,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJets(
 // ----------------------------------------------------------------------------
 std::vector<IPHCTree::NTJet> Selection::GetSelectedJetsForLJets(
                                bool applyJES, float scale, 
-                               bool applyJER, float ResFactor) const
+                               bool applyJER, int ResFactor) const
 {
   // Container for output
   std::vector<IPHCTree::NTJet> selectedJets;
@@ -988,7 +1064,7 @@ std::vector<IPHCTree::NTJet> Selection::GetSelectedJetsForLJets(
             const std::vector<IPHCTree::NTMuon>& muon_cand,
             const std::vector<IPHCTree::NTElectron>& elec_cand,
                                bool applyJES, float scale, 
-                               bool applyJER, float ResFactor) const
+                               bool applyJER, int ResFactor) const
 {
   // Container for output
   std::vector<IPHCTree::NTJet> selectedJets;
@@ -1474,17 +1550,23 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTT
     //std::cout << "hadId " << hadId << endl;
     //std::cout << "localElectrons[i].ID[mvaTrigV0] " <<  localElectrons[i].ID["mvaTrigV0"]<< endl;
     
-    //useless 
+    
     if (!localElectrons[i].isGsfElectron)                       continue; 
-    if(localElectrons[i].p4Gsf.Pt()        <=PtThr)             continue;
-    if(fabs(localElectrons[i].p4Gsf.Eta()) >=EtaThr)            continue;
-    //if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)            continue;
-    if(fabs(localElectrons[i].dxy_vertex)>=0.04)                continue; 
+    if(fabs(localElectrons[i].dxy_vertex)> 0.04)                continue; 
     if(!localElectrons[i].passConversionVeto)                   continue;
     if( elecID < 0.5 )                                          continue;
-    if(localElectrons[i].missingHits > 0)                       continue;
+    if(localElectrons[i].missingHits > 0) continue;
     
-    std::vector<IPHCTree::NTMuon> localMuon = *GetPointer2Muons();
+    if(localElectrons[i].p4Gsf.Pt()        <=PtThr)             continue;
+    if(fabs(localElectrons[i].p4Gsf.Eta()) >=EtaThr)            continue;
+    
+    
+    //if(fabs(localElectrons[i].p4.Eta()) >=EtaThr)            continue;
+    //if(localElectrons[i].missingHits > 0)                       continue;
+    
+    
+    
+    /*std::vector<IPHCTree::NTMuon> localMuon = *GetPointer2Muons();
     double deltaRMu = 1000;
     for(unsigned int j=0; j<localMuon.size(); j++){
       if( !localMuon[j].isGlobalMuon ) continue;
@@ -1493,9 +1575,12 @@ std::vector<IPHCTree::NTElectron> Selection::GetSelectedElectronsNoIsoDileptonTT
       if(deltaRMuEl < deltaRMu) deltaRMu = deltaRMuEl;
       //cout << "deltaRMu " << deltaRMu << endl;
       
-    }
+    }*/
     
-    if(deltaRMu > 0.1)  selectedElectrons.push_back(localElectrons[i]);
+    //if(deltaRMu > 0.1)  selectedElectrons.push_back(localElectrons[i]);
+    selectedElectrons.push_back(localElectrons[i]);
+    
+    
   }
   std::sort(selectedElectrons.begin(),selectedElectrons.end(),HighestPt());
   return selectedElectrons;
@@ -1999,34 +2084,40 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsNoIsoDileptonTTbar(
   // Containers for output
   std::vector<IPHCTree::NTMuon> selectedMuons;
   vector<IPHCTree::NTMuon> localMuons;
-
   // Get muons
   if (applyLES) localMuons = GetScaledMuonsDileptonTTbar(scale); 
   else localMuons = *GetPointer2Muons();
 
   for(unsigned int i=0;i<localMuons.size();i++)
   { 
-  
+    
+    
+    
+    if (!localMuons[i].isGlobalMuon  ) continue;
+    //if (!localMuons[i].isTrackerMuon ) continue; 
+    if (!localMuons[i].isPFMuon      ) continue; 
     if (fabs(localMuons[i].p4.Eta()) >= EtaThr)                  continue;
     if (localMuons[i].p4.Pt()        <  PtThr)                   continue;
-    if (!localMuons[i].isGlobalMuon && !localMuons[i].isTrackerMuon )  continue; // isGlobalMuon
-    if (!localMuons[i].isPFMuon) continue; // isTrackerMuon
+    if (localMuons[i].Chi2	>= 10)         continue;
+    if (localMuons[i].Chi2	< 0  )         continue;
+    
+    if (localMuons[i].numTrackerLayersWithMeasurement <= 5) continue;
+    if (localMuons[i].NValidHits     <= 0  ) continue;
+    if (fabs(localMuons[i].dxy_vertex) > 0.02 ) continue;
+    if ( fabs( localMuons[i].vertex.Z() - 
+    	 GetSelectedVertex()[0].p3.Z() ) >= 0.5 ) continue;
+	 
+    if (localMuons[i].pixelHits == 0 ) continue;
+    if (localMuons[i].numMatchedStations <= 1 ) continue;
+    
     
     //---------------------------
     //old muon ID
-    if (!localMuons[i].isGlobalMuon)  continue; // isGlobalMuon
-    if (!localMuons[i].isTrackerMuon) continue; // isTrackerMuon
-    if (localMuons[i].Chi2	   >= cfg.MuonNormChi2_)       continue;
-    if (localMuons[i].NTrValidHits   <= cfg.MuonNofValidTrHits_) continue;
-    if (localMuons[i].NValidHits     <= cfg.MuonNofValidHits_  ) continue;
-    if (fabs(localMuons[i].D0Inner)  >= cfg.MuonD0Cut_)        continue;
-    if (fabs(localMuons[i].p4.Eta()) >= EtaThr) 	       continue;
-    if (localMuons[i].p4.Pt()	   <  PtThr)		       continue;
-    if (GetSelectedVertex().size() == 0) continue;
-    if ( fabs( localMuons[i].vertex.Z() - 
-    	 GetSelectedVertex()[0].p3.Z() ) > cfg.MuonVertexMatchThr_ ) continue;
-
+    //if (localMuons[i].NTrValidHits   <= cfg.MuonNofValidTrHits_) continue;
+    //if (fabs(localMuons[i].D0Inner)  >= cfg.MuonD0Cut_)          continue;
+    //if (GetSelectedVertex().size() == 0) continue;
     
+    //if (localMuons[i].numMatchedStations == 0 ) continue;
     
     
     selectedMuons.push_back(localMuons[i]);
@@ -2053,7 +2144,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsDileptonTTbar(
    // Loop over muons 
   for(unsigned int i=0;i<muons.size();i++)
   {
-    if ( RelIso03PFDeltaBeta(muons[i]) > MuonRelIso) continue;
+    if ( RelIso04PFDeltaBeta(muons[i]) > MuonRelIso) continue;
     selectedMuons.push_back(muons[i]);
   }
   std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
@@ -2075,7 +2166,7 @@ std::vector<IPHCTree::NTMuon> Selection::GetSelectedMuonsDeltaBetaIso(
    // Loop over muons 
   for(unsigned int i=0;i<muons.size();i++)
   {
-    if ( RelIso03PFDeltaBeta(muons[i]) > MuonRelIso) continue;
+    if ( RelIso04PFDeltaBeta(muons[i]) > MuonRelIso) continue;
     selectedMuons.push_back(muons[i]);
   }
   std::sort(selectedMuons.begin(),selectedMuons.end(),HighestPt());
@@ -2777,6 +2868,290 @@ void Selection::LoadMuScaleFactors()
   delete f_Data_Mu;
 } 
 
+// ----------------------------------------------------------------------------
+// LoadMuIDScaleFactors
+// ----------------------------------------------------------------------------
+void Selection::LoadMuIDScaleFactors()
+{
+  string fileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/MuonEfficiencies_Run2012ReReco_53X.root"));
+  std::cout<<"Reading the MuScaleFactors file "<<fileName<<endl;
+  fexists(fileName, true);
+  TFile *f_Data_Mu = new TFile(fileName.c_str());
+  f_Data_Mu->cd();
+  scaleFactMu_ID_abseta_inf0p9  = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_Tight_pt_abseta<0.9")->Clone("");
+  scaleFactMu_ID_abseta_0p9_1p2 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_Tight_pt_abseta0.9-1.2")->Clone("");
+  scaleFactMu_ID_abseta_1p2_2p1 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_Tight_pt_abseta1.2-2.1")->Clone("");
+  scaleFactMu_ID_abseta_2p1_2p4 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_Tight_pt_abseta2.1-2.4")->Clone("");
+  f_Data_Mu->Close();
+  delete f_Data_Mu;
+} 
+
+
+// ----------------------------------------------------------------------------
+// GetMuIDScaleFactors
+// ----------------------------------------------------------------------------
+std::vector<double> Selection::getScaleFactorMuID(double pT, double eta){
+  double fabseta = fabs(eta);
+  std::vector<double> thereturn ;
+  int nbin = 0;
+  if(scaleFactMu_ID_abseta_inf0p9  == 0 ||  
+     scaleFactMu_ID_abseta_0p9_1p2 == 0 ||  
+     scaleFactMu_ID_abseta_1p2_2p1 == 0 ||  
+     scaleFactMu_ID_abseta_2p1_2p4 == 0   ){
+    std::cout << "WARNING no SF loaded for muon ID " << std::endl;
+   }else{
+     double* pTbin   = 0;
+     double* eff_val = 0;   
+     double* eff_val_up   = 0;  
+     double* eff_val_down = 0; 
+     if(fabseta < 0.9                  ) {
+       pTbin   = scaleFactMu_ID_abseta_inf0p9->GetX() ; 
+       eff_val = scaleFactMu_ID_abseta_inf0p9->GetY();
+       eff_val_up   = 	scaleFactMu_ID_abseta_inf0p9->GetEYhigh();  
+       eff_val_down = 	scaleFactMu_ID_abseta_inf0p9->GetEYlow() ;  
+       nbin = scaleFactMu_ID_abseta_inf0p9->GetN();
+     }            
+     if(fabseta < 1.2 && fabseta > 0.9 ) {
+       pTbin   = scaleFactMu_ID_abseta_0p9_1p2->GetX(); 
+       eff_val = scaleFactMu_ID_abseta_0p9_1p2->GetY();
+       eff_val_up   = 	scaleFactMu_ID_abseta_0p9_1p2->GetEYhigh();  
+       eff_val_down = 	scaleFactMu_ID_abseta_0p9_1p2->GetEYlow() ;  
+       nbin = scaleFactMu_ID_abseta_0p9_1p2->GetN();
+     }
+     if(fabseta < 2.1 && fabseta > 1.2 ) {
+       pTbin   = scaleFactMu_ID_abseta_1p2_2p1->GetX(); 
+       eff_val = scaleFactMu_ID_abseta_1p2_2p1->GetY();
+       eff_val_up   = 	scaleFactMu_ID_abseta_1p2_2p1->GetEYhigh();  
+       eff_val_down = 	scaleFactMu_ID_abseta_1p2_2p1->GetEYlow() ;  
+       nbin = scaleFactMu_ID_abseta_1p2_2p1->GetN();
+     }
+     if(fabseta < 2.4 && fabseta > 2.1 ) {
+       pTbin   = scaleFactMu_ID_abseta_2p1_2p4->GetX(); 
+       eff_val = scaleFactMu_ID_abseta_2p1_2p4->GetY();
+       eff_val_up   = 	scaleFactMu_ID_abseta_2p1_2p4->GetEYhigh();  
+       eff_val_down = 	scaleFactMu_ID_abseta_2p1_2p4->GetEYlow() ;  
+       nbin = scaleFactMu_ID_abseta_2p1_2p4->GetN();
+     }
+     
+  //cout << "nbin " << nbin << endl;
+     for( int i = 0; i<  nbin; i++){
+       if(i < (nbin-1) ){
+         if(pT > pTbin[i] && pT < pTbin[i+1]) {
+	   thereturn.push_back(eff_val[i]);
+	   thereturn.push_back(eff_val_up[i]);
+	   thereturn.push_back(-eff_val_down[i]);
+	 }
+       }else if(thereturn.size() ==0){
+          thereturn.push_back(eff_val[nbin-1]);
+	  thereturn.push_back(eff_val_up[nbin-1]);
+	  thereturn.push_back(-eff_val_down[nbin-1]);
+	}
+       //cout << "eff_val["<<i<<"] " << eff_val[nbin] << endl;
+     }
+   }
+   
+   return thereturn;
+}
+
+// ----------------------------------------------------------------------------
+// LoadMuIsoScaleFactors Iso < 0.12
+// ----------------------------------------------------------------------------
+void Selection::LoadMuIsoScaleFactors12()
+{
+  string fileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/MuonEfficiencies_ISO_Run_2012ReReco_53X.root"));
+  std::cout<<"Reading the MuScaleFactors file "<<fileName<<endl;
+  fexists(fileName, true);
+  TFile *f_Data_Mu = new TFile(fileName.c_str());
+  f_Data_Mu->cd();
+  scaleFactMu_Iso12_abseta_inf0p9  = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<012_Tight_pt_abseta<0.9")->Clone("");
+  scaleFactMu_Iso12_abseta_0p9_1p2 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<012_Tight_pt_abseta0.9-1.2")->Clone("");
+  scaleFactMu_Iso12_abseta_1p2_2p1 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<012_Tight_pt_abseta1.2-2.1")->Clone("");
+  scaleFactMu_Iso12_abseta_2p1_2p4 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<012_Tight_pt_abseta2.1-2.4")->Clone("");
+  f_Data_Mu->Close();
+  delete f_Data_Mu;
+} 
+
+
+// ----------------------------------------------------------------------------
+// GetMuIsoScaleFactors Iso < 0.12
+// ----------------------------------------------------------------------------
+std::vector<double> Selection::getScaleFactorMuIso12(double pT, double eta){
+  double fabseta = fabs(eta);
+  std::vector<double > thereturn;
+  if(scaleFactMu_Iso12_abseta_inf0p9  == 0 ||  
+     scaleFactMu_Iso12_abseta_0p9_1p2 == 0 ||  
+     scaleFactMu_Iso12_abseta_1p2_2p1 == 0 ||  
+     scaleFactMu_Iso12_abseta_2p1_2p4 == 0   ){
+    std::cout << "WARNING no SF loaded for muon Iso " << std::endl;
+   }else{   
+     double* pTbin = 0;
+     double* eff_val = 0; 
+     double* eff_val_up   = 0;  
+     double* eff_val_down = 0; 
+     int nbin =  0; 
+     if(fabseta < 0.9                  ) {
+       pTbin        = scaleFactMu_Iso12_abseta_inf0p9->GetX() ;
+       eff_val      = scaleFactMu_Iso12_abseta_inf0p9->GetY(); 
+       eff_val_up   = scaleFactMu_Iso12_abseta_inf0p9->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso12_abseta_inf0p9->GetEYlow() ;  
+       nbin = scaleFactMu_Iso12_abseta_inf0p9->GetN();
+     }                      
+     if(fabseta < 1.2 && fabseta > 0.9 ) {
+       pTbin        = scaleFactMu_Iso12_abseta_0p9_1p2->GetX();
+       eff_val      = scaleFactMu_Iso12_abseta_0p9_1p2->GetY();
+       eff_val_up   = scaleFactMu_Iso12_abseta_0p9_1p2->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso12_abseta_0p9_1p2->GetEYlow() ;  
+       nbin = scaleFactMu_Iso12_abseta_0p9_1p2->GetN();
+     }
+     if(fabseta < 2.1 && fabseta > 1.2 ) {
+       pTbin        = scaleFactMu_Iso12_abseta_1p2_2p1->GetX();
+       eff_val      = scaleFactMu_Iso12_abseta_1p2_2p1->GetY();
+       eff_val_up   = scaleFactMu_Iso12_abseta_1p2_2p1->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso12_abseta_1p2_2p1->GetEYlow() ;  
+       nbin = scaleFactMu_Iso12_abseta_1p2_2p1->GetN();
+     }
+     if(fabseta < 2.4 && fabseta > 2.1 ) {
+       pTbin        = scaleFactMu_Iso12_abseta_2p1_2p4->GetX();
+       eff_val      = scaleFactMu_Iso12_abseta_2p1_2p4->GetY();
+       eff_val_up   = scaleFactMu_Iso12_abseta_2p1_2p4->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso12_abseta_2p1_2p4->GetEYlow() ;  
+       nbin         = scaleFactMu_Iso12_abseta_2p1_2p4->GetN();
+     }  
+
+     for( int i = 0; i<  nbin; i++){
+       if(i < (nbin-1) ){
+         if(pT > pTbin[i] && pT < pTbin[i+1]){
+	   thereturn.push_back(eff_val[i]);
+	   thereturn.push_back(eff_val_up[i]);
+	   thereturn.push_back(-eff_val_down[i]);
+	 }
+       }else if(thereturn.size() == 0) {
+          thereturn.push_back(eff_val[nbin-1]);
+	  thereturn.push_back(eff_val_up[nbin-1]);
+	  thereturn.push_back(-eff_val_down[nbin-1]);
+       }
+     }  
+   }
+   return thereturn;
+}
+
+// ----------------------------------------------------------------------------
+// LoadMuIsoScaleFactors Iso < 0.20
+// ----------------------------------------------------------------------------
+void Selection::LoadMuIsoScaleFactors20()
+{
+  string fileName(getenv( "CMSSW_BASE" )+string("/src/IPHCAnalysis/NTuple/macros/data/MuonEfficiencies_ISO_Run_2012ReReco_53X.root"));
+  std::cout<<"Reading the MuScaleFactors file "<<fileName<<endl;
+  fexists(fileName, true);
+  TFile *f_Data_Mu = new TFile(fileName.c_str());
+  f_Data_Mu->cd();
+  scaleFactMu_Iso20_abseta_inf0p9  = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<02_Tight_pt_abseta<0.9")->Clone("");
+  scaleFactMu_Iso20_abseta_0p9_1p2 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<02_Tight_pt_abseta0.9-1.2")->Clone("");
+  scaleFactMu_Iso20_abseta_1p2_2p1 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<02_Tight_pt_abseta1.2-2.1")->Clone("");
+  scaleFactMu_Iso20_abseta_2p1_2p4 = (TGraphAsymmErrors*)gROOT->FindObject("DATA_over_MC_combRelIsoPF04dBeta<02_Tight_pt_abseta2.1-2.4")->Clone("");
+  f_Data_Mu->Close();
+  delete f_Data_Mu;
+} 
+
+
+// ----------------------------------------------------------------------------
+// GetMuIsoScaleFactors Iso < 0.20
+// ----------------------------------------------------------------------------
+std::vector<double> Selection::getScaleFactorMuIso20(double pT, double eta){
+  double fabseta = fabs(eta);
+  std::vector<double > thereturn ;
+  if(scaleFactMu_Iso20_abseta_inf0p9  == 0 ||  
+     scaleFactMu_Iso20_abseta_0p9_1p2 == 0 ||  
+     scaleFactMu_Iso20_abseta_1p2_2p1 == 0 ||  
+     scaleFactMu_Iso20_abseta_2p1_2p4 == 0   ){
+    std::cout << "WARNING no SF loaded for muon Iso " << std::endl;
+   }else{   
+     double* pTbin = 0;
+     double* eff_val = 0; 
+     double* eff_val_up   = 0;  
+     double* eff_val_down = 0; 
+     int nbin =  0; 
+     if(fabseta < 0.9                  ) {
+       pTbin        = scaleFactMu_Iso20_abseta_inf0p9->GetX() ;
+       eff_val      = scaleFactMu_Iso20_abseta_inf0p9->GetY(); 
+       eff_val_up   = scaleFactMu_Iso20_abseta_inf0p9->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso20_abseta_inf0p9->GetEYlow() ;  
+       nbin = scaleFactMu_Iso20_abseta_inf0p9->GetN();
+     }                      
+     if(fabseta < 1.2 && fabseta > 0.9 ) {
+       pTbin        = scaleFactMu_Iso20_abseta_0p9_1p2->GetX();
+       eff_val      = scaleFactMu_Iso20_abseta_0p9_1p2->GetY();
+       eff_val_up   = scaleFactMu_Iso20_abseta_0p9_1p2->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso20_abseta_0p9_1p2->GetEYlow() ;  
+       nbin = scaleFactMu_Iso20_abseta_0p9_1p2->GetN();
+     }
+     if(fabseta < 2.1 && fabseta > 1.2 ) {
+       pTbin        = scaleFactMu_Iso20_abseta_1p2_2p1->GetX();
+       eff_val      = scaleFactMu_Iso20_abseta_1p2_2p1->GetY();
+       eff_val_up   = scaleFactMu_Iso20_abseta_1p2_2p1->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso20_abseta_1p2_2p1->GetEYlow() ;  
+       nbin = scaleFactMu_Iso20_abseta_1p2_2p1->GetN();
+     }
+     if(fabseta < 2.4 && fabseta > 2.1 ) {
+       pTbin        = scaleFactMu_Iso20_abseta_2p1_2p4->GetX();
+       eff_val      = scaleFactMu_Iso20_abseta_2p1_2p4->GetY();
+       eff_val_up   = scaleFactMu_Iso20_abseta_2p1_2p4->GetEYhigh();  
+       eff_val_down = scaleFactMu_Iso20_abseta_2p1_2p4->GetEYlow() ;  
+       nbin = scaleFactMu_Iso20_abseta_2p1_2p4->GetN();
+     }  
+     for( int i = 0; i<  nbin; i++){
+       if(i < (nbin-1) ){
+         if(pT > pTbin[i] && pT < pTbin[i+1]){
+	   thereturn.push_back(eff_val[i]);
+	   thereturn.push_back(eff_val_up[i]);
+	   thereturn.push_back(-eff_val_down[i]);
+	  }
+       }else if(thereturn.size()==0){
+          thereturn.push_back(eff_val[nbin-1]);
+	  thereturn.push_back(eff_val_up[nbin-1]);
+	  thereturn.push_back(-eff_val_down[nbin-1]);
+       }
+     }  
+   }
+   return thereturn;
+}
+
+// ----------------------------------------------------------------------------
+// GetSF for electrons, ID+Iso, 0.5 MVA, 0.15 iso
+// ----------------------------------------------------------------------------
+
+
+std::vector<double> Selection::getSscaleFactorElectronAllID05(double pT, double eta){
+  double fabseta = fabs(eta);
+  std::vector<double > thereturn;
+  if( pT > 20 && pT < 30){
+    if(fabseta < 0.8                       ) {thereturn.push_back(0.969); thereturn.push_back(0.007); thereturn.push_back(-0.007);}
+    if(fabseta > 0.8    && fabseta < 1.4442) {thereturn.push_back(0.935); thereturn.push_back(0.017); thereturn.push_back(-0.017);}
+    if(fabseta > 1.4442 && fabseta < 1.5660) {thereturn.push_back(1.032); thereturn.push_back(0.039); thereturn.push_back(-0.039);}
+    if(fabseta > 1.5660 && fabseta < 2.5000) {thereturn.push_back(0.919); thereturn.push_back(0.014); thereturn.push_back(-0.014);}
+  }
+  if( pT > 30 && pT < 40){
+    if(fabseta < 0.8                       ) {thereturn.push_back(0.926); thereturn.push_back(0.003); thereturn.push_back(-0.003);}
+    if(fabseta > 0.8    && fabseta < 1.4442) {thereturn.push_back(0.945); thereturn.push_back(0.004); thereturn.push_back(-0.004);}
+    if(fabseta > 1.4442 && fabseta < 1.5660) {thereturn.push_back(0.907); thereturn.push_back(0.015); thereturn.push_back(-0.015);}
+    if(fabseta > 1.5660 && fabseta < 2.5000) {thereturn.push_back(0.926); thereturn.push_back(0.005); thereturn.push_back(-0.005);}
+  }
+  if( pT > 40 && pT < 50){
+    if(fabseta < 0.8                       ) {thereturn.push_back(0.969); thereturn.push_back(0.002); thereturn.push_back(-0.002);}
+    if(fabseta > 0.8    && fabseta < 1.4442) {thereturn.push_back(0.964); thereturn.push_back(0.002); thereturn.push_back(-0.002);}
+    if(fabseta > 1.4442 && fabseta < 1.5660) {thereturn.push_back(0.957); thereturn.push_back(0.022); thereturn.push_back(-0.022);}
+    if(fabseta > 1.5660 && fabseta < 2.5000) {thereturn.push_back(0.952); thereturn.push_back(0.003); thereturn.push_back(-0.003);}
+  }
+  if( pT > 50){
+    if(fabseta < 0.8                       ) {thereturn.push_back(0.975); thereturn.push_back(0.000); thereturn.push_back(-0.000);}
+    if(fabseta > 0.8    && fabseta < 1.4442) {thereturn.push_back(0.974); thereturn.push_back(0.003); thereturn.push_back(-0.003);}
+    if(fabseta > 1.4442 && fabseta < 1.5660) {thereturn.push_back(0.877); thereturn.push_back(0.036); thereturn.push_back(-0.036);}
+    if(fabseta > 1.5660 && fabseta < 2.5000) {thereturn.push_back(0.950); thereturn.push_back(0.004); thereturn.push_back(-0.004);}
+  }
+   
+   return thereturn; 
+  
+}
 
 // ----------------------------------------------------------------------------
 // InitJESUnc
