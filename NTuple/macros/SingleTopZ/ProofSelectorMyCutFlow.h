@@ -20,7 +20,7 @@
 #include "NTFormat/interface/NTEvent.h"
 #include "Plots/interface/HistoManager.h"
 
-
+#include <cmath>
 
 #include "Tools/interface/Dataset.h"
 #include "Tools/interface/AnalysisEnvironmentLoader.h"
@@ -57,7 +57,6 @@ class TTree;
 
 class AnalysisEnvironmentLoader;
 class DiLeptonSelection;
-
 
 class ProofSelectorMyCutFlow : public TSelector {
  public :
@@ -125,7 +124,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   //------------------------------------
   HistoManager MyhistoManager;
   int ITypeMC ;
-  
+  bool isTTbarMCatNLO;
     
   //------------------------------------
   //loose isolation on W cand
@@ -135,7 +134,13 @@ class ProofSelectorMyCutFlow : public TSelector {
   float looseIso;
   float themetcut;
    
- 
+  //------------------------------------
+  //tight isolation on W cand
+  //------------------------------------
+  float tightIso_e;
+  float tightIso_mu;
+  float elecIso_default;
+  
   //------------------------------------
   //Trigger scale factors
   //------------------------------------
@@ -178,6 +183,10 @@ class ProofSelectorMyCutFlow : public TSelector {
   
   std::vector<TH1F> Ntrilept_mumumu;
   std::vector<TH1F> Ntrileptnoniso_mumumu;
+  
+  
+  std::vector<TH1F> InvM_ll_mumumu_afterdileptsel;
+  
   
   
   std::vector<TH1F> CutFlow_mumumu;
@@ -237,6 +246,14 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> Mt_eemu_afterbjetveto;
   std::vector<TH1F> Mt_eee_afterbjetveto;
    
+  std::vector<TH1F> NJetLight_mumu;
+  std::vector<TH1F> NJetLight_ee;
+  
+  std::vector<TH1F> NJetHeavy_mumu;
+  std::vector<TH1F> NJetHeavy_ee;
+  
+  std::vector<TH1F> FlavComp_mumu;
+  std::vector<TH1F> FlavComp_ee;
   
   std::vector<TH1F> NJet_mumumu_afterZsel;
   std::vector<TH1F> NJet_mumue_afterZsel;
@@ -294,7 +311,10 @@ class ProofSelectorMyCutFlow : public TSelector {
   
   
   
- 
+  std::vector<TH1F> mWT_mumumu_afterZsel;
+  std::vector<TH1F> mWT_mumue_afterZsel;
+  std::vector<TH1F> mWT_eemu_afterZsel;
+  std::vector<TH1F> mWT_eee_afterZsel;
   
   
   
@@ -322,6 +342,16 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> NBJet_mumue_afterleptsel_mWT110;
   std::vector<TH1F> NBJet_eemu_afterleptsel_mWT110;
   std::vector<TH1F> NBJet_eee_afterleptsel_mWT110;
+  
+  std::vector<TH1F> NBJet_mumumu_afterleptsel;
+  std::vector<TH1F> NBJet_mumue_afterleptsel;
+  std::vector<TH1F> NBJet_eemu_afterleptsel;
+  std::vector<TH1F> NBJet_eee_afterleptsel;
+  
+  std::vector<TH1F> NJet_mumumu_afterleptsel;
+  std::vector<TH1F> NJet_mumue_afterleptsel;
+  std::vector<TH1F> NJet_eemu_afterleptsel;
+  std::vector<TH1F> NJet_eee_afterleptsel;
   
   //to be filled
   
@@ -612,6 +642,12 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> mWT_eee_afterbjetveto;
   
   
+  std::vector<TH1F> cosThetaStar_mumumu_afterbjetsel;
+  std::vector<TH1F> cosThetaStar_mumue_afterbjetsel;
+  std::vector<TH1F> cosThetaStar_eemu_afterbjetsel;
+  std::vector<TH1F> cosThetaStar_eee_afterbjetsel;
+  
+  
   std::vector<TH1F> Charge_mumumu_afterleptsel;
   std::vector<TH1F> Charge_mumue_afterleptsel;
   std::vector<TH1F> Charge_eemu_afterleptsel;
@@ -671,6 +707,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> *pMt_afterbjetsel;
   std::vector<TH1F> *pMt_afterbjetveto;
   std::vector<TH1F> *pNJet_afterZsel;  
+  std::vector<TH1F> *pmWT_afterZsel;  
   std::vector<TH1F> *pNJet_afterbsel;
   std::vector<TH1F> *pNJet_afterleptsel_mWT110;
   std::vector<TH1F> *pNLept_afterbsel;
@@ -683,6 +720,8 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> *pBJetDiscri_afterjetsel_cjets;
   std::vector<TH1F> *pBJetDiscri_afterjetsel_ljets;
   std::vector<TH1F> *pNBJet_afterleptsel_mWT110;
+  std::vector<TH1F> *pNBJet_afterleptsel;
+  std::vector<TH1F> *pNJet_afterleptsel;
   std::vector<TH1F> *pNvtx_afterleptsel;
   std::vector<TH1F> *pInvM_ll_afterleptsel;  
   std::vector<TH1F> *pInvM_ll_afterleptsel_mWT110;  
@@ -733,7 +772,8 @@ class ProofSelectorMyCutFlow : public TSelector {
   std::vector<TH1F> *pWmissAssing_afterleptsel;  
   std::vector<TH1F> *pmWT_afterleptsel; 
   std::vector<TH1F> *pmWT_afterbjetsel;  
-  std::vector<TH1F> *pmWT_afterbjetveto;  
+  std::vector<TH1F> *pmWT_afterbjetveto; 
+  std::vector<TH1F> *pcosThetaStar_afterbjetsel;   
   std::vector<TH1F> *pCharge_afterleptsel;  
   std::vector<TH1F> *pCharge_afterleptsel_mWT110;   
   std::vector<TH1F> *pNvertex; 
@@ -762,7 +802,7 @@ class ProofSelectorMyCutFlow : public TSelector {
   //------------------------------------
   TTree *TheTree;
   
-  
+  float tree_cosThetaStar;
   float tree_topMass;
   float tree_totMass;
   float tree_deltaPhilb;
@@ -793,7 +833,87 @@ class ProofSelectorMyCutFlow : public TSelector {
   
   float tree_EvtWeight;
   
+  //------------------------------------
+  //SmallTTree and banches used studies
+  //------------------------------------
+  TTree *SmallTree;
   
+  int   smalltree_nlepton;
+  float smalltree_lept_pt[500];
+  float smalltree_lept_eta[500];
+  float smalltree_lept_phi[500];
+  float smalltree_lept_iso[500];
+  int   smalltree_lept_flav[500];
+  
+  int smalltree_njets;
+  float smalltree_jet_pt[500];
+  float smalltree_jet_eta[500];
+  float smalltree_jet_phi[500];
+  float smalltree_jet_btagdiscri[500];
+  float smalltree_jet_btagdiscri_up[500];
+  float smalltree_jet_btagdiscri_down[500];
+  int   smalltree_jet_flav[500];
+  
+  int smalltree_jesup_njets;
+  float smalltree_jet_jesup_pt[500];
+  float smalltree_jet_jesup_eta[500];
+  float smalltree_jet_jesup_phi[500];
+  float smalltree_jet_jesup_btagdiscri[500];
+  int   smalltree_jet_jesup_flav[500];
+  
+  
+  int smalltree_jesdown_njets;
+  float smalltree_jet_jesdown_pt[500];
+  float smalltree_jet_jesdown_eta[500];
+  float smalltree_jet_jesdown_phi[500];
+  float smalltree_jet_jesdown_btagdiscri[500];
+  int   smalltree_jet_jesdown_flav[500];
+  
+  
+  int smalltree_jerup_njets;
+  float smalltree_jet_jerup_pt[500];
+  float smalltree_jet_jerup_eta[500];
+  float smalltree_jet_jerup_phi[500];
+  float smalltree_jet_jerup_btagdiscri[500];
+  int   smalltree_jet_jerup_flav[500];
+  
+  
+  int smalltree_jerdown_njets;
+  float smalltree_jet_jerdown_pt[500];
+  float smalltree_jet_jerdown_eta[500];
+  float smalltree_jet_jerdown_phi[500];
+  float smalltree_jet_jerdown_btagdiscri[500];
+  int   smalltree_jet_jerdown_flav[500];
+  
+  
+  
+  
+  float smalltree_met_pt;
+  float smalltree_met_phi;
+  float smalltree_met_jesup_pt;
+  float smalltree_met_jesup_phi;
+  float smalltree_met_jesdown_pt;
+  float smalltree_met_jesdown_phi;
+  float smalltree_met_jerup_pt;
+  float smalltree_met_jerup_phi;
+  float smalltree_met_jerdown_pt;
+  float smalltree_met_jerdown_phi;  
+  float smalltree_met_unclsup_pt;
+  float smalltree_met_unclsup_phi;
+  float smalltree_met_unclsdown_pt;
+  float smalltree_met_unclsdown_phi;
+  
+  float smalltree_evtweight;
+  float smalltree_weight_trigup;
+  float smalltree_weight_trigdown;
+  float smalltree_weight_leptup;
+  float smalltree_weight_leptdown;
+  float smalltree_weight_PDFup;
+  float smalltree_weight_PDFdown;
+  
+  int   smalltree_IChannel;
+  
+
   //------------------------------------
   //definition of member functions
   //------------------------------------
@@ -813,12 +933,24 @@ class ProofSelectorMyCutFlow : public TSelector {
   
   ClassDef(ProofSelectorMyCutFlow,0);
   
+  
   void createTheHisto(HistoManager *thehistomanag);
   void WriteTheHisto(TFile* theoutputfile, HistoManager *thehistomanag);
   void cleanHistoVector();
   
+  
   void defineHistoPointer(int channel);
   
+  void setNullHistoPointer();
+  
+  
+  bool selectedEventForSynch(int event_nbr);
+  bool selectedEventForSynch_step0(int event_nbr);
+  
+  double getLeptonSF(TLorentzVector lept1, TLorentzVector lept2, TLorentzVector lept3, TString channel, int syst);
+  double getTriggerSF(int ichannel);
+  
+  NTMET  SmearedMET(vector<NTJet> &selJets, vector<NTJet> &selJetsNoSmear, NTMET &met);
 };
 
 #endif

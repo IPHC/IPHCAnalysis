@@ -23,9 +23,9 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   float lumi_error=0.022;
   
   
-  float SF_trigger_error = 0.015;
-  float SF_Lepton_error  = 0.010;
-  float SF_MET_error     = 0.016;
+  float SF_trigger_error = 0.001;
+  float SF_Lepton_error  = 0.001;
+  float SF_MET_error     = 0.001;
  
   
   double frac_ee   = 0;
@@ -36,8 +36,11 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   
 
   TString filename;
-  //filename="backup_outputProof20-12-12_10-03-23_noSFapplied_Zenriched/proof_merged_noSF_Zenriched.root"; 
-  filename="backup_outputProof10-04-14_14-52//proof_merged.root";
+  
+  //filename = "proofmerged_tightiso.root";
+  //filename = "mergedProof/proofmerged_invertIso.root";
+  filename = "backup_outputProof29-09-14_19-18/proof_merged.root";
+  //filename = "mergedProof/proofmerged_wTreeCostThetaStar_invertiso.root";
   
   
   TString channel;
@@ -268,6 +271,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   TH1F * histo_WZ ;
   TH1F * histo_ZZ ;
   TH1F * histo_tZq;
+  TH1F * histo_TTZ ;
+  TH1F * histo_TTW ;
   TH1F * histo_SingleToptW;
   TH1F * histo_TtW;
   TH1F * histo_TbartW;
@@ -275,7 +280,7 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   TH1F * histo_TtChan;
   TH1F * histo_TbartChan;
   TH1F * histo_SingleTopsChan;
-  //TH1F * histo_TsChan;
+  TH1F * histo_TsChan;
   TH1F * histo_TbarsChan;
   TH1F * histo_ratio;
   
@@ -401,6 +406,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_TT->Add(histo_TT, h_3_TT     , 1, 1);
     histo_TT->Add(histo_TT, h_4_TT     , 1, 1);
   }
+  //histo_TT->Scale(10.1/245.8);
+  
 
 /*
   TString histo_TTbarSig_name= plotname+channel+selection+"_TTbarSig";
@@ -673,8 +680,35 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_ZZ->Add(histo_ZZ, h_3_ZZ     , 1, 1);
     histo_ZZ->Add(histo_ZZ, h_4_ZZ     , 1, 1);
   }
+ 
 
+  TString histo_TTZ_name = plotname+channel+selection+"_TTZ";
+  histo_TTZ                  = (TH1F*)filechannel->Get(histo_TTZ_name);
+  if (namechan=="all") {
+    TString h_name2_TTZ=plotname+"mumue"+selection+"_TTZ";
+    TH1F * h_2_TTZ = (TH1F*)filechannel->Get(h_name2_TTZ);
+    TString h_name3_TTZ=plotname+"eemu"+selection+"_TTZ";
+    TH1F * h_3_TTZ = (TH1F*)filechannel->Get(h_name3_TTZ);
+    TString h_name4_TTZ=plotname+"eee"+selection+"_TTZ";
+    TH1F * h_4_TTZ = (TH1F*)filechannel->Get(h_name4_TTZ);
+    histo_TTZ->Add(histo_TTZ, h_2_TTZ     , 1, 1);
+    histo_TTZ->Add(histo_TTZ, h_3_TTZ     , 1, 1);
+    histo_TTZ->Add(histo_TTZ, h_4_TTZ     , 1, 1);
+  }
   
+  TString histo_TTW_name = plotname+channel+selection+"_TTW";
+  histo_TTW                  = (TH1F*)filechannel->Get(histo_TTW_name);
+  if (namechan=="all") {
+    TString h_name2_TTW=plotname+"mumue"+selection+"_TTW";
+    TH1F * h_2_TTW = (TH1F*)filechannel->Get(h_name2_TTW);
+    TString h_name3_TTW=plotname+"eemu"+selection+"_TTW";
+    TH1F * h_3_TTW = (TH1F*)filechannel->Get(h_name3_TTW);
+    TString h_name4_TTW=plotname+"eee"+selection+"_TTW";
+    TH1F * h_4_TTW = (TH1F*)filechannel->Get(h_name4_TTW);
+    histo_TTW->Add(histo_TTW, h_2_TTW     , 1, 1);
+    histo_TTW->Add(histo_TTW, h_3_TTW     , 1, 1);
+    histo_TTW->Add(histo_TTW, h_4_TTW     , 1, 1);
+  }
 
   ;
   
@@ -723,6 +757,12 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   histo_tZq->SetFillStyle(1001);
   ;
   
+  histo_TTW->SetFillStyle(1001);
+  ;
+  
+  histo_TTZ->SetFillStyle(1001);
+  ;
+  
   histo_TT->SetFillColor(kRed-7);
   histo_Zjets->SetFillColor(kAzure-2);
   //histo_Wjets->SetFillColor(kGreen-3);
@@ -730,6 +770,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   histo_VV->SetFillColor(13);
   histo_SingleToptW->SetFillColor(kMagenta);
   histo_tZq->SetFillColor(kAzure+8);
+  histo_TTZ->SetFillColor(kBlue);
+  histo_TTW->SetFillColor(kBlue+7);
   // color code for Z/DY -> tau tau : kAzure+8
   
   ;
@@ -737,8 +779,11 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   hmc->Add(hmc,histo_VV, 1., 1.);
   //hmc->Add(hmc,histo_Wjets, 1., 1.);
   hmc->Add(hmc,histo_SingleToptW, 1., 1.);
-  //hmc->Add(hmc,histo_TT, 1., 1.);
+  hmc->Add(hmc,histo_TT, 1., 1.);
   hmc->Add(hmc,histo_Zjets, 1., 1.);
+  hmc->Add(hmc,histo_TTZ, 1., 1.);
+  hmc->Add(hmc,histo_TTW, 1., 1.);
+  
   hmc->SetName("hmc");
   
   
@@ -755,6 +800,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
    // histo_FCNCzut->Rebin(bins);
   }
@@ -768,6 +815,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -783,6 +832,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -796,6 +847,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -809,6 +862,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -823,6 +878,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -837,6 +894,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -851,6 +910,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -864,6 +925,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -876,6 +939,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -888,6 +953,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     histo_tZq->Rebin(bins);
     histo_TT->Rebin(bins);
     histo_Zjets->Rebin(bins);
+    histo_TTZ->Rebin(bins);
+    histo_TTW->Rebin(bins);
     histo_Data->Rebin(bins);
     //histo_FCNCzut->Rebin(bins);
   }
@@ -1017,6 +1084,8 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     hs->GetXaxis()->SetLabelSize(0.);
     hs->SetMinimum(0.1);
     TString theXtitle = "";
+    
+    
     if(plotname == "Inv")theXtitle ="M_{ll} [GeV/c^{-1}]";
     else if(plotname == "Njets_")   theXtitle ="jet mult.";
     else if(plotname == "PtJet1_")   theXtitle ="Leading Jet p_{T} [GeV/c]";
@@ -1066,7 +1135,7 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
   latex2->SetNDC();
   latex2->SetTextSize(0.04);
   latex2->SetTextAlign(31); 
-  latex2->DrawLatex(0.87, 0.95, "4.9 fb^{-1} at #sqrt{s} = 7 TeV");
+  latex2->DrawLatex(0.87, 0.95, "19.7 fb^{-1} at #sqrt{s} = 8 TeV");
   
   TString info_data; 
   if (namechan=="eee")    info_data = "eee channel";
@@ -1101,7 +1170,7 @@ void PlotStack(TString plotname, TString namechan, TString selection, bool setlo
     }
     }*/
   qw = new TLegend(.80,.60,.95,.90);
-  if(plotname == "NJet_") qw = new TLegend(.20,.50,.35,.80);
+  if(plotname == "NJet_") qw = new TLegend(.60,.50,.75,.80);
   
   
   ;

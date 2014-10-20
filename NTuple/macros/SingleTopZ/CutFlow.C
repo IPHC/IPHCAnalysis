@@ -60,7 +60,7 @@ void CutFlow(){
   //*********************************
   
   
-  TFile *f_data  = new TFile("backup_outputProof10-04-14_14-52/proof_merged.root");
+  TFile *f_data  = new TFile("proofmerged.root");
   
   f_data->cd();
   
@@ -935,11 +935,12 @@ void CutFlow(){
     
     vector<string> CutName;
     CutName.push_back("Trigger");
-    CutName.push_back("lepton selection");
+    CutName.push_back("2 o.s leptons");
+    CutName.push_back("3 leptons");
     CutName.push_back("Z mass cut");
     CutName.push_back("jet multi.");
     CutName.push_back("b-jet multi. ");
-    CutName.push_back("Mt cut ");
+    //CutName.push_back("Mt cut ");
     
     //compute error
     for(int k0=0; k0<5; ++k0) {

@@ -12,7 +12,8 @@ class ProofSelectorMyCutFlowTools{
                 std::vector<NTElectron> *selE,        std::vector<NTMuon> *selM,
                 std::vector<NTElectron> *selENonIso,  std::vector<NTMuon> *selMNonIso,
                 std::vector<NTElectron> *theZeeCand,  std::vector<NTMuon> *theZmumuCand,
-                std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand
+                std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand,
+		float tightIso_e, float tightIso_mu
                 );
 
 };
@@ -127,7 +128,8 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
   		std::vector<NTElectron> *selE,        std::vector<NTMuon> *selM, 
   		std::vector<NTElectron> *selENonIso,  std::vector<NTMuon> *selMNonIso, 
 		std::vector<NTElectron> *theZeeCand,  std::vector<NTMuon> *theZmumuCand, 
-		std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand
+		std::vector<NTElectron> *theWeCand,   std::vector<NTMuon> *theWmuCand,
+		float tightIso_e, float tightIso_mu
 		){
  
       //*****************************************************************
@@ -152,7 +154,7 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
       for(unsigned int iel2 = 0; iel2 < selE->size(); iel2++){
     	if(iel1 == iel2) continue;
     	if((*selE)[iel1].charge == (*selE)[iel2].charge) continue;
-    	TLorentzVector theZee = (*selE)[iel1].p4 + (*selE)[iel2].p4;
+    	TLorentzVector theZee = (*selE)[iel1].p4Gsf + (*selE)[iel2].p4Gsf;
     	if( fabs(theZee.M() - 91) < fabs(mInv-91) ){
     	//if( fabs(theZeeCand.M() - 200) < fabs(mInv-200) ){
     	  theel1 = iel1;
@@ -165,7 +167,7 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
     if(theel1>=0 && theel2>=0){ //JLA
       theZeeCand->push_back((*selE)[theel1]);
       theZeeCand->push_back((*selE)[theel2]);
-      //double invM = (theZeeCand[0].p4+theZeeCand[1].p4).M();
+      //double invM = (theZeeCand[0].p4Gsf+theZeeCand[1].p4Gsf).M();
       //cout << "lepton origin of Zee cand " << selE[theel1].LeptonOrigin << "  " << selE[theel2].LeptonOrigin << "  invmass " <<  invM << endl;
     }
   }
@@ -179,9 +181,9 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
       bool matchElec=false;
       for(unsigned int iel2 = 0; iel2 < theZeeCand->size(); iel2++){
   	 
-    	 if(fabs((*selE)[iel1].p4.Pt() - (*theZeeCand)[iel2].p4.Pt()) <  0.0001)  matchElec=true;
+    	 if(fabs((*selE)[iel1].p4Gsf.Pt() - (*theZeeCand)[iel2].p4Gsf.Pt()) <  0.0001)  matchElec=true;
        }
-      if(!matchElec){
+      if(!matchElec && Selection::EffArea03PF( (*selE)[iel1], rhocorr) < tightIso_e){
     	theWeCand->push_back((*selE)[iel1]);
     	wcharge = (*selE)[iel1].charge;
     	if( (*selE)[iel1].LeptonOrigin == 10) leptonFlavor = 1;
@@ -191,10 +193,11 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
     for(unsigned int iel1 = 0; iel1 < selENonIso->size(); iel1++){
       bool matchElec=false;
       for(unsigned int iel2 = 0; iel2 < theZeeCand->size(); iel2++){
-    	 if(fabs( (*selENonIso)[iel1].p4.Pt() - (*theZeeCand)[iel2].p4.Pt()) <  0.0001)  matchElec=true;
+    	 if(fabs( (*selENonIso)[iel1].p4Gsf.Pt() - (*theZeeCand)[iel2].p4Gsf.Pt()) <  0.0001)  matchElec=true;
     	 else if( (*selE)[iel1].LeptonOrigin == 10) leptonFlavor = 1;
       }
       //if(!matchElec && selENonIso[iel1].RelIso03PF() > looseIsoCut){ 
+      //if(!matchElec) cout << " eleciso " << Selection::EffArea03PF( (*selENonIso)[iel1], rhocorr) << " looseIsoCut " <<looseIsoCut << endl;
       if(!matchElec && Selection::EffArea03PF( (*selENonIso)[iel1], rhocorr) > looseIsoCut){ 
     	theWeCand->push_back((*selENonIso)[iel1]);
     	wcharge = (*selENonIso)[iel1].charge; 
@@ -249,7 +252,7 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
     	 if(fabs((*selM)[imu1].p4.Pt() -(* theZmumuCand)[imu2].p4.Pt()) <  0.0001) matchMuon = true;
     	 
       } 
-      if(!matchMuon){
+      if(!matchMuon &&  Selection::RelIso04PFDeltaBeta( (*selM)[imu1]) < tightIso_mu) {
     	theWmuCand->push_back( (*selM)[imu1]);
     	wcharge = (*selM)[imu1].charge;
     	if( (*selM)[imu1].LeptonOrigin == 10) leptonFlavor = 1;
@@ -264,7 +267,7 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
      
       }
       //if(!matchMuon && selMNonIso[imu1].RelIso03PF() > looseIsoCut){
-      if(!matchMuon && Selection::RelIso03PFDeltaBeta( (*selMNonIso)[imu1]) > looseIsoCut){
+      if(!matchMuon && Selection::RelIso04PFDeltaBeta( (*selMNonIso)[imu1]) > looseIsoCut){
     	theWmuCand->push_back( (*selMNonIso)[imu1]);
     	wcharge = (*selMNonIso)[imu1].charge;
     	if( (*selMNonIso)[imu1].LeptonOrigin == 10) leptonFlavor = 1;
@@ -295,6 +298,7 @@ void  ProofSelectorMyCutFlowTools::determineLeptonCandidates(
   }*/
   
 }
+
 
 
 #endif
